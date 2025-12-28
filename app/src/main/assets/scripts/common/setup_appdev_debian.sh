@@ -319,10 +319,17 @@ rm -rf /root/.config/flutter /root/.flutter /root/android
 
 # Pre-download artifacts (Run as TARGET_USER with login shell to set HOME correctly)
 echo "FluxLinux: Configuring Flutter (as $TARGET_USER)..."
-su - $TARGET_USER -c "flutter config --no-analytics"
+# Ensure Flutter is in PATH for the user session explicitly during this setup
+su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-analytics"
 # Force Android SDK path update
-su - $TARGET_USER -c "flutter config --android-sdk $SDK_ROOT"
-echo " - Flutter Config: $(su - $TARGET_USER -c 'flutter config' | grep 'android-sdk')"
+echo "FluxLinux: Setting Flutter Android SDK to $SDK_ROOT..."
+su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --android-sdk $SDK_ROOT"
+
+# Accept Licenses
+echo "FluxLinux: Accepting Android SDK Licenses..."
+yes | $SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
+
+echo " - Flutter Config: $(su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config" | grep "android-sdk")"
 su - $TARGET_USER -c "flutter precache"
 
 # Accept Android Licenses in Flutter
