@@ -375,10 +375,6 @@ su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-
 echo "FluxLinux: Setting Flutter Android SDK to $SDK_ROOT..."
 su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --android-sdk $SDK_ROOT"
 
-# Accept Licenses
-echo "FluxLinux: Accepting Android SDK Licenses..."
-yes | $SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
-
 echo " - Flutter Config: $(su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config" | grep "android-sdk")"
 su - $TARGET_USER -c "flutter precache"
 
