@@ -311,43 +311,17 @@ else
     echo "FluxLinux: Flutter already installed."
 fi # End of initial Flutter installation check
 
-# Fix "dubious ownership" error system-wide for all repos (Dev Environment)
-# Unconditionally Trust All Directories (Required for chroot/multi-user setup to avoid "fatal: detected dubious ownership")
+# Minimal Flutter Configuration
+# 1. Essential Permissions & Git Config
 git config --system --add safe.directory '*'
-
-# Always configure Flutter (Fixes paths if user moved folders or config broke)
-# Set Permissions
 chown -R $TARGET_USER:$TARGET_GROUP "$FLUTTER_ROOT"
 chmod -R 775 "$FLUTTER_ROOT"
-
-export PATH="$FLUTTER_ROOT/bin:$PATH"
-
-# Clear stale root Flutter config (prevents "/root/android" errors)
-rm -rf /root/.config/flutter /root/.flutter /root/android
-
-# Pre-download artifacts (Run as TARGET_USER with login shell to set HOME correctly)
-echo "FluxLinux: Configuring Flutter (as $TARGET_USER)..."
-
-# CRITICAL FIX: Ensure /dev/null is writable by user, otherwise git/flutter fail
-echo "FluxLinux: Fixing /dev/null permissions..."
+# Fix /dev/null for non-root git usage
 chmod 666 /dev/null 2>/dev/null || true
-ls -la /dev/null
 
-echo "FluxLinux: Checking /proc access for $TARGET_USER..."
-su - $TARGET_USER -c "ls -l /proc/self/exe" || echo " [!] /proc/self/exe listing failed"
-su - $TARGET_USER -c "readlink -f /proc/self/exe" || echo " [!] /proc/self/exe readlink failed"
-
-# Ensure Flutter is in PATH for the user session explicitly during this setup
-su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-analytics"
-# Force Android SDK path update
-echo "FluxLinux: Setting Flutter Android SDK to $SDK_ROOT..."
+# 2. Configure Android SDK (Single requested command)
+echo "FluxLinux: Setting Flutter Android SDK..."
 su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --android-sdk $SDK_ROOT"
-
-echo " - Flutter Config: $(su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config" | grep "android-sdk")"
-su - $TARGET_USER -c "flutter precache"
-
-# Accept Android Licenses in Flutter
-yes | su - $TARGET_USER -c "flutter doctor --android-licenses" >/dev/null 2>&1
 
 # 4. Kotlin (Manual Install for shared access)
 KOTLIN_ROOT="/opt/kotlin"
