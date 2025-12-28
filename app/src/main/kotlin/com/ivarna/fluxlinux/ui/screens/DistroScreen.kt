@@ -165,21 +165,26 @@ fun DistroScreen(
                         val guiScript = scriptManager.getScriptContent("common/start_gui.sh")
                         
                         // 2. Generate Command
-                        val command = if (distro.id == "debian_chroot") {
+                        val command = if (distro.id == "debian_chroot" || distro.id == "debian13_chroot" || distro.id == "arch_chroot") {
                             // Specialized Root Command for Chroot
                             // 2. Prepare Root Script
-                            val chrootScript = scriptManager.getScriptContent("chroot/setup_debian_chroot.sh")
-                            val safeScript = if (!chrootScript.endsWith("\n")) "$chrootScript\n" else chrootScript
-                            val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
-                            val scriptName = "setup_debian_chroot.sh"
-                            
-                            // Chunk the encoded string to avoid shell/clipboard limits (approx 1000 chars per chunk)
-                            val chunks = scriptB64.chunked(1000)
-                            val chunkedEchos = StringBuilder()
-                            chunkedEchos.append("rm -f \"\${S}.b64\"\n") // Clear previous temp file
-                            chunks.forEach { chunk ->
-                                chunkedEchos.append("echo \"$chunk\" >> \"\${S}.b64\"\n")
+                            val scriptPath = when (distro.id) {
+                                "arch_chroot" -> "chroot/setup_arch_chroot.sh"
+                                "debian13_chroot" -> "chroot/setup_debian13_chroot.sh"
+                                else -> "chroot/setup_debian_chroot.sh"
                             }
+                            val scriptName = when (distro.id) {
+                                "arch_chroot" -> "setup_arch_chroot.sh"
+                                "debian13_chroot" -> "setup_debian13_chroot.sh"
+                                else -> "setup_debian_chroot.sh"
+                            }
+                            
+                            val chrootScript = scriptManager.getScriptContent(scriptPath)
+                            val safeScript = if (!chrootScript.endsWith("\n")) "$chrootScript\n" else chrootScript
+                            val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.DEFAULT)
+                            
+                            // Use Heredoc with wrapped Base64 to prevent terminal freeze (Line length limits)
+                            val chunkedEchos = "cat << 'EOF_B64' > \"\${S}.b64\"\n$scriptB64\nEOF_B64\n"
 
                             // Simplified robust command
                             """

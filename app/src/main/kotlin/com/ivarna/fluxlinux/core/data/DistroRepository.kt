@@ -34,6 +34,17 @@ object DistroRepository {
             configuration = SupportedDistro.TERMUX
         ),
         Distro(
+            id = "arch_chroot",
+            name = "Arch Linux (KDE Plasma)",
+            description = "Rolling release distro with KDE Plasma desktop. (Root)",
+            color = Color(0xFF1793D1),
+            iconRes = R.drawable.distro_arch,
+            comingSoon = false,
+            prootSupported = false,
+            chrootSupported = true,
+            configuration = SupportedDistro.ARCH
+        ),
+        Distro(
             id = "debian_chroot",
             name = "Debian (Rooted)",
             description = "High-performance Debian 12 environment running via Chroot (Requires Root).",
@@ -43,6 +54,17 @@ object DistroRepository {
             prootSupported = false,
             chrootSupported = true,
             configuration = SupportedDistro.DEBIAN // Reusing family config for script mapping fallback
+        ),
+        Distro(
+            id = "debian13_chroot",
+            name = "Debian 13 (Trixie) [Root]",
+            description = "Latest Debian 13 (Testing) environment via Chroot. (Released 2025)",
+            color = FluxAccentMagenta,
+            iconRes = R.drawable.distro_debian,
+            comingSoon = false,
+            prootSupported = false,
+            chrootSupported = true,
+            configuration = SupportedDistro.DEBIAN
         ),
         
         // Coming Soon - Sorted alphabetically

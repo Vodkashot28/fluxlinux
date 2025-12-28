@@ -24,21 +24,48 @@ rm -f /etc/apt/sources.list.d/vscode.list
 apt update -y || handle_error "System Update"
 apt install -y curl wget git build-essential gnupg || handle_error "Basic Tools Installation"
 
-# 2. Install Browsers (Firefox & Chromium)
-echo "FluxLinux: Installing Browsers..."
-apt install -y firefox-esr chromium || handle_error "Browser Installation"
+# 2. Install Browsers (Firefox Latest & Chromium)
+echo "FluxLinux: Installing Latest Firefox (Mozilla Repo)..."
 
-# 3. Install Node.js (LTS v20)
-if ! command -v node &> /dev/null; then
-    echo "FluxLinux: Installing Node.js 20.x..."
-    mkdir -p /etc/apt/keyrings
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-    apt update -y
-    apt install -y nodejs || handle_error "Node.js Installation"
-else
-    echo "FluxLinux: Node.js already installed."
-fi
+# Setup Mozilla Official Repo (Supports ARM64)
+mkdir -p /etc/apt/keyrings
+wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
+
+echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" | tee /etc/apt/sources.list.d/mozilla.list > /dev/null
+
+# Prioritize Mozilla Repo
+echo '
+Package: *
+Pin: origin packages.mozilla.org
+Pin-Priority: 1000
+' | tee /etc/apt/preferences.d/mozilla
+
+apt update -y
+apt install -y firefox chromium || handle_error "Browser Installation"
+
+# Fix: Create Firefox Wrapper to prevent Sandboxing Crashes in Chroot
+echo "FluxLinux: Applying Firefox Crash Fixes..."
+cat <<EOF > /usr/local/bin/firefox
+#!/bin/sh
+# Firefox Wrapper for Android Chroot
+# Disables Content Sandbox to prevent "AbnormalShutdown" IPC errors
+export MOZ_DISABLE_CONTENT_SANDBOX=1
+export MOZ_FORCE_DISABLE_E10S=1
+# Ensure software rendering is forced if hw is flaky
+export LIBGL_ALWAYS_SOFTWARE=1
+exec /usr/bin/firefox "\$@" --no-remote
+EOF
+chmod +x /usr/local/bin/firefox
+
+# 3. Install Node.js (Latest v23)
+# 3. Install Node.js (Latest v23)
+# Always run setup to ensure upgrade from v20 -> v23
+echo "FluxLinux: Installing/Upgrading Node.js to 23.x..."
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_23.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+apt update -y
+apt install -y nodejs || handle_error "Node.js Installation"
 
 # 4. Install Python
 echo "FluxLinux: Installing Python..."

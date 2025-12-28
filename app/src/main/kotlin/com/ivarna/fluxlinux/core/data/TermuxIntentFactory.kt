@@ -114,22 +114,18 @@ object TermuxIntentFactory {
         }
         
         if (distroId == "debian_chroot") {
-            // Launch Chroot CLI using Android Root (su) - Robust One-liner
-            // We define the mount logic directly here so we don't rely on external scripts sticking around
-            val command = """
-                su -c '
-                D="/data/local/tmp/chrootDebian";
-                export LD_LIBRARY_PATH=/data/data/com.termux/files/usr/lib;
-                mount -o remount,dev,suid /data;
-                busybox mount --bind /dev ${'$'}D/dev;
-                busybox mount --bind /sys ${'$'}D/sys;
-                busybox mount --bind /proc ${'$'}D/proc;
-                busybox mount -t devpts devpts ${'$'}D/dev/pts;
-                busybox chroot ${'$'}D /bin/su - flux
-                '
-            """.trimIndent().replace("\n", " ") // Flatten to single line for Intent safety
-            
-            return buildRunCommandIntent(command, runInBackground = false)
+            // Launch Chroot CLI using Android Root (su)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_debian.sh\"", runInBackground = false)
+        }
+
+        if (distroId == "debian13_chroot") {
+            // Launch Debian 13 Chroot CLI using Android Root (su)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_debian13.sh\"", runInBackground = false)
+        }
+        
+        if (distroId == "arch_chroot") {
+            // Launch Arch Chroot CLI (via generated script)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_arch.sh\"", runInBackground = false)
         }
         
         // Default to 'flux' user if setup, fallback to root if not (proot-distro handles login)
@@ -143,8 +139,17 @@ object TermuxIntentFactory {
     fun buildLaunchGuiIntent(distroId: String): Intent {
         if (distroId == "debian_chroot") {
             // Launch Chroot GUI using Android Root (su)
-            // Uses the wrapper that handles Termux-X11 and PulseAudio from the outside
             return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_debian_gui.sh\"", runInBackground = true)
+        }
+
+        if (distroId == "debian13_chroot") {
+            // Launch Debian 13 Chroot GUI using Android Root (su)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_debian13_gui.sh\"", runInBackground = true)
+        }
+        
+        if (distroId == "arch_chroot") {
+            // Launch Arch Chroot GUI (Hyprland via VirGL)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_arch_gui.sh\"", runInBackground = true)
         }
         
         // Standard Proot Launch
@@ -162,9 +167,7 @@ object TermuxIntentFactory {
         val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
         
         if (distroId == "debian_chroot") {
-            // For Chroot, we must decode the script on the HOST (Android) because the minimal chroot
-            // might not have 'base64' installed yet.
-            // We write directly to the Chroot's /tmp directory from the outside.
+            // For Chroot, we must decode the script on the HOST (Android)
             val innerCommand = """
                 su -c '
                 echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
@@ -176,16 +179,23 @@ object TermuxIntentFactory {
             
             return buildRunCommandIntent(innerCommand, runInBackground = false)
         }
+
+        if (distroId == "debian13_chroot") {
+            // Debian 13 Chroot Feature Script
+            val innerCommand = """
+                su -c '
+                echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                chmod +x /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                busybox chroot /data/local/tmp/chrootDebian13 /bin/su - root -c "bash /tmp/flux_feature.sh";
+                rm -f /data/local/tmp/chrootDebian13/tmp/flux_feature.sh
+                '
+            """.trimIndent().replace("\n", " ")
+            
+            return buildRunCommandIntent(innerCommand, runInBackground = false)
+        }
         
         // Command to run inside Termux (Proot):
-        // 1. Log into Distro
-        // 2. Decode script to /tmp
-        // 3. Run script
-        // 4. Cleanup
-        
         val innerCommand = "echo \"$scriptB64\" | base64 -d > /tmp/flux_feature.sh && bash /tmp/flux_feature.sh; rm -f /tmp/flux_feature.sh"
-        // We use --shared-tmp to access /tmp although proot handles it separately usually.
-        // Actually proot-distro login runs as root by default.
         val command = "proot-distro login $distroId --shared-tmp -- bash -c '$innerCommand'"
         
         return buildRunCommandIntent(command, runInBackground = false) // Foreground to see progress
