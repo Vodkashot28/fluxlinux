@@ -36,20 +36,26 @@ apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
 # 1b. Install Java (Dynamic Version)
-echo "FluxLinux: Installing Java Development Kit..."
-if apt install -y openjdk-21-jdk; then
-    JAVA_VERSION="21"
-elif apt install -y openjdk-17-jdk; then
+echo "FluxLinux: Installing Java Development Kit (JDK 17)..."
+# User requested 17 specifically to avoid 21 issues
+if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
     JAVA_VERSION="17"
+elif apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
+    JAVA_VERSION="21"
 else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
-    apt install -y default-jdk || handle_error "Java Installation"
+    apt-get install -y -o Dpkg::Use-Pty=0 default-jdk || handle_error "Java Installation"
     JAVA_VERSION="default"
+fi
+
+# Ensure JDK 17 is default if we installed it
+if [ "$JAVA_VERSION" = "17" ]; then
+    update-java-alternatives --set java-1.17.0-openjdk-arm64 2>/dev/null || true
 fi
 
 # Verify Java Installation
 if ! java -version >/dev/null 2>&1; then
-    echo "FluxLinux: [⚠️] Java installation appears broken. Attempting repair..."
+    echo "FluxLinux: [⚠️] Java installation appears broken. Switching/Repairing..."
     
     # Check if /dev/pts is mounted (Chroot env issue)
     if [ ! -e /dev/pts/ptmx ]; then
@@ -59,17 +65,11 @@ if ! java -version >/dev/null 2>&1; then
     # Fix broken installs first
     apt-get update
     
-    # Targeted Clean: Remove only the broken JDK version
-    echo "FluxLinux: [⚠️] Removing broken OpenJDK ${JAVA_VERSION}..."
-    apt-get remove -y -o Dpkg::Use-Pty=0 \
-            "openjdk-${JAVA_VERSION}-jdk" \
-            "openjdk-${JAVA_VERSION}-jre-headless" || true
-            
-    # Fresh Install of just that JDK
-    echo "FluxLinux: Reinstalling OpenJDK ${JAVA_VERSION}..."
-    apt-get install -y -o Dpkg::Use-Pty=0 \
-            openjdk-${JAVA_VERSION}-jdk \
-            openjdk-${JAVA_VERSION}-jre-headless
+    # Repair Logic: Reinstall JDK 17 only (Leave 21 alone)
+    echo "FluxLinux: Reinstalling OpenJDK 17..."
+    apt-get install -y --reinstall -o Dpkg::Use-Pty=0 \
+            openjdk-17-jdk \
+            openjdk-17-jre-headless
     
     if ! java -version >/dev/null 2>&1; then
         echo "FluxLinux: [❌] Java Install Failed."
