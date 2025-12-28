@@ -36,9 +36,7 @@ apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
 echo "FluxLinux: Installing Java Development Kit..."
-if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
-    JAVA_VERSION="17"
-elif apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
+if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
     JAVA_VERSION="21"
 else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
@@ -533,8 +531,6 @@ if ! grep -q "ANDROID_HOME" "$BASHRC"; then
 # Dynamic Java Home
 if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
-elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
-    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 else
     export JAVA_HOME=/usr/lib/jvm/default-java
 fi
