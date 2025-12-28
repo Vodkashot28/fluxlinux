@@ -50,12 +50,29 @@ fi
 # Verify Java Installation
 if ! java -version >/dev/null 2>&1; then
     echo "FluxLinux: [⚠️] Java installation appears broken. Attempting repair..."
-    apt update
-    apt --fix-broken install -y
-    apt install --reinstall -y openjdk-${JAVA_VERSION}-jdk openjdk-${JAVA_VERSION}-jre-headless
+    
+    # Check if /dev/pts is mounted (Chroot env issue)
+    if [ ! -e /dev/pts/ptmx ]; then
+        echo "FluxLinux: [⚠️] /dev/pts not mounted - Using non-interactive apt mode"
+    fi
+    
+    # Fix broken installs first
+    apt-get update
+    apt-get install -y -f -o Dpkg::Use-Pty=0
+    
+    # Reinstall Java components with no PTY
+    echo "FluxLinux: Reinstalling OpenJDK..."
+    apt-get install --reinstall -y -o Dpkg::Use-Pty=0 \
+            openjdk-${JAVA_VERSION}-jdk \
+            openjdk-${JAVA_VERSION}-jre-headless \
+            ca-certificates-java
     
     if ! java -version >/dev/null 2>&1; then
-        echo "FluxLinux: [❌] Java Repair Failed. Check 'apt' logs."
+        echo "FluxLinux: [❌] Java Repair Failed."
+        echo "   Debug: Listing /usr/lib/jvm/:"
+        ls -la /usr/lib/jvm/
+        echo "   Debug: Checking libjli.so:"
+        find /usr/lib/jvm -name "libjli.so"
         exit 1
     fi
     echo "FluxLinux: [✅] Java Repaired successfully."
