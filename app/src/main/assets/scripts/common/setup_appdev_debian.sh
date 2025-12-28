@@ -36,39 +36,57 @@ apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
 # 1b. Install Java (Dynamic Version)
-echo "FluxLinux: Installing Java Development Kit (JDK 21)..."
-if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
-    JAVA_VERSION="21"
+echo "FluxLinux: Installing Java Development Kit (JDK 17)..."
+
+# Try apt first
+if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
+    JAVA_VERSION="17"
+    update-java-alternatives --set java-1.17.0-openjdk-arm64 2>/dev/null || true
 else
-    echo "FluxLinux: specific JDK not found, trying default-jdk..."
-    apt-get install -y -o Dpkg::Use-Pty=0 default-jdk || handle_error "Java Installation"
-    JAVA_VERSION="default"
-fi
-
-# Fix libjli.so not found error by setting LD_LIBRARY_PATH
-# This file attempts to find libjli.so and add its directory to library path
-LIBJLI_PATH=$(find /usr/lib/jvm -name "libjli.so" | head -1)
-if [ -n "$LIBJLI_PATH" ]; then
-    LIBJLI_DIR=$(dirname "$LIBJLI_PATH")
-    export LD_LIBRARY_PATH="$LIBJLI_DIR:$LD_LIBRARY_PATH"
-    echo "FluxLinux: Added $LIBJLI_DIR to LD_LIBRARY_PATH"
-fi
-
-# Verify Java Installation w/o repair (User requested to remove repair logic)
-if ! java -version >/dev/null 2>&1; then
-    echo "FluxLinux: [⚠️] Java command still failing."
-    echo "   Attempting to run with explicit LD_LIBRARY_PATH..."
-    if ! LD_LIBRARY_PATH="$LIBJLI_DIR" java -version >/dev/null 2>&1; then
-        echo "FluxLinux: [❌] Java is broken and repair is disabled."
-        # Try finding absolute path binary
-        JAVA_BIN=$(find /usr/lib/jvm -name java -type f -executable | grep bin/java | head -1)
-        if [ -x "$JAVA_BIN" ]; then
-             echo "   Found java at $JAVA_BIN. Using absolute path..."
-             # symlink it to /usr/local/bin/java to override broken /usr/bin/java
-             ln -sf "$JAVA_BIN" /usr/local/bin/java
-        fi
+    echo "FluxLinux: openjdk-17-jdk not found in apt. Installing Eclipse Temurin JDK 17..."
+    
+    # URL for JDK 17 LTS (ARM64)
+    JDK17_URL="https://api.adoptium.net/v3/binary/latest/17/ga/linux/aarch64/jdk/hotspot/normal/eclipse?project=jdk"
+    JDK17_DIR="/opt/jdk-17"
+    JDK17_TAR="/tmp/jdk17.tar.gz"
+    
+    # Download
+    if [ ! -d "$JDK17_DIR" ]; then
+        echo "   Downloading JDK 17..."
+        wget -q --show-progress "$JDK17_URL" -O "$JDK17_TAR" || handle_error "JDK 17 Download"
+        
+        # Extract
+        mkdir -p "$JDK17_DIR"
+        tar -xf "$JDK17_TAR" -C "$JDK17_DIR" --strip-components=1 || handle_error "JDK 17 Extract"
+        rm -f "$JDK17_TAR"
+    else
+        echo "   JDK 17 already installed in $JDK17_DIR"
     fi
+    
+    # Configure Alternatives
+    echo "   Configuring update-alternatives..."
+    update-alternatives --install /usr/bin/java java "$JDK17_DIR/bin/java" 1000
+    update-alternatives --install /usr/bin/javac javac "$JDK17_DIR/bin/javac" 1000
+    update-alternatives --install /usr/bin/jar jar "$JDK17_DIR/bin/jar" 1000
+    
+    update-alternatives --set java "$JDK17_DIR/bin/java"
+    update-alternatives --set javac "$JDK17_DIR/bin/javac"
+    
+    JAVA_VERSION="17-temurin"
+    export JAVA_HOME="$JDK17_DIR"
+    export PATH="$JAVA_HOME/bin:$PATH"
 fi
+
+# Remove libjli fix as Temurin shouldn't need it (it's self-contained)
+unset LD_LIBRARY_PATH
+
+# Verify Java Installation
+if ! java -version >/dev/null 2>&1; then
+    echo "FluxLinux: [❌] Java Install Failed even with Temurin."
+    ls -la $JDK17_DIR/bin/java 2>/dev/null
+    exit 1
+fi
+echo "FluxLinux: [✅] Java $(java -version 2>&1 | head -1) installed."
 
 # 2. Android SDK Setup
 SDK_ROOT="/opt/android-sdk"
@@ -551,7 +569,9 @@ if ! grep -q "ANDROID_HOME" "$BASHRC"; then
 
 # FluxLinux App Dev Config
 # Dynamic Java Home
-if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
+if [ -d "/opt/jdk-17" ]; then
+    export JAVA_HOME=/opt/jdk-17
+elif [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
 elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
