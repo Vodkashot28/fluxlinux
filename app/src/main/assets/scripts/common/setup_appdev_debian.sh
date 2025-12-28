@@ -36,11 +36,8 @@ apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
 # 1b. Install Java (Dynamic Version)
-echo "FluxLinux: Installing Java Development Kit (JDK 17)..."
-# User requested 17 specifically to avoid 21 issues
-if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
-    JAVA_VERSION="17"
-elif apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
+echo "FluxLinux: Installing Java Development Kit (JDK 21)..."
+if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
     JAVA_VERSION="21"
 else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
@@ -48,38 +45,29 @@ else
     JAVA_VERSION="default"
 fi
 
-# Ensure JDK 17 is default if we installed it
-if [ "$JAVA_VERSION" = "17" ]; then
-    update-java-alternatives --set java-1.17.0-openjdk-arm64 2>/dev/null || true
+# Fix libjli.so not found error by setting LD_LIBRARY_PATH
+# This file attempts to find libjli.so and add its directory to library path
+LIBJLI_PATH=$(find /usr/lib/jvm -name "libjli.so" | head -1)
+if [ -n "$LIBJLI_PATH" ]; then
+    LIBJLI_DIR=$(dirname "$LIBJLI_PATH")
+    export LD_LIBRARY_PATH="$LIBJLI_DIR:$LD_LIBRARY_PATH"
+    echo "FluxLinux: Added $LIBJLI_DIR to LD_LIBRARY_PATH"
 fi
 
-# Verify Java Installation
+# Verify Java Installation w/o repair (User requested to remove repair logic)
 if ! java -version >/dev/null 2>&1; then
-    echo "FluxLinux: [⚠️] Java installation appears broken. Switching/Repairing..."
-    
-    # Check if /dev/pts is mounted (Chroot env issue)
-    if [ ! -e /dev/pts/ptmx ]; then
-        echo "FluxLinux: [⚠️] /dev/pts not mounted - Using non-interactive apt mode"
+    echo "FluxLinux: [⚠️] Java command still failing."
+    echo "   Attempting to run with explicit LD_LIBRARY_PATH..."
+    if ! LD_LIBRARY_PATH="$LIBJLI_DIR" java -version >/dev/null 2>&1; then
+        echo "FluxLinux: [❌] Java is broken and repair is disabled."
+        # Try finding absolute path binary
+        JAVA_BIN=$(find /usr/lib/jvm -name java -type f -executable | grep bin/java | head -1)
+        if [ -x "$JAVA_BIN" ]; then
+             echo "   Found java at $JAVA_BIN. Using absolute path..."
+             # symlink it to /usr/local/bin/java to override broken /usr/bin/java
+             ln -sf "$JAVA_BIN" /usr/local/bin/java
+        fi
     fi
-    
-    # Fix broken installs first
-    apt-get update
-    
-    # Repair Logic: Reinstall JDK 17 only (Leave 21 alone)
-    echo "FluxLinux: Reinstalling OpenJDK 17..."
-    apt-get install -y --reinstall -o Dpkg::Use-Pty=0 \
-            openjdk-17-jdk \
-            openjdk-17-jre-headless
-    
-    if ! java -version >/dev/null 2>&1; then
-        echo "FluxLinux: [❌] Java Install Failed."
-        echo "   Debug: Listing /usr/lib/jvm/:"
-        ls -la /usr/lib/jvm/
-        echo "   Debug: Checking libjli.so:"
-        find /usr/lib/jvm -name "libjli.so"
-        exit 1
-    fi
-    echo "FluxLinux: [✅] Java Repaired successfully."
 fi
 
 # 2. Android SDK Setup
