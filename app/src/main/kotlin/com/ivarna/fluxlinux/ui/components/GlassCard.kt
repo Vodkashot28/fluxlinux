@@ -43,6 +43,8 @@ fun DistroCard(
     onLaunchGui: () -> Unit,
     onWebDevInstall: (() -> Unit)? = null,
     webDevDescription: String? = null,
+    onAppDevInstall: (() -> Unit)? = null,
+    appDevDescription: String? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -258,6 +260,29 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = webDevDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onAppDevInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onAppDevInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF6200EA) // Deep Purple
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install App Dev Pack", color = Color.White)
+                    }
+                    if (appDevDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = appDevDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,

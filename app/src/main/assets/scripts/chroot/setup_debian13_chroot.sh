@@ -132,7 +132,7 @@ configure_debian_chroot() {
 
     # /dev/shm for Electron apps
     mkdir -p "$DEBIANPATH/dev/shm"
-    $BB mount -t tmpfs -o size=256M tmpfs "$DEBIANPATH/dev/shm" || goodbye
+    $BB mount -t tmpfs -o size=512M tmpfs "$DEBIANPATH/dev/shm" || goodbye
 
     # Mount sdcard
     mkdir -p "$DEBIANPATH/sdcard"
@@ -241,7 +241,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # /dev/shm for Electron apps
 mkdir -p \$DEBIANPATH/dev/shm
-\$BB mount -t tmpfs -o size=256M tmpfs \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
 mkdir -p \$DEBIANPATH/sdcard
@@ -355,7 +355,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # /dev/shm for Electron apps
 mkdir -p \$DEBIANPATH/dev/shm
-\$BB mount -t tmpfs -o size=256M tmpfs \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
 mkdir -p \$DEBIANPATH/sdcard
@@ -420,7 +420,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # /dev/shm for Electron apps
 mkdir -p \$DEBIANPATH/dev/shm
-\$BB mount -t tmpfs -o size=256M tmpfs \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
 mkdir -p \$DEBIANPATH/sdcard
@@ -515,7 +515,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # /dev/shm for Electron apps
 mkdir -p \$DEBIANPATH/dev/shm
-\$BB mount -t tmpfs -o size=256M tmpfs \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
 mkdir -p \$DEBIANPATH/sdcard

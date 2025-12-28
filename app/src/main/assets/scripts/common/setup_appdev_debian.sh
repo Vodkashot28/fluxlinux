@@ -1,0 +1,638 @@
+#!/bin/bash
+# setup_appdev_debian.sh
+# Installs App Development stack (Android SDK, Flutter, React Native, IntelliJ)
+# Target: Debian 13 (Trixie) ARM64
+
+# Error Handler
+handle_error() {
+    echo ""
+    echo "❌ FluxLinux Error: Script failed at step: $1"
+    echo "---------------------------------------------------"
+    echo "Please check the error message above for details."
+    echo "---------------------------------------------------"
+    read -p "Press Enter to acknowledge error and exit..."
+    exit 1
+}
+
+echo "FluxLinux: Setting up App Development Environment (Android + Flutter + React Native)..."
+# Ensure we set ownership to the 'flux' user (since we verify using sudo/root)
+TARGET_USER="flux"
+TARGET_GROUP="users"
+
+# 1. Install Dependencies
+echo "FluxLinux: Installing System Dependencies..."
+export DEBIAN_FRONTEND=noninteractive
+apt update -y
+# Core deps + Flutter Linux deps + React Native deps
+apt install -y git wget curl unzip zip xz-utils \
+    libgtk-3-dev liblzma-dev libstdc++-12-dev \
+    libgtk-3-dev liblzma-dev libstdc++-12-dev \
+    adb fastboot aapt cmake ninja-build \
+    clang mesa-utils chromium \
+    || handle_error "Dependencies Installation"
+
+# Remove legacy Gradle (Debian ships ancient 4.4.1)
+apt remove -y gradle >/dev/null 2>&1 || true
+
+# 1b. Install Java (Dynamic Version)
+echo "FluxLinux: Installing Java Development Kit..."
+if apt install -y openjdk-21-jdk; then
+    JAVA_VERSION="21"
+elif apt install -y openjdk-17-jdk; then
+    JAVA_VERSION="17"
+else
+    echo "FluxLinux: specific JDK not found, trying default-jdk..."
+    apt install -y default-jdk || handle_error "Java Installation"
+    JAVA_VERSION="default"
+fi
+
+# 2. Android SDK Setup
+SDK_ROOT="/opt/android-sdk"
+# Check for sdkmanager binary to confirm valid install
+if [ ! -f "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+    echo "FluxLinux: Installing Android SDK..."
+    # Clean partial install
+    if [ -d "$SDK_ROOT" ]; then
+        echo "FluxLinux: Found partial/corrupt Android SDK. Cleaning..."
+        rm -rf "$SDK_ROOT"
+    fi
+    
+    mkdir -p "$SDK_ROOT/cmdline-tools"
+    cd "$SDK_ROOT/cmdline-tools"
+    
+    # Download Command Line Tools (verified AArch64 compatible)
+    # Using version 11076708 (stable)
+    echo "FluxLinux: Downloading Android Command Line Tools..."
+    wget --show-progress https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip || handle_error "Android Tools Download"
+    unzip tools.zip || handle_error "Android Tools Unzip"
+    mv cmdline-tools latest
+    rm tools.zip
+    
+    # Environment Variables for Session
+    export ANDROID_HOME="$SDK_ROOT"
+    export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+    
+    # Accept Licenses (Silence is golden)
+    echo "FluxLinux: Accepting Android Licenses..."
+    yes | sdkmanager --licenses
+fi
+
+# Unconditionally Update/Patch SDK (Allows re-run to fix corruption/paths)
+# Environment Variables for Session (Ensure they are set even if existing)
+export ANDROID_HOME="$SDK_ROOT"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+# Install Components
+echo "FluxLinux: Installing Platform Tools, SDK 34 (Android 14 - Last Compatible), & NDK..."
+# NOTE: We now use ARM64 native build-tools from lzhiyong/android-sdk-tools (35.0.2)
+# This provides ARM64-compatible aapt, aapt2, aidl, zipalign for SDK 35/36 support
+
+# Clean cmdline-tools path inconsistency (latest-2 vs latest)
+if [ -d "$SDK_ROOT/cmdline-tools/latest-2" ]; then
+    echo "FluxLinux: Fixing cmdline-tools path..."
+    rm -rf "$SDK_ROOT/cmdline-tools/latest"
+    mv "$SDK_ROOT/cmdline-tools/latest-2" "$SDK_ROOT/cmdline-tools/latest"
+fi
+
+# Clean up inconsistent NDK directories before sdkmanager (only backups and duplicates)
+echo "FluxLinux: Cleaning up inconsistent NDK installations..."
+for ndk_dir in "$SDK_ROOT/ndk/"*; do
+    if [ -d "$ndk_dir" ]; then
+        ndk_name=$(basename "$ndk_dir")
+        # Only remove backup directories and numbered duplicates
+        if [[ "$ndk_name" == *".x86_backup"* ]] || [[ "$ndk_name" == *"-2"* ]]; then
+            echo " - Removing inconsistent NDK: $ndk_name"
+            rm -rf "$ndk_dir"
+        fi
+    fi
+done
+
+echo "FluxLinux: Installing Platform Tools, SDK 34/35/36, NDK 27 & 29..."
+sdkmanager "platform-tools" \
+           "cmdline-tools;latest" \
+           "platforms;android-34" \
+           "platforms;android-35" \
+           "platforms;android-36" \
+           "build-tools;35.0.0" \
+           "build-tools;36.0.0" \
+           "ndk;27.0.12077973" \
+           "ndk;29.0.14206865" \
+           "cmake;3.22.1" \
+           || handle_error "Android SDK Components"
+           
+# Fix CMake & Ninja (Android SDK bundles x86 binaries)
+# Strategy: SHELL WRAPPER.
+# We create a script that execs /usr/bin/cmake. This preserves CMAKE_ROOT resolution (which Hard Copy breaks).
+echo "FluxLinux: Patching Android SDK CMake/Ninja (Wrapper Script)..."
+
+find "$SDK_ROOT/cmake" -name "cmake" -type f | while read -r binary; do
+    echo " - Wrapping $binary -> /usr/bin/cmake"
+    rm -f "$binary"
+    cat <<EOF > "$binary"
+#!/bin/sh
+exec /usr/bin/cmake "\$@"
+EOF
+    chmod +x "$binary"
+done
+
+find "$SDK_ROOT/cmake" -name "ninja" -type f | while read -r binary; do
+    echo " - Wrapping $binary -> /usr/bin/ninja"
+    rm -f "$binary"
+    cat <<EOF > "$binary"
+#!/bin/sh
+exec /usr/bin/ninja "\$@"
+EOF
+    chmod +x "$binary"
+done
+
+# Verify Patch Content
+echo "FluxLinux: Verifying CMake Wrapper Content:"
+find "$SDK_ROOT/cmake" -name "cmake" -type f -print -exec cat {} \; -quit
+
+# Project-level Fix: Inject cmake.dir and ndk.dir into found local.properties
+echo "FluxLinux: Configuring local projects..."
+find /home/$TARGET_USER -name "local.properties" 2>/dev/null | while read -r prop; do
+    # CMake fix
+    if ! grep -q "cmake.dir" "$prop"; then
+        echo "cmake.dir=/usr" >> "$prop"
+        echo " - Patched $prop with cmake.dir=/usr"
+    fi
+    # NDK path fix (ensure ARM64 NDK is used)
+    if ! grep -q "ndk.dir" "$prop"; then
+        echo "ndk.dir=$SDK_ROOT/ndk/29.0.14206865" >> "$prop"
+        echo " - Patched $prop with ndk.dir"
+    else
+        # Update existing ndk.dir to point to correct version
+        sed -i "s|ndk.dir=.*|ndk.dir=$SDK_ROOT/ndk/29.0.14206865|" "$prop"
+    fi
+done
+
+# Fix ADB/Fastboot (SDK bundles x86 binaries)
+# Strategy: SHELL WRAPPER - delegates to system native binary
+echo "FluxLinux: Patching SDK ADB/Fastboot (Wrapper Script)..."
+if [ -f "$SDK_ROOT/platform-tools/adb" ]; then
+    rm -f "$SDK_ROOT/platform-tools/adb"
+    cat <<EOF > "$SDK_ROOT/platform-tools/adb"
+#!/bin/sh
+exec /usr/bin/adb "\$@"
+EOF
+    chmod +x "$SDK_ROOT/platform-tools/adb"
+    echo " - Wrapped $SDK_ROOT/platform-tools/adb -> /usr/bin/adb"
+fi
+
+if [ -f "$SDK_ROOT/platform-tools/fastboot" ]; then
+    rm -f "$SDK_ROOT/platform-tools/fastboot"
+    cat <<EOF > "$SDK_ROOT/platform-tools/fastboot"
+#!/bin/sh
+exec /usr/bin/fastboot "\$@"
+EOF
+    chmod +x "$SDK_ROOT/platform-tools/fastboot"
+    echo " - Wrapped $SDK_ROOT/platform-tools/fastboot -> /usr/bin/fastboot"
+fi
+
+# Fix NDK (SDK bundles x86_64 binaries - need ARM64)
+# Install ARM64 NDK from HomuHomu833/android-ndk-custom (musl-based, statically linked)
+# NOTE: termux-ndk uses Bionic libc and fails on glibc systems
+
+# Function to install ARM64 NDK for a specific version
+install_arm64_ndk() {
+    local NDK_VER="$1"
+    local NDK_RELEASE="$2"      # GitHub release tag (e.g., r27, r29)
+    local NDK_SOURCE_DIR="$3"   # Tarball name prefix (e.g., r27d, r29)
+    
+    local NDK_DIR="$SDK_ROOT/ndk/$NDK_VER"
+    # Note: GitHub uses $NDK_RELEASE for tag, but tarball contains $NDK_SOURCE_DIR
+    local ARM64_NDK_URL="https://github.com/HomuHomu833/android-ndk-custom/releases/download/$NDK_RELEASE/android-ndk-$NDK_SOURCE_DIR-aarch64-linux-musl.tar.xz"
+    local ARM64_NDK_TAR="/tmp/android-ndk-$NDK_SOURCE_DIR-aarch64-linux-musl.tar.xz"
+    local ARM64_NDK_EXTRACTED="/tmp/android-ndk-$NDK_SOURCE_DIR"
+    
+    echo "FluxLinux: Checking NDK $NDK_VER ($NDK_RELEASE)..."
+    
+    # Check if NDK needs replacement
+    local NEEDS_FIX=false
+    if [ -d "$NDK_DIR" ]; then
+        if [ -d "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64" ]; then
+            if [ ! -L "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64" ]; then
+                NEEDS_FIX=true
+            fi
+        elif [ ! -d "$NDK_DIR/toolchains/llvm/prebuilt/linux-arm64" ]; then
+            NEEDS_FIX=true
+        fi
+    else
+        echo "   NDK $NDK_VER not yet installed - skipping ARM64 setup"
+        return
+    fi
+    
+    if [ "$NEEDS_FIX" = true ]; then
+        echo "   Detected x86_64 NDK - replacing with ARM64 version..."
+        
+        # Download ARM64 NDK (force redownload to avoid corrupt files)
+        if [ -f "$ARM64_NDK_TAR" ]; then
+            # Verify the file is a valid xz archive
+            if ! xz -t "$ARM64_NDK_TAR" 2>/dev/null; then
+                echo "   Existing download corrupt - removing..."
+                rm -f "$ARM64_NDK_TAR"
+            fi
+        fi
+        
+        if [ ! -f "$ARM64_NDK_TAR" ]; then
+            echo "   Downloading NDK $NDK_RELEASE..."
+            wget -q --show-progress "$ARM64_NDK_URL" -O "$ARM64_NDK_TAR" || { echo "   [⚠️] Download failed"; rm -f "$ARM64_NDK_TAR"; return; }
+        fi
+        
+        # Extract
+        rm -rf "$ARM64_NDK_EXTRACTED"
+        rm -rf /tmp/ndk-extract-$NDK_RELEASE
+        mkdir -p /tmp/ndk-extract-$NDK_RELEASE
+        tar -xf "$ARM64_NDK_TAR" -C /tmp/ndk-extract-$NDK_RELEASE || { echo "   [⚠️] Extract failed - removing corrupt file"; rm -f "$ARM64_NDK_TAR"; return; }
+        mv /tmp/ndk-extract-$NDK_RELEASE/android-ndk-$NDK_SOURCE_DIR "$ARM64_NDK_EXTRACTED" 2>/dev/null || \
+           mv /tmp/ndk-extract-$NDK_RELEASE/* "$ARM64_NDK_EXTRACTED" 2>/dev/null
+        
+        # Backup old NDK and install ARM64 version
+        if [ -d "$NDK_DIR" ]; then
+            rm -rf "${NDK_DIR}.x86_backup"
+            mv "$NDK_DIR" "${NDK_DIR}.x86_backup"
+        fi
+        
+        mv "$ARM64_NDK_EXTRACTED" "$NDK_DIR"
+        
+        # Verify
+        local PREBUILT_DIR="$NDK_DIR/toolchains/llvm/prebuilt"
+        if [ -d "$PREBUILT_DIR/linux-arm64" ] || [ -L "$PREBUILT_DIR/linux-x86_64" ]; then
+            if [ -f "$PREBUILT_DIR/linux-arm64/bin/clang" ] || [ -f "$PREBUILT_DIR/linux-x86_64/bin/clang" ]; then
+                echo "   [✅] ARM64 NDK $NDK_RELEASE installed successfully"
+            else
+                echo "   [⚠️] clang binary not found"
+            fi
+        else
+            echo "   [⚠️] Installation verification failed"
+        fi
+    else
+        echo "   [✅] ARM64 NDK already configured"
+    fi
+}
+
+echo "FluxLinux: Installing ARM64 NDKs (static/musl)..."
+
+# Install ARM64 NDK 27 (r27d) - Note: GitHub tag is "r27" but tarball contains "r27d"
+install_arm64_ndk "27.0.12077973" "r27" "r27d"
+
+# Install ARM64 NDK 29 (r29)
+install_arm64_ndk "29.0.14206865" "r29" "r29"
+           
+# Set Permissions
+chown -R $TARGET_USER:$TARGET_GROUP "$SDK_ROOT"
+rm -f /usr/local/bin/adb /usr/local/bin/fastboot
+chmod -R 777 "$SDK_ROOT" # Wide permissions for ease of use in Chroot
+
+# 3. Flutter Setup
+FLUTTER_ROOT="/opt/flutter"
+# Check for flutter binary
+if [ ! -f "$FLUTTER_ROOT/bin/flutter" ]; then
+    echo "FluxLinux: Installing Flutter SDK (Stable)..."
+    # Clean partial
+    if [ -d "$FLUTTER_ROOT" ]; then
+        echo "FluxLinux: Found partial Flutter. Cleaning..."
+        rm -rf "$FLUTTER_ROOT"
+    fi
+    
+    # Git clone is the official way for ARM64
+    git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER_ROOT" || handle_error "Flutter Clone"
+    
+else
+    echo "FluxLinux: Flutter already installed."
+fi # End of initial Flutter installation check
+
+# Fix "dubious ownership" error system-wide for all repos (Dev Environment)
+# Unconditionally Trust All Directories (Required for chroot/multi-user setup to avoid "fatal: detected dubious ownership")
+git config --system --add safe.directory '*'
+
+# Always configure Flutter (Fixes paths if user moved folders or config broke)
+# Set Permissions
+chown -R $TARGET_USER:$TARGET_GROUP "$FLUTTER_ROOT"
+chmod -R 775 "$FLUTTER_ROOT"
+
+export PATH="$FLUTTER_ROOT/bin:$PATH"
+
+# Clear stale root Flutter config (prevents "/root/android" errors)
+rm -rf /root/.config/flutter /root/.flutter /root/android
+
+# Pre-download artifacts (Run as TARGET_USER with login shell to set HOME correctly)
+echo "FluxLinux: Configuring Flutter (as $TARGET_USER)..."
+su - $TARGET_USER -c "flutter config --no-analytics"
+# Force Android SDK path update
+su - $TARGET_USER -c "flutter config --android-sdk $SDK_ROOT"
+echo " - Flutter Config: $(su - $TARGET_USER -c 'flutter config' | grep 'android-sdk')"
+su - $TARGET_USER -c "flutter precache"
+
+# Accept Android Licenses in Flutter
+yes | su - $TARGET_USER -c "flutter doctor --android-licenses" >/dev/null 2>&1
+
+# 4. Kotlin (Manual Install for shared access)
+KOTLIN_ROOT="/opt/kotlin"
+if [ ! -f "$KOTLIN_ROOT/bin/kotlinc" ]; then
+    echo "FluxLinux: Installing Kotlin Compiler..."
+    # Clean partial
+    [ -d "$KOTLIN_ROOT" ] && rm -rf "$KOTLIN_ROOT"
+    
+    # Download 2.1.0 compiler
+    wget --show-progress https://github.com/JetBrains/kotlin/releases/download/v2.1.0/kotlin-compiler-2.1.0.zip -O /tmp/kotlin.zip || handle_error "Kotlin Download"
+    unzip -q /tmp/kotlin.zip -d /opt
+    mv /opt/kotlinc "$KOTLIN_ROOT"
+    rm /tmp/kotlin.zip
+fi
+
+# 4b. Gradle (Manual Install, System version is too old)
+GRADLE_VER="9.2"
+if ! command -v gradle >/dev/null 2>&1 || [[ $(gradle -v) != *"$GRADLE_VER"* ]]; then
+    echo "FluxLinux: Installing Gradle $GRADLE_VER..."
+    wget -q --show-progress "https://services.gradle.org/distributions/gradle-${GRADLE_VER}-bin.zip" -O /tmp/gradle.zip || handle_error "Gradle Download"
+    unzip -q /tmp/gradle.zip -d /opt
+    rm /tmp/gradle.zip
+    [ -d "/opt/gradle" ] && rm -rf /opt/gradle
+    mv "/opt/gradle-${GRADLE_VER}" /opt/gradle
+    ln -sf /opt/gradle/bin/gradle /usr/local/bin/gradle
+    # Fix for caching issues (user reported /usr/bin/gradle not found)
+    ln -sf /opt/gradle/bin/gradle /usr/bin/gradle
+fi
+
+# 4c. ARM64 Build Tools (aapt, aapt2, aidl, zipalign, dexdump)
+# Install native ARM64 build-tools from:
+# - SDK 35: lzhiyong/android-sdk-tools (v35.0.2)
+# - SDK 36: HomuHomu833/android-sdk-custom (v36.1.0)
+# This fixes SDK 35/36 resource compilation on ARM64 systems
+echo "FluxLinux: Installing ARM64 Native Build Tools..."
+
+# --- SDK 35 Build Tools (from lzhiyong) ---
+ARM64_35_URL="https://github.com/lzhiyong/android-sdk-tools/releases/download/35.0.2/android-sdk-tools-static-aarch64.zip"
+ARM64_35_ZIP="/tmp/android-sdk-35-aarch64.zip"
+ARM64_35_DIR="/tmp/android-sdk-35-extracted"
+
+echo "FluxLinux: Installing SDK 35 ARM64 Build Tools (35.0.2)..."
+if [ ! -f "$ARM64_35_ZIP" ]; then
+    wget -q --show-progress "$ARM64_35_URL" -O "$ARM64_35_ZIP" || handle_error "ARM64 SDK 35 Build Tools Download"
+fi
+
+rm -rf "$ARM64_35_DIR"
+mkdir -p "$ARM64_35_DIR"
+unzip -q "$ARM64_35_ZIP" -d "$ARM64_35_DIR" || handle_error "ARM64 SDK 35 Build Tools Extract"
+
+BUILD_TOOLS_35="$SDK_ROOT/build-tools/35.0.0"
+mkdir -p "$BUILD_TOOLS_35"
+
+for tool in aapt aapt2 aidl zipalign dexdump split-select; do
+    if [ -f "$ARM64_35_DIR/build-tools/$tool" ]; then
+        cp -f "$ARM64_35_DIR/build-tools/$tool" "$BUILD_TOOLS_35/$tool"
+        chmod +x "$BUILD_TOOLS_35/$tool"
+        echo " - SDK 35: Installed $tool (ARM64)"
+    fi
+done
+
+# Verify SDK 35 aapt2
+if file "$BUILD_TOOLS_35/aapt2" 2>/dev/null | grep -q "aarch64"; then
+    echo " [✅] SDK 35 aapt2 is ARM64 native"
+else
+    echo " [⚠️] SDK 35 aapt2 verification skipped"
+fi
+
+# --- SDK 36 Build Tools (from HomuHomu833) ---
+ARM64_36_URL="https://github.com/HomuHomu833/android-sdk-custom/releases/download/36.0.0/android-sdk-aarch64-linux-musl.tar.xz"
+ARM64_36_TAR="/tmp/android-sdk-36-aarch64.tar.xz"
+ARM64_36_DIR="/tmp/android-sdk-36-extracted"
+
+echo "FluxLinux: Installing SDK 36 ARM64 Build Tools (36.1.0)..."
+if [ ! -f "$ARM64_36_TAR" ]; then
+    wget -q --show-progress "$ARM64_36_URL" -O "$ARM64_36_TAR" || handle_error "ARM64 SDK 36 Build Tools Download"
+fi
+
+rm -rf "$ARM64_36_DIR"
+mkdir -p "$ARM64_36_DIR"
+tar -xf "$ARM64_36_TAR" -C "$ARM64_36_DIR" || handle_error "ARM64 SDK 36 Build Tools Extract"
+
+BUILD_TOOLS_36="$SDK_ROOT/build-tools/36.0.0"
+mkdir -p "$BUILD_TOOLS_36"
+
+# SDK 36 has build-tools in android-sdk/build-tools/36.1.0/ subdirectory
+SDK36_SRC="$ARM64_36_DIR/android-sdk/build-tools/36.1.0"
+for tool in aapt aapt2 aidl zipalign dexdump split-select d8 apksigner; do
+    if [ -f "$SDK36_SRC/$tool" ]; then
+        cp -f "$SDK36_SRC/$tool" "$BUILD_TOOLS_36/$tool"
+        chmod +x "$BUILD_TOOLS_36/$tool"
+        echo " - SDK 36: Installed $tool (ARM64)"
+    fi
+done
+# Copy lib directory and other files
+[ -d "$SDK36_SRC/lib" ] && cp -rf "$SDK36_SRC/lib" "$BUILD_TOOLS_36/"
+[ -f "$SDK36_SRC/core-lambda-stubs.jar" ] && cp -f "$SDK36_SRC/core-lambda-stubs.jar" "$BUILD_TOOLS_36/"
+
+# Also install latest aapt2 (SDK 36) to /usr/local/bin for global access
+cp -f "$SDK36_SRC/aapt2" /usr/local/bin/aapt2
+chmod +x /usr/local/bin/aapt2
+
+# Configure Gradle to use this override globally
+GRADLE_USER_HOME="/home/$TARGET_USER/.gradle"
+mkdir -p "$GRADLE_USER_HOME"
+
+# Update or add aapt2 override in gradle.properties
+if grep -q "android.aapt2FromMavenOverride" "$GRADLE_USER_HOME/gradle.properties" 2>/dev/null; then
+    sed -i "s|android.aapt2FromMavenOverride=.*|android.aapt2FromMavenOverride=/usr/local/bin/aapt2|" "$GRADLE_USER_HOME/gradle.properties"
+else
+    echo "android.aapt2FromMavenOverride=/usr/local/bin/aapt2" >> "$GRADLE_USER_HOME/gradle.properties"
+fi
+
+# Permission fix for ~/.gradle
+chown -R $TARGET_USER:$TARGET_GROUP "$GRADLE_USER_HOME"
+
+# Verify ARM64 aapt2
+echo "FluxLinux: Verifying ARM64 aapt2..."
+if file /usr/local/bin/aapt2 | grep -q "aarch64"; then
+    echo " [✅] aapt2 (SDK 36) is ARM64 native"
+else
+    echo " [⚠️] aapt2 architecture verification failed"
+fi
+
+# 5. IntelliJ IDEA Community
+IDEA_ROOT="/opt/intellij"
+# Check for idea.sh binary
+if [ ! -f "$IDEA_ROOT/bin/idea.sh" ]; then
+    
+    # Recent version: 2024.3.1 (AArch64)
+    IDEA_VER="2024.3.1"
+    IDEA_URL="https://download.jetbrains.com/idea/ideaIC-${IDEA_VER}-aarch64.tar.gz"
+
+    echo "FluxLinux: Installing IntelliJ IDEA Community ($IDEA_VER)..."
+    
+    # Clean partial
+    if [ -d "$IDEA_ROOT" ]; then
+        rm -rf "$IDEA_ROOT"
+    fi
+    mkdir -p "$IDEA_ROOT"
+    wget -q --show-progress "$IDEA_URL" -O /tmp/idea.tar.gz || handle_error "IntelliJ Download"
+    
+    echo "Extracting..."
+    tar -xzf /tmp/idea.tar.gz -C "$IDEA_ROOT" --strip-components=1
+    rm /tmp/idea.tar.gz
+    
+    # Create Wrapper
+    # Dynamically find JAVA_HOME
+    if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
+        JHOME="/usr/lib/jvm/java-21-openjdk-arm64"
+    elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
+        JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
+    else
+        JHOME="/usr/lib/jvm/default-java"
+    fi
+
+    cat <<EOF > /usr/local/bin/idea
+#!/bin/bash
+export JAVA_HOME=$JHOME
+exec "$IDEA_ROOT/bin/idea.sh" "\$@"
+EOF
+    chmod +x /usr/local/bin/idea
+    
+    # Create Desktop Entry
+    mkdir -p /usr/share/applications
+    cat <<EOF > /usr/share/applications/jetbrains-idea-ce.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=IntelliJ IDEA Community Edition
+Icon=$IDEA_ROOT/bin/idea.svg
+Exec="/usr/local/bin/idea" %f
+Comment=Capable and Ergonomic IDE for JVM
+Categories=Development;IDE;
+Terminal=false
+StartupWMClass=jetbrains-idea-ce
+EOF
+
+else
+    echo "FluxLinux: IntelliJ IDEA already installed."
+fi
+
+# 6. React Native Setup (Environment)
+# Node is installed via webdev script. We just ensure env vars are ready.
+echo "FluxLinux: Configuring Environment (React Native/Android)..."
+
+# Update .bashrc
+BASHRC="$HOME/.bashrc"
+if ! grep -q "ANDROID_HOME" "$BASHRC"; then
+    cat <<EOF >> "$BASHRC"
+
+# FluxLinux App Dev Config
+# Dynamic Java Home
+if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+else
+    export JAVA_HOME=/usr/lib/jvm/default-java
+fi
+
+export ANDROID_HOME=$SDK_ROOT
+export ANDROID_NDK=$SDK_ROOT/ndk/29.0.14206865
+export PATH=\$PATH:\$ANDROID_HOME/cmdline-tools/latest/bin
+export PATH=\$PATH:\$ANDROID_HOME/platform-tools
+export PATH=\$PATH:$FLUTTER_ROOT/bin
+export PATH=\$PATH:\$ANDROID_HOME/tools
+export PATH=\$PATH:\$ANDROID_HOME/tools/bin
+export PATH=\$PATH:/opt/gradle/bin
+
+# React Native
+export REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+
+# Flutter Web
+export CHROME_EXECUTABLE=/usr/bin/chromium
+EOF
+fi
+
+# Ensure /dev/shm is sufficient for Gradle (Should be handled by chroot setup)
+# (Done in previous step with 512M update)
+
+# 7. Global Symlinks for Immediate Usage
+echo "FluxLinux: Creating global symlinks..."
+# Clean bad symlinks from previous installs
+rm -f /usr/local/bin/adb /usr/local/bin/fastboot
+
+ln -sf "$FLUTTER_ROOT/bin/flutter" /usr/local/bin/flutter
+ln -sf "$FLUTTER_ROOT/bin/dart" /usr/local/bin/dart
+
+# Bridge ADB/Fastboot from /usr/bin (native) to /usr/local/bin (cached in user shell)
+# This fixes "No such file" errors if user shell has hashed the old path.
+if [ -f "/usr/bin/adb" ]; then
+    ln -sf /usr/bin/adb /usr/local/bin/adb
+    ln -sf /usr/bin/fastboot /usr/local/bin/fastboot
+fi
+
+# Kotlin
+ln -sf "$KOTLIN_ROOT/bin/kotlin" /usr/local/bin/kotlin
+ln -sf "$KOTLIN_ROOT/bin/kotlinc" /usr/local/bin/kotlinc
+
+# 8. Final Permission Fix (Crucial for non-root usage)
+echo "FluxLinux: Ensuring correct permissions for $TARGET_USER..."
+chown -R $TARGET_USER:$TARGET_GROUP "$SDK_ROOT" "$FLUTTER_ROOT" "$IDEA_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
+chmod -R 775 "$SDK_ROOT" "$FLUTTER_ROOT" "$IDEA_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
+
+echo "FluxLinux: App Development Setup Complete!"
+
+# Final Verification
+verify_installation() {
+    echo ""
+    echo "🔎 FluxLinux: Verifying Installations..."
+    echo "------------------------------------------------"
+    MISSING=0
+    
+    # Check Java
+    if java -version >/dev/null 2>&1; then echo " [✅] JDK Installed"; else echo " [❌] JDK Missing"; MISSING=1; fi
+    
+    # Check Android SDK
+    if [ -f "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then echo " [✅] Android SDK Tools"; else echo " [❌] Android SDK Tools Missing"; MISSING=1; fi
+    
+    # Check ADB (apt)
+    if command -v adb >/dev/null; then echo " [✅] ADB (Native)"; else echo " [❌] ADB Missing"; MISSING=1; fi
+    
+    # Check Flutter
+    if [ -f "$FLUTTER_ROOT/bin/flutter" ]; then echo " [✅] Flutter SDK"; else echo " [❌] Flutter SDK Missing"; MISSING=1; fi
+
+    # Check Gradle (Native)
+    if command -v gradle >/dev/null; then 
+        echo " [✅] Gradle: $(gradle -v | grep 'Gradle' | head -n 1)"
+    else 
+        if [ -f "/opt/gradle/bin/gradle" ]; then
+            echo " [✅] Gradle: Path OK (/opt/gradle/bin/gradle)"
+            ls -l /usr/bin/gradle
+            echo " [⚠️] Try running 'hash -r' to reload paths."
+        else
+            echo " [❌] Gradle Missing (/opt/gradle not found)"
+            MISSING=1
+        fi
+    fi
+    
+    # Check CMake
+    if command -v cmake >/dev/null; then echo " [✅] CMake (Native)"; else echo " [❌] CMake Missing"; MISSING=1; fi
+    
+    # Check Kotlin
+    if [ -f "$KOTLIN_ROOT/bin/kotlinc" ]; then echo " [✅] Kotlin Compiler"; else echo " [❌] Kotlin Missing"; MISSING=1; fi
+
+    # Check IntelliJ
+    if [ -f "$IDEA_ROOT/bin/idea.sh" ]; then echo " [✅] IntelliJ IDEA"; else echo " [❌] IntelliJ IDEA Missing"; MISSING=1; fi
+    
+    echo "------------------------------------------------"
+    if [ $MISSING -eq 1 ]; then
+        echo "⚠️  Some components failed to install."
+    else
+        echo "🎉 All components installed successfully!"
+    fi
+}
+
+verify_installation
+
+echo "------------------------------------------------"
+echo "Stack Installed:"
+echo " - JDK 17/21/Default"
+echo " - Android SDK 34/35/36 (ARM64 Build Tools)"
+echo " - Flutter (Stable)"
+echo " - Kotlin"
+echo " - IntelliJ IDEA Community ($IDEA_VER)"
+echo "------------------------------------------------"
+echo "Note: Restart your terminal/session for PATH changes to take effect."
+read -p "Press Enter to close..."
