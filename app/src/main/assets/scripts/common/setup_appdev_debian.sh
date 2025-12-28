@@ -44,7 +44,15 @@ else
     JAVA_VERSION="default"
 fi
 
+# Fix libjli.so path issue (Common in fresh/broken Trixie installs)
+LIBJLI_PATH=$(find /usr/lib/jvm -name "libjli.so" | head -1)
+if [ -n "$LIBJLI_PATH" ]; then
+    LIBJLI_DIR=$(dirname "$LIBJLI_PATH")
+    export LD_LIBRARY_PATH="$LIBJLI_DIR:$LD_LIBRARY_PATH"
+    echo "FluxLinux: Added $LIBJLI_DIR to LD_LIBRARY_PATH"
+fi
 
+echo "FluxLinux: Java Status: $(java -version 2>&1 | head -1)"
 
 # 2. Android SDK Setup
 SDK_ROOT="/opt/android-sdk"
@@ -527,6 +535,12 @@ if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
 else
     export JAVA_HOME=/usr/lib/jvm/default-java
+fi
+
+# Fix libjli.so error
+LIBJLI_PATH=\$(find /usr/lib/jvm -name "libjli.so" | head -1)
+if [ -n "\$LIBJLI_PATH" ]; then
+    export LD_LIBRARY_PATH=\$(dirname "\$LIBJLI_PATH"):\$LD_LIBRARY_PATH
 fi
 
 export ANDROID_HOME=$SDK_ROOT
