@@ -333,6 +333,10 @@ echo "FluxLinux: Fixing /dev/null permissions..."
 chmod 666 /dev/null 2>/dev/null || true
 ls -la /dev/null
 
+echo "FluxLinux: Checking /proc access for $TARGET_USER..."
+su - $TARGET_USER -c "ls -l /proc/self/exe" || echo " [!] /proc/self/exe listing failed"
+su - $TARGET_USER -c "readlink -f /proc/self/exe" || echo " [!] /proc/self/exe readlink failed"
+
 # Ensure Flutter is in PATH for the user session explicitly during this setup
 su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-analytics"
 # Force Android SDK path update
