@@ -327,6 +327,10 @@ rm -rf /root/.config/flutter /root/.flutter /root/android
 
 # Pre-download artifacts (Run as TARGET_USER with login shell to set HOME correctly)
 echo "FluxLinux: Configuring Flutter (as $TARGET_USER)..."
+
+# CRITICAL FIX: Ensure /dev/null is writable by user, otherwise git/flutter fail
+chmod 666 /dev/null 2>/dev/null || true
+
 # Ensure Flutter is in PATH for the user session explicitly during this setup
 su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-analytics"
 # Force Android SDK path update
