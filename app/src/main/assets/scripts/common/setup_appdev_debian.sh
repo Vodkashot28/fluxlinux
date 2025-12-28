@@ -329,7 +329,9 @@ rm -rf /root/.config/flutter /root/.flutter /root/android
 echo "FluxLinux: Configuring Flutter (as $TARGET_USER)..."
 
 # CRITICAL FIX: Ensure /dev/null is writable by user, otherwise git/flutter fail
+echo "FluxLinux: Fixing /dev/null permissions..."
 chmod 666 /dev/null 2>/dev/null || true
+ls -la /dev/null
 
 # Ensure Flutter is in PATH for the user session explicitly during this setup
 su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --no-analytics"
