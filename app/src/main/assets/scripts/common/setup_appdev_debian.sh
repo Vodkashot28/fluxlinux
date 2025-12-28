@@ -44,13 +44,7 @@ else
     JAVA_VERSION="default"
 fi
 
-# Verify Java Installation
-echo "FluxLinux: Verifying Java..."
-if ! java -version >/dev/null 2>&1; then
-    echo "FluxLinux: [❌] Java Install Failed. Please check system repositories."
-    exit 1
-fi
-echo "FluxLinux: [✅] Java $(java -version 2>&1 | head -1) installed."
+
 
 # 2. Android SDK Setup
 SDK_ROOT="/opt/android-sdk"
