@@ -59,22 +59,17 @@ if ! java -version >/dev/null 2>&1; then
     # Fix broken installs first
     apt-get update
     
-    # Aggressive Clean: Purge existing Java logic
-    echo "FluxLinux: [⚠️] Purging broken Java installation..."
-    apt-get purge -y -o Dpkg::Use-Pty=0 \
-            "openjdk-*" \
-            "default-jdk" \
-            "default-jre" \
-            "ca-certificates-java" || true
+    # Targeted Clean: Remove only the broken JDK version
+    echo "FluxLinux: [⚠️] Removing broken OpenJDK ${JAVA_VERSION}..."
+    apt-get remove -y -o Dpkg::Use-Pty=0 \
+            "openjdk-${JAVA_VERSION}-jdk" \
+            "openjdk-${JAVA_VERSION}-jre-headless" || true
             
-    apt-get autoremove -y -o Dpkg::Use-Pty=0 || true
-    
-    # Fresh Install
-    echo "FluxLinux: Performing fresh Java install..."
+    # Fresh Install of just that JDK
+    echo "FluxLinux: Reinstalling OpenJDK ${JAVA_VERSION}..."
     apt-get install -y -o Dpkg::Use-Pty=0 \
             openjdk-${JAVA_VERSION}-jdk \
-            openjdk-${JAVA_VERSION}-jre-headless \
-            ca-certificates-java
+            openjdk-${JAVA_VERSION}-jre-headless
     
     if ! java -version >/dev/null 2>&1; then
         echo "FluxLinux: [❌] Java Install Failed."
