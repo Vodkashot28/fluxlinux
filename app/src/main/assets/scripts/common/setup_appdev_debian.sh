@@ -75,15 +75,23 @@ else
     JAVA_VERSION="17-temurin"
     export JAVA_HOME="$JDK17_DIR"
     export PATH="$JAVA_HOME/bin:$PATH"
+    
+    # Install dependencies for manually installed Java
+    echo "   Installing Java dependencies..."
+    apt-get install -y -o Dpkg::Use-Pty=0 libc6 libfreetype6 libxext6 libxi6 libxrender1 libxtst6 libasound2 zlib1g
 fi
 
 # Remove libjli fix as Temurin shouldn't need it (it's self-contained)
 unset LD_LIBRARY_PATH
 
 # Verify Java Installation
-if ! java -version >/dev/null 2>&1; then
+echo "FluxLinux: Verifying Java..."
+if ! java -version; then
     echo "FluxLinux: [❌] Java Install Failed even with Temurin."
-    ls -la $JDK17_DIR/bin/java 2>/dev/null
+    echo "Debug Info:"
+    ls -la $JDK17_DIR/bin/java
+    echo "ldd output:"
+    ldd $JDK17_DIR/bin/java
     exit 1
 fi
 echo "FluxLinux: [✅] Java $(java -version 2>&1 | head -1) installed."
