@@ -35,6 +35,7 @@ apt install -y git wget curl unzip zip xz-utils \
 apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
+# 1b. Install Java (Dynamic Version)
 echo "FluxLinux: Installing Java Development Kit..."
 if apt install -y openjdk-21-jdk; then
     JAVA_VERSION="21"
@@ -44,6 +45,20 @@ else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
     apt install -y default-jdk || handle_error "Java Installation"
     JAVA_VERSION="default"
+fi
+
+# Verify Java Installation
+if ! java -version >/dev/null 2>&1; then
+    echo "FluxLinux: [⚠️] Java installation appears broken. Attempting repair..."
+    apt update
+    apt --fix-broken install -y
+    apt install --reinstall -y openjdk-${JAVA_VERSION}-jdk openjdk-${JAVA_VERSION}-jre-headless
+    
+    if ! java -version >/dev/null 2>&1; then
+        echo "FluxLinux: [❌] Java Repair Failed. Check 'apt' logs."
+        exit 1
+    fi
+    echo "FluxLinux: [✅] Java Repaired successfully."
 fi
 
 # 2. Android SDK Setup
