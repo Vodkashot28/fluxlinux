@@ -45,6 +45,8 @@ fun DistroCard(
     webDevDescription: String? = null,
     onAppDevInstall: (() -> Unit)? = null,
     appDevDescription: String? = null,
+    onCustomize: (() -> Unit)? = null,
+    customizeDescription: String? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -283,6 +285,29 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = appDevDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onCustomize != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onCustomize,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00ACC1) // Cyan
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Customize Desktop", color = Color.White)
+                    }
+                    if (customizeDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = customizeDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,

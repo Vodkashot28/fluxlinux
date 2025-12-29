@@ -321,7 +321,38 @@ chmod 666 /dev/null 2>/dev/null || true
 
 # 2. Configure Android SDK (Single requested command)
 echo "FluxLinux: Setting Flutter Android SDK..."
-su - $TARGET_USER -c "export PATH=$FLUTTER_ROOT/bin:\$PATH; flutter config --android-sdk $SDK_ROOT"
+
+ACTUAL_USER="flux"
+USER_GROUP="users"
+
+echo "FluxLinux: Flutter already installed."
+echo "FluxLinux: Setting Flutter Android SDK..."
+echo "FluxLinux: Fixing permissions..."
+
+# Fix permissions with correct group
+chown -R $ACTUAL_USER:$USER_GROUP /opt/flutter /opt/android-sdk
+chmod -R 755 /opt/flutter/bin
+
+# Create Flutter config directory
+mkdir -p /home/$ACTUAL_USER/.config/flutter
+chown -R $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.config
+
+# Write settings directly to config file (bypasses root check)
+cat > /home/$ACTUAL_USER/.config/flutter/settings << EOF
+android-sdk=/opt/android-sdk
+EOF
+
+chown $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.config/flutter/settings
+
+# Add environment variables to .bashrc
+if ! grep -q "/opt/flutter/bin" /home/$ACTUAL_USER/.bashrc 2>/dev/null; then
+    echo 'export PATH="/opt/flutter/bin:$PATH"' >> /home/$ACTUAL_USER/.bashrc
+    echo 'export ANDROID_SDK_ROOT="/opt/android-sdk"' >> /home/$ACTUAL_USER/.bashrc
+    echo 'export ANDROID_HOME="/opt/android-sdk"' >> /home/$ACTUAL_USER/.bashrc
+    chown $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.bashrc
+fi
+
+echo "FluxLinux: Flutter Android SDK configured."
 
 # 4. Kotlin (Manual Install for shared access)
 KOTLIN_ROOT="/opt/kotlin"

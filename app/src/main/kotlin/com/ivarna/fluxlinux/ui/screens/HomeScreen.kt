@@ -195,6 +195,25 @@ fun HomeScreen(
                     appDevDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
                         "Includes: Android Studio (IntelliJ), Flutter, SDK/NDK, React Native, Kotlin"
                     } else null,
+                    onCustomize = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
+                         {
+                            if (permissionState.status.isGranted) {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_customization_debian.sh")
+                                val intent = TermuxIntentFactory.buildRunFeatureScriptIntent(distro.id, scriptContent)
+                                try {
+                                    onStartService(intent)
+                                    android.widget.Toast.makeText(context, "Starting Desktop Customization...", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to start customization", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                         }
+                    } else null,
+                    customizeDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
+                        "Applies Themes, Fonts, Wallpapers & 2x Scaling." else null
                 )
             }
         }
