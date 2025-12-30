@@ -57,9 +57,14 @@ apt install -y \
     gir1.2-gsound-1.0 \
     gstreamer1.0-libav \
     gstreamer1.0-plugins-bad \
-    python3-librosa \
     python3-opencv \
+    python3-pip \
     || handle_error "Video Editors & Dependencies"
+
+# Install Librosa via pip (Not available in apt for Trixie yet)
+# Using --break-system-packages as this is a containerized single-user env
+echo "FluxLinux: Installing Python Libs (Librosa)..."
+pip3 install librosa --break-system-packages || echo " [⚠️] Librosa install failed (Pitivi beat detection may suffer)"
 
 # Fix Kdenlive DBus Launch
 # We create a wrapper to ensure dbus-launch is used
