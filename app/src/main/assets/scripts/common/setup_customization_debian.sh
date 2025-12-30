@@ -409,8 +409,26 @@ EOF
 cat <<'EOF' > "$USER_HOME/.config/info.sh"
 #!/bin/bash
 
-# Get RAM and SWAP info (concise format)
-RAM_SWAP=$(free -m | awk '/Mem:/ {r=$3/1024; t=$2/1024} /Swap:/ {s=$3/1024; st=$2/1024} END {printf "%.1f/%.1fG | %.1f/%.1fG", r, t, s, st}')
+# Get combined memory percentage (RAM + SWAP)
+MEM_PERCENT=$(free -m | awk '
+/Mem:/ {
+    mem_used = $3
+    mem_total = $2
+}
+/Swap:/ {
+    swap_used = $3
+    swap_total = $2
+}
+END {
+    total = mem_total + swap_total
+    used = mem_used + swap_used
+    if (total > 0) {
+        percent = (used / total) * 100
+        printf "%.0f", percent
+    } else {
+        print "0"
+    }
+}')
 
 # Get battery info from sysfs
 BATTERY_PATH="/sys/class/power_supply/battery"
@@ -433,7 +451,7 @@ else
 fi
 
 # Output in genmon XML format
-echo "<txt>${RAM_SWAP}${BATTERY_INFO}</txt>"
+echo "<txt>MEM ${MEM_PERCENT}%${BATTERY_INFO}</txt>"
 EOF
 
 chmod +x "$USER_HOME/.config/info.sh"
@@ -489,7 +507,71 @@ BackgroundDarkness=0.7
 EOF
 chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$USER_HOME/.config"
 
-# 6. Reload XFCE Daemons (Force restart like chroot script does)
+
+# 7. Configure Zsh and Terminal Enhancements
+echo "FluxLinux: Configuring Zsh and Terminal..."
+
+# Install Oh My Zsh for flux user
+su - "$CUSTOM_USER" -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' 2>/dev/null
+
+# Set ZSH_CUSTOM path
+ZSH_CUSTOM="$USER_HOME/.oh-my-zsh/custom"
+
+# Install zsh plugins
+echo "FluxLinux: Installing Zsh plugins..."
+su - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-autosuggestions '$ZSH_CUSTOM/plugins/zsh-autosuggestions'" 2>/dev/null
+su - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting '$ZSH_CUSTOM/plugins/zsh-syntax-highlighting'" 2>/dev/null
+su - "$CUSTOM_USER" -c "git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git '$ZSH_CUSTOM/plugins/zsh-autocomplete'" 2>/dev/null
+
+# Install pokemon-colorscripts
+echo "FluxLinux: Installing pokemon-colorscripts..."
+POKEMON_TEMP="/tmp/pokemon-colorscripts"
+rm -rf "$POKEMON_TEMP"
+git clone https://gitlab.com/phoneybadger/pokemon-colorscripts.git "$POKEMON_TEMP" 2>/dev/null
+cd "$POKEMON_TEMP" && ./install.sh 2>/dev/null
+cd - > /dev/null
+rm -rf "$POKEMON_TEMP"
+
+# Configure .zshrc
+echo "FluxLinux: Configuring .zshrc..."
+ZSHRC="$USER_HOME/.zshrc"
+
+# Set theme to random
+sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="random"/' "$ZSHRC"
+
+# Configure plugins
+if grep -q "plugins=" "$ZSHRC" 2>/dev/null; then
+    sed -i 's/plugins=(.*)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' "$ZSHRC"
+else
+    echo 'plugins=(git zsh-autosuggestions zsh-syntax-highlighting)' >> "$ZSHRC"
+fi
+
+# Download fastfetch config
+mkdir -p "$USER_HOME/.local/share/fastfetch/presets"
+curl -fsSL https://raw.githubusercontent.com/abhay-byte/Linux_Setup/dev/config/termux.jsonc \
+    -o "$USER_HOME/.local/share/fastfetch/presets/termux.jsonc" 2>/dev/null
+
+# Add fastfetch and pokemon to .zshrc startup (if not already present)
+if ! grep -q 'fastfetch --config termux' "$ZSHRC"; then
+    sed -i '1ifastfetch --config termux' "$ZSHRC"
+fi
+
+if ! grep -q 'pokemon-colorscripts' "$ZSHRC"; then
+    echo '' >> "$ZSHRC"
+    echo '# Show random pokemon on terminal start' >> "$ZSHRC"
+    echo 'pokemon-colorscripts -r' >> "$ZSHRC"
+fi
+
+# Set zsh as default shell for flux user
+chsh -s /bin/zsh "$CUSTOM_USER" 2>/dev/null
+
+# Fix ownership
+chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$USER_HOME/.oh-my-zsh" "$USER_HOME/.zshrc" "$USER_HOME/.local" 2>/dev/null
+
+echo "FluxLinux: Terminal configuration complete!"
+
+
+# 8. Reload XFCE Daemons (Force restart like chroot script does)
 echo "FluxLinux: Reloading Desktop..."
 
 # Kill existing XFCE processes to force reload (matches chroot pattern)
