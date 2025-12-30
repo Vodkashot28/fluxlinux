@@ -356,7 +356,7 @@ fun HomeScreen(
                          }
                     } else null,
                     hwAccelDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "Supports Adreno (Turnip), Mali (Wrapper) & Generic (VirGL)" else null
+                        "Turnip (Adreno) or VirGL (All GPUs)" else null
                 )
             }
         }

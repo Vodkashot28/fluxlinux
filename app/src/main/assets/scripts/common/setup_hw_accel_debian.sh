@@ -1,6 +1,7 @@
 #!/bin/bash
 # scripts/common/setup_hw_accel_debian.sh
-# Based on termux-desktop implementation (sabamdarif)
+# Hardware Acceleration Setup for Debian (PRoot)
+# Based on termux-desktop implementation by sabamdarif
 
 # Check if running as root
 if [ "$(id -u)" != "0" ]; then
@@ -22,7 +23,8 @@ apt-get install -y \
     unzip \
     libvulkan1 \
     libgl1 \
-    libglx0
+    libglx0 \
+    xdg-desktop-portal
 
 # 2. Detect Architecture
 ARCH=$(dpkg --print-architecture)
@@ -35,29 +37,25 @@ echo "============================================"
 echo "      Select your GPU / Acceleration Mode"
 echo "============================================"
 echo "1) Adreno (Turnip + Zink)"
-echo "   - Best for Snapdragon devices."
-echo "   - Installs custom Mesa/Turnip drivers inside Debian."
+echo "   - Best for Snapdragon devices"
+echo "   - Installs custom Mesa/Turnip drivers"
+echo "   - Highest performance for Adreno GPUs"
 echo ""
-echo "2) Mali / Other (Zink + Host Wrapper)"
-echo "   - For Mali/Exynos/Mediatek devices."
-echo "   - REQUIRES 'vulkan-wrapper-android' installed in locally."
-echo "   - Uses Zink (OpenGL over Vulkan)."
+echo "2) VirGL (Universal)"
+echo "   - Works with ALL GPU types (Adreno, Mali, etc.)"
+echo "   - Requires 'virgl_test_server' running in Termux"
+echo "   - Good compatibility, moderate performance"
 echo ""
-echo "3) Generic (VirGL)"
-echo "   - Universal compatibility."
-echo "   - Requires 'virgl_test_server' running on Host."
-echo "   - Good for desktop, slower for games."
 echo "============================================"
-read -r -p "Enter choice [1-3]: " GPU_CHOICE
+echo "Note: Mali/Exynos users should use VirGL (option 2)"
+echo "============================================"
+read -r -p "Enter choice [1-2]: " GPU_CHOICE
 
 case "$GPU_CHOICE" in
     1)
-        MODE="adreno"
+        MODE="turnip"
         ;;
     2)
-        MODE="mali"
-        ;;
-    3)
         MODE="virgl"
         ;;
     *)
@@ -68,8 +66,8 @@ esac
 
 echo "FluxLinux: Configuring for $MODE..."
 
-if [ "$MODE" = "adreno" ]; then
-    # Install Turnip (Mesa Turnip/Zink)
+if [ "$MODE" = "turnip" ]; then
+    # Install Turnip (Mesa Turnip/Zink for Adreno)
     # Reference: https://github.com/sabamdarif/termux-desktop
     TURNIP_VERSION="25.3.2"
     DL_ARCH="aarch64"
@@ -84,62 +82,9 @@ if [ "$MODE" = "adreno" ]; then
         echo "FluxLinux: Installing Turnip..."
         unzip -o /tmp/turnip.zip -d /usr
         rm /tmp/turnip.zip
+        echo "FluxLinux: Turnip installed successfully!"
     else
         echo "Error: Failed to download Turnip drivers."
-        exit 1
-    fi
-fi
-
-if [ "$MODE" = "mali" ]; then
-    # Install Leegao Vulkan Wrapper (Self-Contained Extraction)
-    # 1. Download Pipetto .deb (Known good version)
-    WRAPPER_URL="https://github.com/sabamdarif/termux-desktop/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_aarch64.deb"
-    DEB_PATH="/tmp/vulkan-wrapper.deb"
-    EXTRACT_DIR="/tmp/wrapper_extract"
-    
-    echo "FluxLinux: Downloading Pipetto Vulkan Wrapper..."
-    curl -L -o "$DEB_PATH" "$WRAPPER_URL"
-
-    if [ -f "$DEB_PATH" ]; then
-        echo "FluxLinux: Extracting wrapper..."
-        mkdir -p "$EXTRACT_DIR"
-        dpkg -x "$DEB_PATH" "$EXTRACT_DIR"
-        
-        # Find the .so file (Termux .deb usually has full path or relative)
-        FOUND_LIB=$(find "$EXTRACT_DIR" -name "libvulkan_wrapper.so" | head -n 1)
-        
-        TARGET_LIB="/usr/lib/libvulkan_wrapper.so"
-        ICD_DIR="/etc/vulkan/icd.d"
-        ICD_FILE="$ICD_DIR/wrapper_icd.json"
-        
-        if [ -n "$FOUND_LIB" ] && [ -f "$FOUND_LIB" ]; then
-            echo "FluxLinux: Found library at $FOUND_LIB"
-            echo "FluxLinux: Installing to $TARGET_LIB..."
-            cp "$FOUND_LIB" "$TARGET_LIB"
-            chmod +x "$TARGET_LIB"
-
-            echo "FluxLinux: Configuring Wrapper ICD..."
-            mkdir -p "$ICD_DIR"
-            cat <<EOF > "$ICD_FILE"
-{
-    "file_format_version": "1.0.0",
-    "ICD": {
-        "library_path": "$TARGET_LIB",
-        "api_version": "1.1.0"
-    }
-}
-EOF
-            echo "FluxLinux: Wrapper Installed Successfully!"
-        else
-            echo "Error: Could not find libvulkan_wrapper.so in extracted package."
-            exit 1
-        fi
-        
-        # Cleanup
-        rm "$DEB_PATH"
-        rm -rf "$EXTRACT_DIR"
-    else
-        echo "Error: Failed to download wrapper package."
         exit 1
     fi
 fi
@@ -147,68 +92,66 @@ fi
 # 4. Create Launch Wrapper
 echo "FluxLinux: Creating 'gpu-launch' wrapper..."
 
-cat <<EOF > /usr/local/bin/gpu-launch
+cat <<'EOF' > /usr/local/bin/gpu-launch
 #!/bin/bash
 # FluxLinux GPU Launcher
+# Automatically detects and applies the correct GPU configuration
 
-MODE="$MODE"
-ARCH="$ARCH"
-DL_ARCH="aarch64" # Default for wrapper naming
-if [ "\$ARCH" != "arm64" ]; then DL_ARCH="\$ARCH"; fi
+MODE="MODE_PLACEHOLDER"
 
-# Reset vars
+# Reset environment
 unset GALLIUM_DRIVER
 unset MESA_LOADER_DRIVER_OVERRIDE
 unset VK_ICD_FILENAMES
 
-if [ "\$MODE" = "adreno" ]; then
+if [ "$MODE" = "turnip" ]; then
     # Turnip (Adreno Vulkan) + Zink
     export MESA_LOADER_DRIVER_OVERRIDE=zink
-    export GALLIUM_DRIVER=zink
-    export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.\${DL_ARCH}.json
+    export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json
     export TU_DEBUG=noconform
-    # OpenGL Overrides
     export MESA_GL_VERSION_OVERRIDE=4.6
     export MESA_GLES_VERSION_OVERRIDE=3.2
-    export MESA_GLSL_VERSION_OVERRIDE=460
+    export MESA_NO_ERROR=1
 
-elif [ "\$MODE" = "mali" ]; then
-    # Zink over Self-Contained Wrapper (Mali)
-    # Uses locally installed Leegao wrapper in /usr/lib
-    
-    WRAPPER_JSON="/etc/vulkan/icd.d/wrapper_icd.json"
-    
-    if [ -f "\$WRAPPER_JSON" ]; then
-        export VK_ICD_FILENAMES="\$WRAPPER_JSON"
-        export MESA_LOADER_DRIVER_OVERRIDE=zink
-        export GALLIUM_DRIVER=zink
-        export MESA_GL_VERSION_OVERRIDE=4.6
-        export MESA_GLES_VERSION_OVERRIDE=3.2
-        # Mali specific optimizations
-        export MESA_VK_WSI_PRESENT_MODE=mailbox
-        export MESA_VK_WSI_DEBUG=blit 
-    else
-        echo "Error: Wrapper configuration not found at \$WRAPPER_JSON"
-        echo "Please re-run hardware acceleration setup."
-    fi
-
-elif [ "\$MODE" = "virgl" ]; then
-    # VirGL (Client)
+elif [ "$MODE" = "virgl" ]; then
+    # VirGL (Universal - works with all GPUs)
     export GALLIUM_DRIVER=virpipe
     export MESA_GL_VERSION_OVERRIDE=4.0
     export MESA_GLES_VERSION_OVERRIDE=3.1
-    export MESA_GLSL_VERSION_OVERRIDE=400
+    export MESA_NO_ERROR=1
 fi
 
 # Execute Application
-exec "\$@"
+exec "$@"
 EOF
 
+# Replace placeholder with actual mode
+sed -i "s/MODE_PLACEHOLDER/$MODE/g" /usr/local/bin/gpu-launch
 chmod +x /usr/local/bin/gpu-launch
 
-echo "FluxLinux: GPU Drivers Configured for $MODE!"
+echo ""
+echo "============================================"
+echo "  Hardware Acceleration Setup Complete!"
+echo "============================================"
+echo "Mode: $MODE"
+echo ""
 echo "Usage: gpu-launch <application>"
+echo "Example: gpu-launch glmark2"
+echo ""
+
 if [ "$MODE" = "virgl" ]; then
-    echo "Note: Ensure 'virgl_test_server' is running in Termux."
+    echo "IMPORTANT: VirGL requires virgl_test_server running in Termux!"
+    echo "The server should start automatically when you launch GUI."
+    echo ""
 fi
 
+if [ "$MODE" = "turnip" ]; then
+    echo "Turnip is configured for Adreno GPUs."
+    echo "If you have a different GPU, re-run this script and select VirGL."
+    echo ""
+fi
+
+echo "Test your setup:"
+echo "  gpu-launch glmark2"
+echo "  gpu-launch glxinfo | grep 'OpenGL renderer'"
+echo "============================================"
