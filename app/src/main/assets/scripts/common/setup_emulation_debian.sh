@@ -44,9 +44,16 @@ apt install -y debianutils || handle_error "Debian Utils"
 
 # 2. Install Box64 (Ryan Fortner Repo)
 echo "FluxLinux: Installing Box64 (Ryan Fortner Repo)..."
-# Using instructions from known working setup
+# Add repo
 wget https://ryanfortner.github.io/box86-debs/box86.list -O /etc/apt/sources.list.d/box86.list
 wget -qO- https://ryanfortner.github.io/box86-debs/KEY.gpg | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/box86-debs-archive-keyring.gpg
+
+# APT Pinning to prioritize Ryan's repo over Debian's official one
+cat <<EOF > /etc/apt/preferences.d/box64
+Package: *
+Pin: origin ryanfortner.github.io
+Pin-Priority: 1001
+EOF
 
 apt update -y
 apt-cache policy box64
@@ -60,13 +67,10 @@ rm -rf ~/xow64
 wget https://github.com/ar37-rs/xow64-wine/raw/refs/heads/main/proot_mode/xow64 -O ~/xow64 || handle_error "xow64 Download"
 chmod +x ~/xow64
 
-# Detect Environment (Simple Heuristic for now, defaulting to Proot if typical Proot mounts exist or assume Proot for App Use)
-# In FluxLinux App, we are almost always in Proot.
-# The user asked to "implement for chroot as well". 
-# If /proc/1/exe links to something unrelated to init, likely chroot or proot.
-# Simplest check: If we are root and $PROOT_PID is unset, maybe chroot? 
-# For now, we will default to proot=true as that's safe for the App.
-# Users in Chroot can manually toggle `~/xow64 proot=false`.
+# FIX: Set TMPDIR to /tmp to prevent wineserver from trying to access Android/Termux paths
+# This fixes "wineserver: mkdir /data/data/.../usr/tmp/..." error
+export TMPDIR=/tmp
+mkdir -p /tmp
 
 echo "Configuring xow64..."
 # Ensure we don't have ownership conflict (common in Proot)
@@ -88,12 +92,29 @@ chown -R "$(whoami)" "$HOME/xow64_prefix" 2>/dev/null
 
 # 4. Install Heroic Games Launcher (Native ARM64)
 echo "FluxLinux: Installing Heroic Games Launcher..."
-# Using the confirmed 2.15.2 asset name (Heroic-2.15.2-linux-arm64.deb with Capital H)
-# This was verified as the correct asset name format on GitHub Releases.
-HEROIC_URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/Heroic-2.15.2-linux-arm64.deb"
+
+# Robust URL Fetcher: API -> HTML Scraping -> Fallback
+# 1. Try GitHub API
+HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep "browser_download_url" | grep "arm64.deb" | cut -d '"' -f 4 | head -n 1)
+
+# 2. If API failed (rate limit/empty), try scraping the releases page text
+if [ -z "$HEROIC_URL" ]; then
+    echo " [ℹ️] Heroic API fetch failed, trying HTML scrape..."
+    HEROIC_URL=$(wget -qO- https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep -o 'href="[^"]*arm64.deb"' | cut -d '"' -f 2 | head -n 1)
+    if [ ! -z "$HEROIC_URL" ]; then
+        HEROIC_URL="https://github.com$HEROIC_URL"
+    fi
+fi
+
+# 3. Fallback (Known working legacy version if all else fails)
+if [ -z "$HEROIC_URL" ]; then
+    echo " [⚠️] Could not resolve Heroic URL dynamically. Using hardcoded fallback..."
+    # Heroic-2.15.2-linux-arm64.deb (Verified case)
+    HEROIC_URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/Heroic-2.15.2-linux-arm64.deb"
+fi
 
 echo "Downloading Heroic: $HEROIC_URL"
-# Verify link availability first
+# Verify link availability
 if wget --spider -q "$HEROIC_URL"; then
     rm -f /tmp/heroic.deb
     wget -O /tmp/heroic.deb "$HEROIC_URL"
@@ -101,7 +122,6 @@ if wget --spider -q "$HEROIC_URL"; then
     rm -f /tmp/heroic.deb
 else
     echo " [❌] Heroic Download Failed (404/Network) - URL: $HEROIC_URL"
-    echo "Try checking: https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest"
 fi
 
 # 5. Install RetroArch & DOSBox
