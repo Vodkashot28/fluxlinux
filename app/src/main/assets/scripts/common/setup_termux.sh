@@ -50,6 +50,31 @@ pkg install -y proot-distro x11-repo pulseaudio wget zsh fastfetch git unzip
 # 3. Install Termux:X11
 pkg install -y termux-x11-nightly
 
+# 4. Install Hardware Acceleration Tools
+echo "FluxLinux: Installing Hardware Acceleration tools..."
+# Enable TUR repo for advanced packages
+pkg install -y tur-repo
+pkg update -y
+# Install VirGL server and Zink
+pkg install -y virglrenderer-android mesa-zink
+
+# 5. Install Mali Vulkan Wrapper (Leegao/Pipetto)
+# Required for Mali acceleration (Zink over Host Wrapper)
+ARCH=$(dpkg --print-architecture)
+if [ "$ARCH" = "aarch64" ]; then
+    echo "FluxLinux: Installing Vulkan Wrapper for Mali (aarch64)..."
+    WRAPPER_URL="https://github.com/sabamdarif/termux-desktop/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_aarch64.deb"
+    
+    mkdir -p "$PREFIX/tmp"
+    echo "Downloading wrapper..."
+    curl -L -o "$PREFIX/tmp/vulkan-wrapper.deb" "$WRAPPER_URL"
+    echo "Installing wrapper..."
+    dpkg -i "$PREFIX/tmp/vulkan-wrapper.deb" || apt-get install -f -y
+    rm "$PREFIX/tmp/vulkan-wrapper.deb"
+else
+    echo "FluxLinux: Skipping Vulkan Wrapper (Architecture $ARCH not supported)"
+fi
+
 # 4. (Scripts now deployed separately via app logic)
 # - start_gui.sh (Specific to distro family)
 # - flux_install.sh (Common installer)
