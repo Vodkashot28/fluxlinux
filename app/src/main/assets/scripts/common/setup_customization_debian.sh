@@ -126,7 +126,7 @@ echo "FluxLinux: Applying XFCE4 Settings..."
 apply_xfce_settings() {
     # Helper to set properties
     # $1 = Channel, $2 = Property, $3 = Type, $4 = Value
-    su - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c $1 -p $2 -n -t $3 -s '$4'"
+    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c $1 -p $2 -n -t $3 -s '$4'"
     # Note: '-n' creates if not exists
 }
 
@@ -164,9 +164,9 @@ WALLPAPER_PATH="$WALLPAPER_DIR/$SEL_WALLPAPER"
 echo "FluxLinux: Applying Wallpaper to [$MONITORS]..."
 for M in $MONITORS; do
     # Image
-    su - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/last-image -n -t string -s '$WALLPAPER_PATH'"
+    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/last-image -n -t string -s '$WALLPAPER_PATH'"
     # Style (Zoomed=5)
-    su - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/image-style -n -t int -s 5"
+    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/image-style -n -t int -s 5"
 done
 
 
@@ -511,17 +511,22 @@ chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$USER_HOME/.config"
 # 7. Configure Zsh and Terminal Enhancements
 echo "FluxLinux: Configuring Zsh and Terminal..."
 
+# Install zsh if not already installed
+echo "FluxLinux: Installing zsh..."
+apt-get install -y zsh 2>/dev/null
+
 # Install Oh My Zsh for flux user
-su - "$CUSTOM_USER" -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' 2>/dev/null
+echo "FluxLinux: Installing Oh My Zsh..."
+su -s /bin/bash - "$CUSTOM_USER" -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' 2>/dev/null
 
 # Set ZSH_CUSTOM path
 ZSH_CUSTOM="$USER_HOME/.oh-my-zsh/custom"
 
 # Install zsh plugins
 echo "FluxLinux: Installing Zsh plugins..."
-su - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-autosuggestions '$ZSH_CUSTOM/plugins/zsh-autosuggestions'" 2>/dev/null
-su - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting '$ZSH_CUSTOM/plugins/zsh-syntax-highlighting'" 2>/dev/null
-su - "$CUSTOM_USER" -c "git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git '$ZSH_CUSTOM/plugins/zsh-autocomplete'" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-autosuggestions '$ZSH_CUSTOM/plugins/zsh-autosuggestions'" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting '$ZSH_CUSTOM/plugins/zsh-syntax-highlighting'" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git '$ZSH_CUSTOM/plugins/zsh-autocomplete'" 2>/dev/null
 
 # Install pokemon-colorscripts
 echo "FluxLinux: Installing pokemon-colorscripts..."
@@ -535,6 +540,12 @@ rm -rf "$POKEMON_TEMP"
 # Configure .zshrc
 echo "FluxLinux: Configuring .zshrc..."
 ZSHRC="$USER_HOME/.zshrc"
+
+# Ensure .zshrc exists (Oh My Zsh should create it, but just in case)
+if [ ! -f "$ZSHRC" ]; then
+    touch "$ZSHRC"
+    chown "$CUSTOM_USER:$CUSTOM_GROUP" "$ZSHRC"
+fi
 
 # Set theme to random
 sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="random"/' "$ZSHRC"
@@ -575,15 +586,15 @@ echo "FluxLinux: Terminal configuration complete!"
 echo "FluxLinux: Reloading Desktop..."
 
 # Kill existing XFCE processes to force reload (matches chroot pattern)
-su - "$CUSTOM_USER" -c "killall -9 xfdesktop xfwm4 xfsettingsd" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "killall -9 xfdesktop xfwm4 xfsettingsd" 2>/dev/null
 sleep 2
 
 # Restart daemons with updated settings (run in background but wait a bit for each)
-su - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfdesktop > /dev/null 2>&1 &" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfdesktop > /dev/null 2>&1 &" 2>/dev/null
 sleep 0.5
-su - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfwm4 --replace > /dev/null 2>&1 &" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfwm4 --replace > /dev/null 2>&1 &" 2>/dev/null
 sleep 0.5
-su - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfsettingsd > /dev/null 2>&1 &" 2>/dev/null
+su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 nohup xfsettingsd > /dev/null 2>&1 &" 2>/dev/null
 sleep 1
 
 echo "FluxLinux: Customization Complete!"
