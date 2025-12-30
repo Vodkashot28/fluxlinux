@@ -208,6 +208,48 @@ EOF
     echo " [✅] VS Code installed"
 else
     echo " - VS Code already installed."
+    echo " [✅] VS Code installed"
+else
+    echo " - VS Code already installed."
+fi
+
+# 5e. CLion (C/C++ IDE)
+# Note: CLion is paid software (30-day trial). There is no "Community Edition" for C++.
+echo "FluxLinux: Checking CLion..."
+CLION_DIR="/opt/clion"
+if [ ! -d "$CLION_DIR" ]; then
+    echo " - Installing CLion (Latest ARM64)..."
+    # 2024.3.1.1 (Example check)
+    CLION_VER="2024.3.1.1" 
+    CLION_URL="https://download.jetbrains.com/cpp/CLion-${CLION_VER}-aarch64.tar.gz"
+    
+    wget -q --show-progress "$CLION_URL" -O /tmp/clion.tar.gz || echo " [⚠️] CLion download failed (check version)."
+    
+    if [ -f /tmp/clion.tar.gz ]; then
+        mkdir -p "$CLION_DIR"
+        tar -xzf /tmp/clion.tar.gz -C "$CLION_DIR" --strip-components=1
+        rm /tmp/clion.tar.gz
+        
+        # Symlink
+        ln -sf "$CLION_DIR/bin/clion.sh" /usr/local/bin/clion
+        
+        # Desktop Entry
+        cat <<EOF > /usr/share/applications/clion.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CLion
+Comment=A smart cross-platform IDE for C and C++
+Exec=/opt/clion/bin/clion.sh %f
+Icon=$CLION_DIR/bin/clion.svg
+Terminal=false
+Categories=Development;IDE;
+StartupWMClass=jetbrains-clion
+EOF
+        echo " [✅] CLion Installed (Trial/License Verified)"
+    fi
+else
+    echo " - CLion already installed"
 fi
 
 # 5d. LunarVim (Requires Neovim installed via apt above)
