@@ -49,6 +49,8 @@ fun DistroCard(
     genDevDescription: String? = null,
     onGameDevInstall: (() -> Unit)? = null,
     gameDevDescription: String? = null,
+    onDataScienceInstall: (() -> Unit)? = null,
+    dataScienceDescription: String? = null,
     onCustomize: (() -> Unit)? = null,
     customizeDescription: String? = null,
     onEnableHwAccel: (() -> Unit)? = null,
@@ -337,6 +339,31 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = gameDevDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+
+
+                if (onDataScienceInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onDataScienceInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF009688) // Teal 500
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install Data Science Tools", color = Color.White)
+                    }
+                    if (dataScienceDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = dataScienceDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,
