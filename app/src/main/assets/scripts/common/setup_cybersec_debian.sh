@@ -21,6 +21,10 @@ TARGET_GROUP="users"
 # 1. System Dependencies & Core Tools
 echo "FluxLinux: Installing Security Tools (Apt)..."
 export DEBIAN_FRONTEND=noninteractive
+
+# Enable non-free/contrib repositories for nikto/hashcat if not present
+sed -i 's/main$/main contrib non-free non-free-firmware/g' /etc/apt/sources.list
+sed -i 's/main contrib$/main contrib non-free non-free-firmware/g' /etc/apt/sources.list
 apt update -y
 
 # Network Analysis & Cracking Tools
@@ -32,8 +36,7 @@ apt update -y
 # john: Password Cracker
 # hydra: Network Logon Cracker
 # sqlmap: SQL Injection Tool
-# nikto: Web Server Scanner (perl)
-# hashcat: Advanced Password Recovery (CPU-only on VirGL/Turnip usually, but useful)
+# hashcat: Advanced Password Recovery
 
 apt install -y \
     curl wget git build-essential \
@@ -43,9 +46,22 @@ apt install -y \
     john \
     hydra \
     sqlmap \
-    nikto \
     hashcat \
     || handle_error "Apt Tools Installation"
+
+# Install Nikto Manually (Fallback if apt fails or is too old)
+if ! command -v nikto >/dev/null; then
+    echo "FluxLinux: Installing Nikto (GitHub)..."
+    # Try apt first (it's in non-free)
+    if ! apt install -y nikto; then
+        echo " - Apt install failed/missing. Installing from source..."
+        cd /opt
+        git clone https://github.com/sullo/nikto.git
+        ln -sf /opt/nikto/program/nikto.pl /usr/local/bin/nikto
+    fi
+else
+    echo " [ℹ️] Nikto already installed"
+fi
 
 # 2. Configure Wireshark Permissions
 echo "FluxLinux: Configuring Wireshark permissions..."
@@ -150,6 +166,8 @@ verify_installation() {
     # Cracking Tools
     if command -v john >/dev/null; then echo " [✅] John the Ripper"; else echo " [❌] John Missing"; fi
     if command -v aircrack-ng >/dev/null; then echo " [✅] Aircrack-ng"; else echo " [❌] Aircrack-ng Missing"; fi
+    if command -v hashcat >/dev/null; then echo " [✅] Hashcat"; else echo " [❌] Hashcat Missing"; fi
+    if command -v nikto >/dev/null; then echo " [✅] Nikto"; else echo " [❌] Nikto Missing"; fi
     
     # Metasploit
     if command -v msfconsole >/dev/null; then 
