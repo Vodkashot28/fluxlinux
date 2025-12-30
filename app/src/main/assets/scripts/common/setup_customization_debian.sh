@@ -515,8 +515,19 @@ echo "FluxLinux: Installing zsh..."
 apt-get install -y zsh 2>/dev/null
 
 # Install Oh My Zsh for flux user
+# Install Oh My Zsh for flux user
 echo "FluxLinux: Installing Oh My Zsh..."
-su -s /bin/bash - "$CUSTOM_USER" -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' 2>/dev/null
+
+# 1. Check for corrupt installation (folder exists but missing core script)
+if [ -d "$USER_HOME/.oh-my-zsh" ] && [ ! -f "$USER_HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
+    echo "FluxLinux: Detected corrupt Oh My Zsh installation. Removing..."
+    rm -rf "$USER_HOME/.oh-my-zsh"
+fi
+
+# 2. Install if missing
+if [ ! -d "$USER_HOME/.oh-my-zsh" ]; then
+    su -s /bin/bash - "$CUSTOM_USER" -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' 2>/dev/null
+fi
 
 # Set ZSH_CUSTOM path
 ZSH_CUSTOM="$USER_HOME/.oh-my-zsh/custom"
