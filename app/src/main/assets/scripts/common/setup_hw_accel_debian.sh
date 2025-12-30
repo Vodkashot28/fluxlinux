@@ -90,6 +90,37 @@ if [ "$MODE" = "adreno" ]; then
     fi
 fi
 
+if [ "$MODE" = "mali" ]; then
+    # Install Leegao Vulkan Wrapper (Self-Contained)
+    # URL provided by user: v0.0.5r5
+    WRAPPER_URL="https://github.com/leegao/bionic-vulkan-wrapper/releases/download/v0.0.5r5/libvulkan_wrapper.so"
+    LIB_PATH="/usr/lib/libvulkan_wrapper.so"
+    ICD_DIR="/etc/vulkan/icd.d"
+    ICD_FILE="$ICD_DIR/wrapper_icd.json"
+
+    echo "FluxLinux: Downloading Mali Vulkan Wrapper..."
+    curl -L -o "$LIB_PATH" "$WRAPPER_URL"
+    chmod +x "$LIB_PATH"
+
+    if [ -f "$LIB_PATH" ]; then
+        echo "FluxLinux: Configuring Wrapper ICD..."
+        mkdir -p "$ICD_DIR"
+        cat <<EOF > "$ICD_FILE"
+{
+    "file_format_version": "1.0.0",
+    "ICD": {
+        "library_path": "$LIB_PATH",
+        "api_version": "1.1.0"
+    }
+}
+EOF
+        echo "FluxLinux: Wrapper Installed to $LIB_PATH"
+    else
+        echo "Error: Failed to download wrapper library."
+        exit 1
+    fi
+fi
+
 # 4. Create Launch Wrapper
 echo "FluxLinux: Creating 'gpu-launch' wrapper..."
 
@@ -119,13 +150,13 @@ if [ "\$MODE" = "adreno" ]; then
     export MESA_GLSL_VERSION_OVERRIDE=460
 
 elif [ "\$MODE" = "mali" ]; then
-    # Zink over Host Wrapper (Mali)
-    # Points to Termux installation of wrapper
-    TERMUX_PREFIX="/data/data/com.termux/files/usr"
-    WRAPPER_PATH="\$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.\${DL_ARCH}.json"
+    # Zink over Self-Contained Wrapper (Mali)
+    # Uses locally installed Leegao wrapper in /usr/lib
     
-    if [ -f "\$WRAPPER_PATH" ]; then
-        export VK_ICD_FILENAMES="\$WRAPPER_PATH"
+    WRAPPER_JSON="/etc/vulkan/icd.d/wrapper_icd.json"
+    
+    if [ -f "\$WRAPPER_JSON" ]; then
+        export VK_ICD_FILENAMES="\$WRAPPER_JSON"
         export MESA_LOADER_DRIVER_OVERRIDE=zink
         export GALLIUM_DRIVER=zink
         export MESA_GL_VERSION_OVERRIDE=4.6
@@ -134,9 +165,8 @@ elif [ "\$MODE" = "mali" ]; then
         export MESA_VK_WSI_PRESENT_MODE=mailbox
         export MESA_VK_WSI_DEBUG=blit 
     else
-        echo "Warning: Host Vulkan Wrapper not found at \$WRAPPER_PATH"
-        echo "Please install 'vulkan-wrapper-android' in Termux."
-        # Fallback to software? Or let it fail/try virgl?
+        echo "Error: Wrapper configuration not found at \$WRAPPER_JSON"
+        echo "Please re-run hardware acceleration setup."
     fi
 
 elif [ "\$MODE" = "virgl" ]; then
@@ -157,7 +187,5 @@ echo "FluxLinux: GPU Drivers Configured for $MODE!"
 echo "Usage: gpu-launch <application>"
 if [ "$MODE" = "virgl" ]; then
     echo "Note: Ensure 'virgl_test_server' is running in Termux."
-elif [ "$MODE" = "mali" ]; then
-    echo "Note: Ensure 'vulkan-wrapper-android' is installed in Termux."
 fi
 
