@@ -482,9 +482,10 @@ IDEA_ROOT="/opt/intellij"
 # Check for idea.sh binary
 if [ ! -f "$IDEA_ROOT/bin/idea.sh" ]; then
     
-    # Recent version: 2024.3.1.1 (AArch64)
-    IDEA_VER="2024.3.1.1"
-    IDEA_URL="https://download.jetbrains.com/idea/ideaIC-${IDEA_VER}-aarch64.tar.gz"
+    # Recent version: 2025.3.1 (Unified, AArch64)
+    IDEA_VER="2025.3.1"
+    # Note: 'ideaIC' (Community) is now just 'idea' (Unified) for 2025.3+
+    IDEA_URL="https://download.jetbrains.com/idea/idea-${IDEA_VER}-aarch64.tar.gz"
 
     echo "FluxLinux: Installing IntelliJ IDEA Community ($IDEA_VER)..."
     
