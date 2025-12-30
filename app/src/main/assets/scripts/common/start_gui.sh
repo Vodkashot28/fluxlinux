@@ -31,11 +31,18 @@ sleep 3
 # Start VirGL server for hardware acceleration (if using VirGL mode)
 # Kill any existing virgl server first
 pkill -9 -f virgl_test_server 2>/dev/null
-# Start VirGL server in background
+# Start VirGL server as a persistent background daemon
 if command -v virgl_test_server_android >/dev/null 2>&1; then
     echo "Starting VirGL server for hardware acceleration..."
-    virgl_test_server_android >/dev/null 2>&1 &
-    sleep 1
+    # Use nohup and setsid to detach from parent process
+    nohup setsid virgl_test_server_android >/dev/null 2>&1 &
+    sleep 2
+    # Verify server is running
+    if pgrep -f virgl_test_server >/dev/null; then
+        echo "VirGL server started successfully"
+    else
+        echo "Warning: VirGL server may not have started"
+    fi
 fi
 
 # Launch Termux X11 main activity (CRITICAL for display)

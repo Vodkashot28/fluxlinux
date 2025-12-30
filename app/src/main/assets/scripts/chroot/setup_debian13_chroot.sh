@@ -488,8 +488,8 @@ $TARGET_TERMUX_PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-a
 # 6. Start VirGL server for hardware acceleration
 if [ -x "$TARGET_TERMUX_PREFIX/bin/virgl_test_server_android" ]; then
     echo "Starting VirGL server for hardware acceleration..."
-    $TARGET_TERMUX_PREFIX/bin/virgl_test_server_android >/dev/null 2>&1 &
-    sleep 1
+    nohup setsid $TARGET_TERMUX_PREFIX/bin/virgl_test_server_android >/dev/null 2>&1 &
+    sleep 2
 fi
 
 # 7. Launch Chroot
