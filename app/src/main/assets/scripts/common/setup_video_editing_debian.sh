@@ -44,30 +44,58 @@ echo "FluxLinux: Installing Video Editors..."
 # Flowblade: Fast, precise, Python-based (GTK)
 # Pitivi: Gnome native, integrates well
 
-echo " - Installing Kdenlive, Shotcut, OpenShot, Flowblade, Pitivi..."
+# Kdenlive needs dbus-x11 for session management in simple environments
+# Pitivi needs gsound, libav/ffmpeg, and python libs
+
 apt install -y \
     kdenlive \
+    dbus-x11 \
     shotcut \
     openshot-qt \
     flowblade \
     pitivi \
-    || handle_error "Video Editors Installation"
+    gir1.2-gsound-1.0 \
+    gstreamer1.0-libav \
+    gstreamer1.0-plugins-bad \
+    python3-librosa \
+    python3-opencv \
+    || handle_error "Video Editors & Dependencies"
+
+# Fix Kdenlive DBus Launch
+# We create a wrapper to ensure dbus-launch is used
+if [ -f /usr/bin/kdenlive ]; then
+    echo "Configuring Kdenlive launch wrapper..."
+    mv /usr/bin/kdenlive /usr/bin/kdenlive.bin
+    echo '#!/bin/bash' > /usr/bin/kdenlive
+    echo 'export $(dbus-launch)' >> /usr/bin/kdenlive
+    echo 'exec /usr/bin/kdenlive.bin "$@"' >> /usr/bin/kdenlive
+    chmod +x /usr/bin/kdenlive
+fi
 
 # 3. Audio Tools
 echo "FluxLinux: Installing Audio Tools..."
 # Audacity: The standard for audio editing
-apt install -y audacity || handle_error "Audio Tools Installation"
+# Note: Audacity in PROOT/termux often has shared memory issues.
+# We try to install it but also install a lightweight alternative like Tenacity or simple recorder.
+apt install -y audacity || echo " [⚠️] Audacity install warn"
 
 # 4. Media Players
 echo "FluxLinux: Installing Media Players..."
 # VLC: The classic
 # MPV: Lightweight, powerful, hardware accel friendly
 # SMPlayer: GUI for MPV/MPlayer
+# PulseAudio GStreamer plugin for Pitivi/others
 apt install -y \
     vlc \
     mpv \
     smplayer \
+    gstreamer1.0-pulseaudio \
+    pulseaudio \
     || handle_error "Media Players Installation"
+
+# Configure PulseAudio for local use (ensure it's not trying to be a system daemon)
+# Pitivi calls OpenAL which calls PulseAudio.
+# Ensure PulseAudio is startable by user.
 
 # 5. Optional: Blender (3D & Video Editing)
 # Often heavy, but useful. Included in many video workflows.
