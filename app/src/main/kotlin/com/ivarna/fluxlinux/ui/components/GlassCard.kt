@@ -59,6 +59,8 @@ fun DistroCard(
     designDescription: String? = null,
     onOfficeInstall: (() -> Unit)? = null,
     officeDescription: String? = null,
+    onEmulationInstall: (() -> Unit)? = null,
+    emulationDescription: String? = null,
     onCustomize: (() -> Unit)? = null,
     customizeDescription: String? = null,
     onEnableHwAccel: (() -> Unit)? = null,
@@ -464,6 +466,41 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = officeDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                    if (officeDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = officeDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onEmulationInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onEmulationInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEF6C00) // Orange/DeepOrange for Gaming
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install Gaming & Emulation", color = Color.White)
+                    }
+                    if (emulationDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = emulationDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,

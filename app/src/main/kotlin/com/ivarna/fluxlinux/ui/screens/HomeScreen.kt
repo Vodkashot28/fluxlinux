@@ -489,7 +489,26 @@ fun HomeScreen(
                         }
                     } else null,
                     officeDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "LibreOffice, Thunderbird & more." else null
+                        "LibreOffice, Thunderbird & more." else null,
+                    onEmulationInstall = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
+                        {
+                            if (permissionState.status.isGranted) {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_emulation_debian.sh")
+                                val intent = TermuxIntentFactory.buildRunFeatureScriptIntent(distro.id, scriptContent)
+                                try {
+                                    onStartService(intent)
+                                    android.widget.Toast.makeText(context, "Starting Emulation Setup...", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to start setup", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                        }
+                    } else null,
+                    emulationDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
+                        "Box64, xow64-wine, Heroic, RetroArch." else null
                 )
             }
         }
