@@ -540,20 +540,33 @@ rm -rf "$POKEMON_TEMP"
 echo "FluxLinux: Configuring .zshrc..."
 ZSHRC="$USER_HOME/.zshrc"
 
-# Ensure .zshrc exists (Oh My Zsh should create it, but just in case)
-if [ ! -f "$ZSHRC" ]; then
-    touch "$ZSHRC"
+# Check if .zshrc is valid (loading oh-my-zsh)
+if [ ! -f "$ZSHRC" ] || ! grep -q "oh-my-zsh.sh" "$ZSHRC"; then
+    echo "FluxLinux: Creating valid .zshrc..."
+    cat <<EOF > "$ZSHRC"
+export ZSH="\$HOME/.oh-my-zsh"
+ZSH_THEME="gnzh"
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)
+source \$ZSH/oh-my-zsh.sh
+
+EOF
     chown "$CUSTOM_USER:$CUSTOM_GROUP" "$ZSHRC"
-fi
-
-# Set theme to gnzh
-sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="gnzh"/' "$ZSHRC"
-
-# Configure plugins
-if grep -q "plugins=" "$ZSHRC" 2>/dev/null; then
-    sed -i 's/plugins=(.*)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' "$ZSHRC"
 else
-    echo 'plugins=(git zsh-autosuggestions zsh-syntax-highlighting)' >> "$ZSHRC"
+    # Update existing .zshrc settings
+    # Update theme
+    if grep -q "^ZSH_THEME=" "$ZSHRC"; then
+        sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="gnzh"/' "$ZSHRC"
+    else
+        # Insert theme before plugins or source
+        sed -i '1iZSH_THEME="gnzh"' "$ZSHRC"
+    fi
+    
+    # Update plugins
+    if grep -q "^plugins=" "$ZSHRC"; then
+        sed -i 's/plugins=(.*)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)/' "$ZSHRC"
+    else
+        sed -i '/source \$ZSH\/oh-my-zsh.sh/i plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)' "$ZSHRC"
+    fi
 fi
 
 # Download fastfetch config
