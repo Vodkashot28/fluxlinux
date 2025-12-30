@@ -33,32 +33,12 @@ object DistroRepository {
             chrootSupported = false,
             configuration = SupportedDistro.TERMUX
         ),
-        Distro(
-            id = "arch_chroot",
-            name = "Arch Linux (KDE Plasma)",
-            description = "Rolling release distro with KDE Plasma desktop. (Root)",
-            color = Color(0xFF1793D1),
-            iconRes = R.drawable.distro_arch,
-            comingSoon = false,
-            prootSupported = false,
-            chrootSupported = true,
-            configuration = SupportedDistro.ARCH
-        ),
-        Distro(
-            id = "debian_chroot",
-            name = "Debian (Rooted)",
-            description = "High-performance Debian 12 environment running via Chroot (Requires Root).",
-            color = FluxAccentMagenta,
-            iconRes = R.drawable.distro_debian, // Reusing Debian icon
-            comingSoon = false,
-            prootSupported = false,
-            chrootSupported = true,
-            configuration = SupportedDistro.DEBIAN // Reusing family config for script mapping fallback
-        ),
+
+
         Distro(
             id = "debian13_chroot",
-            name = "Debian 13 (Trixie) [Root]",
-            description = "Latest Debian 13 (Testing) environment via Chroot. (Released 2025)",
+            name = "Debian (Rooted)",
+            description = "High-performance Debian 13 (Trixie) environment via Chroot (Requires Root).",
             color = FluxAccentMagenta,
             iconRes = R.drawable.distro_debian,
             comingSoon = false,
@@ -94,7 +74,7 @@ object DistroRepository {
             description = "A simple, lightweight Linux distribution.",
             color = Color(0xFF1793D1),
             iconRes = R.drawable.distro_arch,
-            comingSoon = false,
+            comingSoon = true,
             prootSupported = true,
             chrootSupported = true,
             configuration = SupportedDistro.ARCH
@@ -155,7 +135,7 @@ object DistroRepository {
             description = "Innovative platform for hardware, clouds, and containers.",
             color = Color(0xFF294172),
             iconRes = R.drawable.distro_fedora,
-            comingSoon = false,
+            comingSoon = true,
             prootSupported = true, // unstable
             chrootSupported = true
         ),
