@@ -413,7 +413,26 @@ fun HomeScreen(
                         }
                     } else null,
                     dataScienceDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "Python (AI/ML), R, Julia, Jupyter & IDEs." else null
+                        "Python (AI/ML), R, Julia, Jupyter & IDEs." else null,
+                    onCyberSecInstall = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
+                        {
+                            if (permissionState.status.isGranted) {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_cybersec_debian.sh")
+                                val intent = TermuxIntentFactory.buildRunFeatureScriptIntent(distro.id, scriptContent)
+                                try {
+                                    onStartService(intent)
+                                    android.widget.Toast.makeText(context, "Starting CyberSec Setup...", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to start setup", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                        }
+                    } else null,
+                    cyberSecDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
+                        "Nmap, Wireshark, Metasploit, Aircrack-ng..." else null
                 )
             }
         }
