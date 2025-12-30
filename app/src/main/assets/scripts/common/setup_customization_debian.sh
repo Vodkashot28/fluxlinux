@@ -132,7 +132,6 @@ apply_xfce_settings() {
 
 # 2x Scaling
 apply_xfce_settings "xsettings" "/Gdk/WindowScalingFactor" "int" "2"
-apply_xfce_settings "xfwm4" "/general/theme" "string" "Default"
 
 # Apply Theme
 if [ -n "$SEL_THEME" ]; then
@@ -152,8 +151,11 @@ if [ -n "$SEL_CURSOR" ]; then
     echo "FluxLinux: Applying Cursor Theme '$SEL_CURSOR'"
     apply_xfce_settings "xsettings" "/Gtk/CursorThemeName" "string" "$SEL_CURSOR"
 fi
+
+# Apply Fonts
 apply_xfce_settings "xsettings" "/Gtk/FontName" "string" "JetBrainsMono Nerd Font 10"
 apply_xfce_settings "xsettings" "/Gtk/MonospaceFontName" "string" "JetBrainsMono Nerd Font Mono 10"
+apply_xfce_settings "xfwm4" "/general/title_font" "string" "JetBrainsMono Nerd Font Bold 10"
 
 # Set Wallpaper (xfce4-desktop)
 MONITORS="monitor0 monitor1 monitorVNC-0 monitorbuiltin builtin monitorHDMI-A-0 monitorVirtual-0 monitorVirtual1"
@@ -168,7 +170,296 @@ for M in $MONITORS; do
 done
 
 
-# 5. Configure Terminal (Direct Config File)
+# 5. Configure XFCE4 Panel
+echo "FluxLinux: Configuring Panel..."
+PANEL_CONFIG_DIR="$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$PANEL_CONFIG_DIR"
+
+cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
+<?xml version="1.1" encoding="UTF-8"?>
+
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <value type="int" value="2"/>
+    <property name="dark-mode" type="bool" value="true"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=6;x=0;y=0"/>
+      <property name="length" type="double" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="icon-size" type="uint" value="16"/>
+      <property name="size" type="uint" value="25"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1"/>
+        <value type="int" value="2"/>
+        <value type="int" value="3"/>
+        <value type="int" value="4"/>
+        <value type="int" value="33"/>
+        <value type="int" value="20"/>
+        <value type="int" value="21"/>
+        <value type="int" value="32"/>
+        <value type="int" value="23"/>
+        <value type="int" value="31"/>
+        <value type="int" value="24"/>
+        <value type="int" value="34"/>
+        <value type="int" value="5"/>
+        <value type="int" value="6"/>
+        <value type="int" value="7"/>
+        <value type="int" value="8"/>
+        <value type="int" value="9"/>
+        <value type="int" value="10"/>
+      </property>
+    </property>
+    <property name="panel-2" type="empty">
+      <property name="autohide-behavior" type="uint" value="1"/>
+      <property name="position" type="string" value="p=10;x=0;y=0"/>
+      <property name="length" type="uint" value="1"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="size" type="uint" value="48"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="11"/>
+        <value type="int" value="12"/>
+        <value type="int" value="13"/>
+        <value type="int" value="14"/>
+        <value type="int" value="15"/>
+        <value type="int" value="16"/>
+        <value type="int" value="17"/>
+        <value type="int" value="18"/>
+      </property>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu">
+      <property name="button-title" type="string" value="Menu"/>
+      <property name="button-icon" type="string" value="org.xfce.panel"/>
+      <property name="small" type="bool" value="true"/>
+      <property name="show-tooltips" type="bool" value="false"/>
+      <property name="show-generic-names" type="bool" value="false"/>
+      <property name="custom-menu" type="bool" value="false"/>
+    </property>
+    <property name="plugin-2" type="string" value="tasklist">
+      <property name="grouping" type="uint" value="1"/>
+      <property name="flat-buttons" type="bool" value="false"/>
+      <property name="show-only-minimized" type="bool" value="false"/>
+      <property name="include-all-workspaces" type="bool" value="false"/>
+      <property name="show-wireframes" type="bool" value="false"/>
+      <property name="show-labels" type="bool" value="false"/>
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-4" type="string" value="pager">
+      <property name="rows" type="uint" value="2"/>
+      <property name="wrap-workspaces" type="bool" value="false"/>
+      <property name="miniature-view" type="bool" value="true"/>
+    </property>
+    <property name="plugin-5" type="string" value="separator">
+      <property name="style" type="uint" value="2"/>
+    </property>
+    <property name="plugin-6" type="string" value="systray">
+      <property name="square-icons" type="bool" value="true"/>
+    </property>
+    <property name="plugin-7" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-8" type="string" value="clock">
+      <property name="digital-layout" type="uint" value="1"/>
+      <property name="mode" type="uint" value="4"/>
+      <property name="show-seconds" type="bool" value="true"/>
+      <property name="show-inactive" type="bool" value="true"/>
+      <property name="show-meridiem" type="bool" value="false"/>
+      <property name="timezone" type="string" value="Asia/Kolkata"/>
+    </property>
+    <property name="plugin-9" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-10" type="string" value="actions"/>
+    <property name="plugin-11" type="string" value="showdesktop"/>
+    <property name="plugin-12" type="string" value="separator"/>
+    <property name="plugin-13" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17669070471.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-14" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17669070472.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-15" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17669070473.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-16" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="17669070474.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-17" type="string" value="separator"/>
+    <property name="plugin-18" type="string" value="directorymenu">
+      <property name="base-directory" type="string" value="/home/flux"/>
+    </property>
+    <property name="plugin-20" type="string" value="cpufreq"/>
+    <property name="plugin-21" type="string" value="cpugraph">
+      <property name="update-interval" type="int" value="2"/>
+      <property name="time-scale" type="int" value="0"/>
+      <property name="size" type="int" value="16"/>
+      <property name="mode" type="int" value="1"/>
+      <property name="color-mode" type="int" value="0"/>
+      <property name="frame" type="int" value="1"/>
+      <property name="border" type="int" value="1"/>
+      <property name="bars" type="int" value="1"/>
+      <property name="per-core" type="int" value="0"/>
+      <property name="tracked-core" type="int" value="0"/>
+      <property name="in-terminal" type="int" value="1"/>
+      <property name="startup-notification" type="int" value="0"/>
+      <property name="load-threshold" type="int" value="0"/>
+      <property name="smt-stats" type="int" value="1"/>
+      <property name="smt-issues" type="int" value="1"/>
+      <property name="per-core-spacing" type="int" value="1"/>
+      <property name="command" type="string" value=""/>
+      <property name="background" type="array">
+        <value type="double" value="1"/>
+        <value type="double" value="1"/>
+        <value type="double" value="1"/>
+        <value type="double" value="0"/>
+      </property>
+      <property name="foreground-1" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-2" type="array">
+        <value type="double" value="1"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-3" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="smt-issues-color" type="array">
+        <value type="double" value="0.90000000000000002"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-system" type="array">
+        <value type="double" value="0.90000000000000002"/>
+        <value type="double" value="0.10000000000000001"/>
+        <value type="double" value="0.10000000000000001"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-user" type="array">
+        <value type="double" value="0.10000000000000001"/>
+        <value type="double" value="0.40000000000000002"/>
+        <value type="double" value="0.90000000000000002"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-nice" type="array">
+        <value type="double" value="0.90000000000000002"/>
+        <value type="double" value="0.80000000000000004"/>
+        <value type="double" value="0.20000000000000001"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-iowait" type="array">
+        <value type="double" value="0.20000000000000001"/>
+        <value type="double" value="0.90000000000000002"/>
+        <value type="double" value="0.40000000000000002"/>
+        <value type="double" value="1"/>
+      </property>
+    </property>
+    <property name="plugin-23" type="string" value="fsguard"/>
+    <property name="plugin-24" type="string" value="genmon">
+      <property name="command" type="string" value="/bin/bash -c &quot;free -m | awk '/Mem:/ {r=\$3/1024; t=\$2/1024} /Swap:/ {s=\$3/1024; st=\$2/1024} END {printf \&quot;&lt;txt&gt;RAM %.1f/%.1fGB | SWAP %.1f/%.1fGB&lt;/txt&gt;\&quot;, r, t, s, st}'&quot;"/>
+      <property name="update-interval" type="uint" value="2000"/>
+      <property name="use-label" type="bool" value="false"/>
+      <property name="font" type="string" value="JetBrainsMono Nerd Font 10"/>
+    </property>
+    <property name="plugin-31" type="string" value="separator"/>
+    <property name="plugin-32" type="string" value="separator"/>
+    <property name="plugin-33" type="string" value="separator"/>
+    <property name="plugin-34" type="string" value="separator"/>
+  </property>
+</channel>
+EOF
+
+chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$PANEL_CONFIG_DIR"
+
+# Create plugin configuration files
+PLUGIN_CONFIG_DIR="$USER_HOME/.config/xfce4/panel"
+mkdir -p "$PLUGIN_CONFIG_DIR"
+
+# Create cpufreq plugin configuration
+cat <<'EOF' > "$PLUGIN_CONFIG_DIR/cpufreq-20.rc"
+show_icon=false
+show_label_governor=false
+keep_compact=true
+one_line=true
+EOF
+
+# Create info.sh script (RAM, SWAP, and Battery)
+cat <<'EOF' > "$USER_HOME/.config/info.sh"
+#!/bin/bash
+
+# Get RAM and SWAP info (concise format)
+RAM_SWAP=$(free -m | awk '/Mem:/ {r=$3/1024; t=$2/1024} /Swap:/ {s=$3/1024; st=$2/1024} END {printf "%.1f/%.1fG | %.1f/%.1fG", r, t, s, st}')
+
+# Get battery info from sysfs
+BATTERY_PATH="/sys/class/power_supply/battery"
+if [ -f "$BATTERY_PATH/capacity" ] && [ -f "$BATTERY_PATH/status" ]; then
+    CAPACITY=$(cat "$BATTERY_PATH/capacity" 2>/dev/null || echo "0")
+    STATUS=$(cat "$BATTERY_PATH/status" 2>/dev/null || echo "Unknown")
+    
+    # Choose indicator based on status
+    if [ "$STATUS" = "Charging" ]; then
+        INDICATOR="CHG"
+    elif [ "$STATUS" = "Full" ]; then
+        INDICATOR="FULL"
+    else
+        INDICATOR="BAT"
+    fi
+    
+    BATTERY_INFO=" | ${INDICATOR} ${CAPACITY}%"
+else
+    BATTERY_INFO=""
+fi
+
+# Output in genmon XML format
+echo "<txt>${RAM_SWAP}${BATTERY_INFO}</txt>"
+EOF
+
+chmod +x "$USER_HOME/.config/info.sh"
+
+# Create genmon plugin configuration (both 19 and 24)
+cat <<EOF > "$PLUGIN_CONFIG_DIR/genmon-19.rc"
+Command=$USER_HOME/.config/info.sh
+UseLabel=0
+Text=(genmon)
+UpdatePeriod=1000
+Font=JetBrainsMono Nerd Font 10
+EOF
+
+cat <<EOF > "$PLUGIN_CONFIG_DIR/genmon-24.rc"
+Command=$USER_HOME/.config/info.sh
+UseLabel=0
+Text=(genmon)
+UpdatePeriod=1000
+Font=JetBrainsMono Nerd Font 10
+EOF
+
+chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$PLUGIN_CONFIG_DIR"
+chown "$CUSTOM_USER:$CUSTOM_GROUP" "$USER_HOME/.config/info.sh"
+
+
+# 6. Configure Terminal (Direct Config File)
 echo "FluxLinux: Configuring Terminal..."
 TERM_CONFIG_DIR="$USER_HOME/.config/xfce4/terminal"
 mkdir -p "$TERM_CONFIG_DIR"
