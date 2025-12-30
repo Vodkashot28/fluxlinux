@@ -499,7 +499,8 @@ sleep 3
 # 5. Start PulseAudio
 echo "Starting PulseAudio..."
 $TARGET_TERMUX_PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
-$TARGET_TERMUX_PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+# Explicitly load module again to be safe (Termux/Proot quirk)
+$TARGET_TERMUX_PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
 
 # 6. Start VirGL server for hardware acceleration
 if [ -x "$TARGET_TERMUX_PREFIX/bin/virgl_test_server_android" ]; then
