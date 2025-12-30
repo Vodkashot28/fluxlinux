@@ -489,7 +489,7 @@ fun HomeScreen(
                         }
                     } else null,
                     officeDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "LibreOffice, Thunderbird, Joplin (CLI) & more." else null
+                        "LibreOffice, Thunderbird & more." else null
                 )
             }
         }

@@ -64,86 +64,6 @@ apt install -y \
     xournalpp \
     || handle_error "PDF Tools Installation"
 
-# 5. Joplin (Note Taking - GUI)
-echo "FluxLinux: Installing Joplin (GUI - ARM64 AppImage)..."
-# We actally need the GUI version as requested.
-# Since we are in PROOT, we must Extract the AppImage.
-
-JOPLIN_VERSION="3.1.20"
-# Based on search results, the asset might be named generic "Joplin-arm64.AppImage" or "Joplin-3.1.20-arm64.AppImage"
-# Failing URL was: .../Joplin-3.1.20-arm64.AppImage
-# Trying likely alternative from this specific repo's naming convention
-JOPLIN_VERSION="3.1.20"
-# Asset name logic: The repo uses "Joplin-arm64.AppImage" for this release
-JOPLIN_URL="https://github.com/leaguecn/joplin-arm64-build/releases/download/v${JOPLIN_VERSION}/Joplin-arm64.AppImage"
-INSTALL_DIR="/opt/joplin"
-
-# FIX: Check for the binary, not just the folder (to handle failed installs)
-if [ ! -f "$INSTALL_DIR/AppRun" ]; then
-    echo "Downloading Joplin ARM64 (Re-installing)..."
-    # Cleanup potential broken install
-    rm -rf "$INSTALL_DIR"
-    
-    mkdir -p /tmp/joplin_install
-    # Clean previous temp download
-    rm -f /tmp/joplin_install/joplin.AppImage
-    
-    # Download with failure check
-    if wget -O /tmp/joplin_install/joplin.AppImage "$JOPLIN_URL"; then
-        echo "Extracting AppImage (Bypassing FUSE)..."
-        chmod +x /tmp/joplin_install/joplin.AppImage
-        cd /tmp/joplin_install
-        
-        # Try extraction
-        ./joplin.AppImage --appimage-extract >/dev/null 2>&1
-        
-        # Validate Extraction
-        if [ -f "squashfs-root/AppRun" ]; then
-            echo "Moving to $INSTALL_DIR..."
-            mkdir -p "$INSTALL_DIR"
-            mv squashfs-root/* "$INSTALL_DIR/"
-            
-            # Create Launcher Wrapper
-            echo "Creating Launcher..."
-            cat <<EOF > /usr/bin/joplin-desktop
-#!/bin/bash
-export PROOT_NO_SECCOMP=1
-# AppImages in Proot often need --no-sandbox
-exec "$INSTALL_DIR/AppRun" --no-sandbox "\$@"
-EOF
-            chmod +x /usr/bin/joplin-desktop
-            
-            # Create Desktop Entry
-            mkdir -p /usr/share/applications
-            cat <<EOF > /usr/share/applications/joplin.desktop
-[Desktop Entry]
-Name=Joplin
-Comment=Joplin for Desktop
-Exec=/usr/bin/joplin-desktop %u
-Icon=$INSTALL_DIR/usr/share/icons/hicolor/512x512/apps/joplin.png
-Type=Application
-Terminal=false
-Categories=Office;NoteTaking;
-MimeType=x-scheme-handler/joplin;
-EOF
-            echo " [✅] Joplin GUI Installed Successfully"
-        else
-            echo " [❌] AppImage Extraction Failed (Bad Download or Incompatible)"
-             # Cleanup failed extraction
-            rm -rf /tmp/joplin_install
-            rm -rf "$INSTALL_DIR"
-        fi
-    else
-        echo " [❌] Joplin Download Failed (Check Network/URL)"
-        rm -f /tmp/joplin_install/joplin.AppImage
-    fi
-    
-    # Final Cleanup of temp
-    rm -rf /tmp/joplin_install
-else
-    echo " [ℹ️] Joplin GUI already installed (Verified)."
-fi
-
 # 6. Verification
 verify_installation() {
     echo ""
@@ -154,7 +74,6 @@ verify_installation() {
     if command -v thunderbird >/dev/null; then echo " [✅] Thunderbird"; else echo " [❌] Thunderbird Missing"; fi
     if command -v evince >/dev/null; then echo " [✅] Evince"; else echo " [❌] Evince Missing"; fi
     if command -v xournalpp >/dev/null; then echo " [✅] Xournal++"; else echo " [❌] Xournal++ Missing"; fi
-    if command -v joplin-desktop >/dev/null; then echo " [✅] Joplin (GUI)"; else echo " [❌] Joplin Missing"; fi
 
     echo "------------------------------------------------"
     echo "🎉 Office Setup Complete!"
@@ -162,5 +81,5 @@ verify_installation() {
 
 verify_installation
 
-echo "Note: Joplin is installed as a Desktop App. Check your Applications menu."
+echo "Note: Check your Applications menu for installed tools."
 read -p "Press Enter to close..."
