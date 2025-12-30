@@ -73,6 +73,12 @@ chmod +x ~/xow64
 export TMPDIR=/tmp
 mkdir -p /tmp
 
+# CRITICAL FIX: wineserver inside xow64 seemingly ignores TMPDIR or defaults to Termux path.
+# We create the directory it's complaining about to pacify it.
+# Wineserver error: mkdir /data/data/com.termux/files/usr/tmp/.wine-0: No such file or directory
+mkdir -p /data/data/com.termux/files/usr/tmp
+chmod 777 /data/data/com.termux/files/usr/tmp 2>/dev/null
+
 echo "Configuring xow64..."
 # Ensure we don't have ownership conflict (common in Proot)
 mkdir -p "$HOME/xow64_prefix"
@@ -89,7 +95,7 @@ echo "Installing xow64 components (Wine/DXVK)..."
 echo "NOTE: This may take some time and might be interactive."
 # Force ownership fix again just before install
 chown -R "$(whoami)" "$HOME/xow64_prefix" 2>/dev/null
-~/xow64 install || echo " [⚠️] xow64 install had issues (check logs)"
+TMPDIR=/tmp ~/xow64 install || echo " [⚠️] xow64 install had issues (check logs)"
 
 # 4. Install Heroic Games Launcher (Native ARM64)
 echo "FluxLinux: Installing Heroic Games Launcher..."
@@ -104,17 +110,27 @@ if [ -z "$HEROIC_URL" ]; then
     echo " [ℹ️] Heroic API fetch failed, scraping releases page..."
     # Get the HTML, look for hrefs with .deb and arm64, grab the first one.
     # We use wget to stdout, then grep.
-    # Pattern: href="/Heroic-Games-Launcher/.../Heroic...arm64.deb"
     HEROIC_FRAGMENT=$(wget -qO- https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep -o 'href="[^"]*arm64\.deb"' | head -n 1 | cut -d '"' -f 2)
     if [ ! -z "$HEROIC_FRAGMENT" ]; then
         HEROIC_URL="https://github.com$HEROIC_FRAGMENT"
     fi
 fi
 
-# 3. Fallback: If scrape fails, use the hardcoded verified URL for 2.15.2
+# 3. Fallback: If scraper failed, try known variations of the filename for 2.15.2
 if [ -z "$HEROIC_URL" ]; then
-    echo " [⚠️] Could not resolve Heroic URL dynamically. Using hardcoded fallback..."
-    HEROIC_URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/Heroic-2.15.2-linux-arm64.deb"
+    echo " [⚠️] Could not resolve Heroic URL dynamically. Trying fallback patterns..."
+    # Heroic 2.15.2 filename variations
+    URLS=(
+        "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/Heroic-2.15.2-linux-arm64.deb"
+        "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/heroic_2.15.2_linux_arm64.deb"
+        "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/heroic-2.15.2-linux-arm64.deb"
+    )
+    for URL in "${URLS[@]}"; do
+        if wget --spider -q "$URL"; then
+            HEROIC_URL="$URL"
+            break
+        fi
+    done
 fi
 
 echo "Downloading Heroic: $HEROIC_URL"
