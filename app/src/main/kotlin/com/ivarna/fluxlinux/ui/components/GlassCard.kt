@@ -55,6 +55,8 @@ fun DistroCard(
     cyberSecDescription: String? = null,
     onVideoEditInstall: (() -> Unit)? = null,
     videoEditDescription: String? = null,
+    onDesignInstall: (() -> Unit)? = null,
+    designDescription: String? = null,
     onCustomize: (() -> Unit)? = null,
     customizeDescription: String? = null,
     onEnableHwAccel: (() -> Unit)? = null,
@@ -414,6 +416,29 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = videoEditDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onDesignInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onDesignInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFC2185B) // Pink/Magenta for Design
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install Graphic Design Tools", color = Color.White)
+                    }
+                    if (designDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = designDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,
