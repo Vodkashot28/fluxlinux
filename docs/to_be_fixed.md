@@ -21,3 +21,11 @@ The current codebase uses the **Input Redirection** method (`< file`) with a ful
 - Investigate `termux-x11` server logs for error messages.
 - verify if `com.termux.x11` app has permission to write/read the config.
 - Test manually running the command inside the Termux environment to isolate script vs. tool issues.
+
+### 6. Gaming & Emulation Setup (Partially Broken)
+- **xow64 (Wine) Failure**: `xow64 install` fails during `wineserver` execution with `mkdir /data/data/com.termux/files/usr/tmp/.wine-0: No such file or directory`.
+  - **Context**: This happens inside Proot. We attempted to fix it by `export TMPDIR=/tmp` and even `mkdir -p /data/data...` inside the script, but `wineserver` (likely hardcoded to Termux paths) still fails or refuses to use the new temp dir on some devices.
+  - **Proposed Fix**: Needs deeper investigation into `xow64`'s Proot patches or creating a dummy bind mount for `/data/data/...` inside the Proot container.
+- **Heroic Games Launcher**: Persistent 404 errors when fetching the ARM64 .deb.
+  - **Context**: GitHub releases asset names vary (case sensitivity). We implemented a "smart scraper" and fallback loop, but it remains flaky.
+  - **Workaround**: Users can manually download the `.deb` and install via `dpkg`.
