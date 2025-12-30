@@ -200,4 +200,54 @@ object TermuxIntentFactory {
         
         return buildRunCommandIntent(command, runInBackground = false) // Foreground to see progress
     }
+
+    /**
+     * Runs a script as Android Root (su).
+     * Used for uninstalling/managing Chroot environments.
+     */
+    fun buildRunRootScriptIntent(scriptContent: String): Intent {
+        val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
+        val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
+        
+        // Write to tmp, execute, then remove.
+        // We use /data/local/tmp as it is writable by shell and accessible by root.
+        val command = """
+            su -c '
+            echo "$scriptB64" | base64 -d > /data/local/tmp/flux_root_task.sh
+            chmod +x /data/local/tmp/flux_root_task.sh
+            sh /data/local/tmp/flux_root_task.sh
+            rm -f /data/local/tmp/flux_root_task.sh
+            '
+        """.trimIndent().replace("\n", " ")
+        
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
+     * Generates a safe command string that detects if it's running as root,
+     * and if not, prompts the user to type 'su'.
+     * Used for Clipboard copy-paste interactions.
+     */
+    fun getSafeRootManualCommand(scriptContent: String, scriptName: String): String {
+        val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
+        val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.DEFAULT)
+        // Use Heredoc with wrapped Base64 to prevent terminal freeze (Line length limits)
+        val chunkedEchos = "cat << 'EOF_B64' > \"\${S}.b64\"\n$scriptB64\nEOF_B64\n"
+
+        return """
+            S="/data/local/tmp/$scriptName"
+            if [ "${'$'}(id -u)" != "0" ]; then S="${'$'}HOME/$scriptName"; fi
+            $chunkedEchos
+            base64 -d "${'$'}S.b64" > "${'$'}S"
+            rm -f "${'$'}S.b64"
+            chmod +x "${'$'}S"
+            if [ "${'$'}(id -u)" = "0" ]; then
+                sh "${'$'}S"
+            else
+                echo "⚠️ PLEASE RUN AS ROOT ⚠️"
+                echo "Type su and press Enter."
+                echo "Then paste this command again."
+            fi
+        """.trimIndent() + "\n"
+    }
 }

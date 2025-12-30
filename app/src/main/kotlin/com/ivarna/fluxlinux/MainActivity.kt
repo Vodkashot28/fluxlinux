@@ -50,11 +50,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleScriptCallback(intent: android.content.Intent) {
+        android.util.Log.d("FluxLinux", "handleScriptCallback called with action: ${intent.action}, data: ${intent.data}")
         // Handle Deep Link: fluxlinux://callback?result=success&name=setup_termux
         if (intent.action == android.content.Intent.ACTION_VIEW && intent.data?.scheme == "fluxlinux") {
             val uri = intent.data
             val result = uri?.getQueryParameter("result")
             val scriptName = uri?.getQueryParameter("name") ?: "unknown"
+            
+            android.util.Log.d("FluxLinux", "Deep Link received: result=$result, scriptName=$scriptName")
             
             if (result == "success") {
                  // Check if this is a distro installation callback
@@ -62,6 +65,10 @@ class MainActivity : ComponentActivity() {
                      val distroId = scriptName.removePrefix("distro_install_")
                      StateManager.setDistroInstalled(this, distroId, true)
                      android.widget.Toast.makeText(this, "$distroId Installed! ✅", android.widget.Toast.LENGTH_LONG).show()
+                 } else if (scriptName.startsWith("distro_uninstall_")) {
+                     val distroId = scriptName.removePrefix("distro_uninstall_")
+                     StateManager.setDistroInstalled(this, distroId, false)
+                     android.widget.Toast.makeText(this, "$distroId Uninstalled! 🗑️", android.widget.Toast.LENGTH_LONG).show()
                  } else {
                      StateManager.setScriptStatus(this, scriptName, true)
                      android.widget.Toast.makeText(this, "Script '$scriptName' completed! ✅", android.widget.Toast.LENGTH_LONG).show()
@@ -151,6 +158,7 @@ class MainActivity : ComponentActivity() {
                             com.ivarna.fluxlinux.ui.screens.HomeScreen(
                                 permissionState = permissionState,
                                 hazeState = hazeState,
+                                scriptRefreshTrigger = refreshKey,
                                 onStartService = onStartServiceStub,
                                 onStartActivity = onStartActivityStub
                             )

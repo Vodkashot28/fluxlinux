@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     permissionState: PermissionState,
     hazeState: HazeState,
+    scriptRefreshTrigger: Int = 0,
     onStartService: (android.content.Intent) -> Unit,
     onStartActivity: (android.content.Intent) -> Unit
 ) {
@@ -53,9 +54,18 @@ fun HomeScreen(
     
     // State for Uninstall Dialog
     val distroToUninstall = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
+    // State for Manual Root Uninstall Instruction Dialog
+    val manualUninstallDistro = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
     
     // Refresh key to trigger recomposition
     val refreshKey = remember { mutableStateOf(0) }
+
+    // React to external refresh trigger (from MainActivity)
+    LaunchedEffect(scriptRefreshTrigger) {
+        if (scriptRefreshTrigger > 0) {
+            refreshKey.value++
+        }
+    }
     
 
     
@@ -528,16 +538,43 @@ fun HomeScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val intent = TermuxIntentFactory.buildUninstallIntent(distro.id)
-                        try {
-                            onStartService(intent)
-                            StateManager.setDistroInstalled(context, distro.id, false)
-                            android.widget.Toast.makeText(context, "Uninstalling ${distro.name}...", android.widget.Toast.LENGTH_SHORT).show()
-                            refreshKey.value++
-                        } catch (e: Exception) {
-                            android.util.Log.e("FluxLinux", "Uninstall failed", e)
+                        // Logic Split: Standard (Intent) vs Chroot (Manual Root Copy-Paste)
+                        val isChroot = distro.id == "debian_chroot" || distro.id == "debian13_chroot" || distro.id == "arch_chroot" || distro.id.contains("chroot")
+                        
+                        if (isChroot) {
+                            // Close the main confirmation dialog first
+                            distroToUninstall.value = null
+                            
+                            // Show the Instruction Dialog
+                            // We need a new state for this or just hack it here?
+                            // Better to use state. Let's create a temporary composable dialog here or manage state properly.
+                            // Since we are inside a callback, we can't emit a new composable easily without state.
+                            // BUT wait, we can't change state and expect the UI to show a new dialog if we just set value=null.
+                            // WE NEED A NEW STATE VARIABLE for "showManualUninstallDialog".
+                            
+                            // To avoid huge refactor, we will leverage the existing callback structure but we need a state.
+                            // Let's rely on a secondary state that triggering this block sets.
+                            
+                            // HACK/FIX: We'll modify the `distroToUninstall` usage logic above to support a second step, OR we accept that we need to add a state variable at the top of HomeScreen.
+                            // Let's add the state variable at the top called `manualUninstallDistro`.
+                            // See the next `replace_file_content` for that insertion.
+                            
+                            // For this block, we sets the NEW state variable and clear the old one.
+                            manualUninstallDistro.value = distro
+                            
+                        } else {
+                            // --- STANDARD PROOT FLOW ---
+                            val intent = TermuxIntentFactory.buildUninstallIntent(distro.id)
+                            try {
+                                onStartService(intent)
+                                StateManager.setDistroInstalled(context, distro.id, false)
+                                android.widget.Toast.makeText(context, "Uninstalling ${distro.name}...", android.widget.Toast.LENGTH_SHORT).show()
+                                refreshKey.value++
+                            } catch (e: Exception) {
+                                android.util.Log.e("FluxLinux", "Uninstall failed", e)
+                            }
+                            distroToUninstall.value = null
                         }
-                        distroToUninstall.value = null
                     }
                 ) { Text("Uninstall", color = FluxAccentMagenta) }
             },
@@ -546,7 +583,65 @@ fun HomeScreen(
             }
         )
     }
-    
+
+    // Manual Chroot Uninstall Instruction Dialog
+    if (manualUninstallDistro.value != null) {
+        val distro = manualUninstallDistro.value!!
+        AlertDialog(
+            onDismissRequest = { manualUninstallDistro.value = null },
+            title = { Text("Manual Root Required", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("To uninstall this Chroot environment, you must use Root (superuser) access manually.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("1. Click 'Proceed' to Copy Command & Open Termux.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                    Text("2. In Termux, type 'su' and press Enter.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                    Text("3. Paste the command and run it.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("The app will detect when uninstallation is complete.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val scriptName = when(distro.id) {
+                            "debian_chroot" -> "chroot/uninstall_debian_chroot.sh"
+                            "debian13_chroot" -> "chroot/uninstall_debian13.sh"
+                            else -> "chroot/uninstall_debian_chroot.sh"
+                        }
+                        
+                        try {
+                            val scriptManager = ScriptManager(context)
+                            val scriptContent = scriptManager.getScriptContent(scriptName)
+                            val command = TermuxIntentFactory.getSafeRootManualCommand(scriptContent, "uninstall_${distro.id}.sh")
+                            
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("FluxLinux Uninstall", command)
+                            clipboard.setPrimaryClip(clip)
+                            
+                            val launchIntent = TermuxIntentFactory.buildOpenTermuxIntent(context)
+                            if (launchIntent != null) {
+                                onStartActivity(launchIntent)
+                                android.widget.Toast.makeText(context, "Command Copied! Type 'su' -> Enter -> Paste", android.widget.Toast.LENGTH_LONG).show()
+                            } else {
+                                android.widget.Toast.makeText(context, "Termux app not found!", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Error preparing script: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        manualUninstallDistro.value = null
+                    }
+                ) {
+                    Text("Proceed")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { manualUninstallDistro.value = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
 }
 
