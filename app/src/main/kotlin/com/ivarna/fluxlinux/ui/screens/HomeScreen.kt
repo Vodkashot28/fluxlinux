@@ -337,7 +337,26 @@ fun HomeScreen(
                          }
                     } else null,
                     customizeDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "Applies Themes, Fonts, Wallpapers & 2x Scaling." else null
+                        "Applies Themes, Fonts, Wallpapers & 2x Scaling." else null,
+                    onEnableHwAccel = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
+                         {
+                            if (permissionState.status.isGranted) {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_hw_accel_debian.sh")
+                                val intent = TermuxIntentFactory.buildRunFeatureScriptIntent(distro.id, scriptContent)
+                                try {
+                                    onStartService(intent)
+                                    android.widget.Toast.makeText(context, "Starting GPU Acceleration Setup...", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to start accelerator", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                         }
+                    } else null,
+                    hwAccelDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
+                        "Supports Adreno (Turnip), Mali (Wrapper) & Generic (VirGL)" else null
                 )
             }
         }
