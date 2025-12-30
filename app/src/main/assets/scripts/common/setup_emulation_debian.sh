@@ -26,6 +26,7 @@ apt install -y \
     wget \
     curl \
     git \
+    gnu-which \
     gnupg \
     tar \
     debian-keyring \
@@ -97,19 +98,22 @@ echo "FluxLinux: Installing Heroic Games Launcher..."
 # 1. Try GitHub API
 HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep "browser_download_url" | grep "arm64.deb" | cut -d '"' -f 4 | head -n 1)
 
-# 2. If API failed (rate limit/empty), try scraping the releases page text
+# 2. Scrape generic latest release for any arm64 .deb
+# This regex looks for hrefs ending in arm64.deb case-insensitive if grep supports it, or just standard.
 if [ -z "$HEROIC_URL" ]; then
-    echo " [ℹ️] Heroic API fetch failed, trying HTML scrape..."
-    HEROIC_URL=$(wget -qO- https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep -o 'href="[^"]*arm64.deb"' | cut -d '"' -f 2 | head -n 1)
-    if [ ! -z "$HEROIC_URL" ]; then
-        HEROIC_URL="https://github.com$HEROIC_URL"
+    echo " [ℹ️] Heroic API fetch failed, scraping releases page..."
+    # Get the HTML, look for hrefs with .deb and arm64, grab the first one.
+    # We use wget to stdout, then grep.
+    # Pattern: href="/Heroic-Games-Launcher/.../Heroic...arm64.deb"
+    HEROIC_FRAGMENT=$(wget -qO- https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep -o 'href="[^"]*arm64\.deb"' | head -n 1 | cut -d '"' -f 2)
+    if [ ! -z "$HEROIC_FRAGMENT" ]; then
+        HEROIC_URL="https://github.com$HEROIC_FRAGMENT"
     fi
 fi
 
-# 3. Fallback (Known working legacy version if all else fails)
+# 3. Fallback: If scrape fails, use the hardcoded verified URL for 2.15.2
 if [ -z "$HEROIC_URL" ]; then
     echo " [⚠️] Could not resolve Heroic URL dynamically. Using hardcoded fallback..."
-    # Heroic-2.15.2-linux-arm64.deb (Verified case)
     HEROIC_URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/Heroic-2.15.2-linux-arm64.deb"
 fi
 
