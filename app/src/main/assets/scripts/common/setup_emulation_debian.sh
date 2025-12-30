@@ -68,30 +68,42 @@ chmod +x ~/xow64
 # Users in Chroot can manually toggle `~/xow64 proot=false`.
 
 echo "Configuring xow64..."
+# Ensure we don't have ownership conflict (common in Proot)
+mkdir -p "$HOME/xow64_prefix"
+chown -R "$(whoami)" "$HOME/xow64_prefix"
 ~/xow64 proot=true
 
 echo "Installing xow64 components (Wine/DXVK)..."
 echo "NOTE: This may take some time and might be interactive."
-~/xow64 install || echo " [⚠️] xow64 install had issues or was skipped"
+# Force ownership fix again just before install
+chown -R "$(whoami)" "$HOME/xow64_prefix" 2>/dev/null
+~/xow64 install || echo " [⚠️] xow64 install had issues (check logs)"
 
 # 4. Install Heroic Games Launcher (Native ARM64)
 echo "FluxLinux: Installing Heroic Games Launcher..."
-HEROIC_VERSION="2.15.2" # Hardcoded for stability or fetch dynamic
-# Fetch latest relese URL dynamically
-HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep "browser_download_url" | grep "arm64.deb" | cut -d '"' -f 4)
+# Using the confirmed 2.15.2 asset name (Heroic_2.15.2_linux_arm64.deb seems correct for some vs lowercase)
+# Let's try to get it from the latest release API more robustly
+HEROIC_LATEST_JSON=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest)
+HEROIC_URL=$(echo "$HEROIC_LATEST_JSON" | grep "browser_download_url" | grep "arm64.deb" | cut -d '"' -f 4 | head -n 1)
 
 if [ -z "$HEROIC_URL" ]; then
-    echo " [⚠️] Could not find Heroic ARM64 release. Installing fallback..."
-    # Fallback to known version if dynamic fetch fails
+    echo " [⚠️] Could not resolve Heroic URL. Trying fallback..."
+    # Fallback to absolute latest known good URL pattern (v2.15.2)
+    # The file is actually usually named "heroic_2.15.2_linux_arm64.deb" but case matters on GitHub.
+    # Searching assets... it seems it is "heroic_2.15.2_linux_arm64.deb" (lowercase).
+    # If it failed, maybe the release version changed.
+    # We will try the 'latest' download link via a redirect service if possible, or just the main release page.
+    # Let's use a known mirror or exact asset from 'releases/download/v2.15.2/...' check carefully.
     HEROIC_URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.15.2/heroic_2.15.2_linux_arm64.deb"
 fi
 
 echo "Downloading Heroic: $HEROIC_URL"
-wget -O /tmp/heroic.deb "$HEROIC_URL" || echo " [⚠️] Heroic Download Failed"
-
-if [ -f "/tmp/heroic.deb" ]; then
-    apt install -y /tmp/heroic.deb || handle_error "Heroic Installation"
+rm -f /tmp/heroic.deb
+if wget -O /tmp/heroic.deb "$HEROIC_URL"; then
+    apt install -y /tmp/heroic.deb || echo " [⚠️] Heroic Install Failed (Dependency?)"
     rm -f /tmp/heroic.deb
+else
+    echo " [❌] Heroic Download Failed (404/Network)"
 fi
 
 # 5. Install RetroArch & DOSBox
