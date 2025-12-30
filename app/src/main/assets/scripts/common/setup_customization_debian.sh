@@ -194,7 +194,6 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
         <value type="int" value="1"/>
         <value type="int" value="2"/>
         <value type="int" value="3"/>
-        <value type="int" value="4"/>
         <value type="int" value="33"/>
         <value type="int" value="20"/>
         <value type="int" value="21"/>
@@ -232,11 +231,13 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
   <property name="plugins" type="empty">
     <property name="plugin-1" type="string" value="applicationsmenu">
       <property name="button-title" type="string" value="Menu"/>
-      <property name="button-icon" type="string" value="org.xfce.panel"/>
+      <property name="button-icon" type="string" value="open-menu"/>
       <property name="small" type="bool" value="true"/>
       <property name="show-tooltips" type="bool" value="false"/>
       <property name="show-generic-names" type="bool" value="false"/>
       <property name="custom-menu" type="bool" value="false"/>
+      <property name="show-menu-icons" type="bool" value="false"/>
+      <property name="show-button-title" type="bool" value="false"/>
     </property>
     <property name="plugin-2" type="string" value="tasklist">
       <property name="grouping" type="uint" value="1"/>
@@ -249,11 +250,6 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
     <property name="plugin-3" type="string" value="separator">
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
-    </property>
-    <property name="plugin-4" type="string" value="pager">
-      <property name="rows" type="uint" value="2"/>
-      <property name="wrap-workspaces" type="bool" value="false"/>
-      <property name="miniature-view" type="bool" value="true"/>
     </property>
     <property name="plugin-5" type="string" value="separator">
       <property name="style" type="uint" value="2"/>
@@ -307,7 +303,7 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
       <property name="update-interval" type="int" value="2"/>
       <property name="time-scale" type="int" value="0"/>
       <property name="size" type="int" value="16"/>
-      <property name="mode" type="int" value="1"/>
+      <property name="mode" type="int" value="0"/>
       <property name="color-mode" type="int" value="0"/>
       <property name="frame" type="int" value="1"/>
       <property name="border" type="int" value="1"/>
@@ -376,7 +372,10 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
         <value type="double" value="1"/>
       </property>
     </property>
-    <property name="plugin-23" type="string" value="fsguard"/>
+    <property name="plugin-23" type="string" value="fsguard">
+      <property name="display-meter" type="bool" value="false"/>
+      <property name="show-size" type="bool" value="true"/>
+    </property>
     <property name="plugin-24" type="string" value="genmon">
       <property name="command" type="string" value="/bin/bash -c &quot;free -m | awk '/Mem:/ {r=\$3/1024; t=\$2/1024} /Swap:/ {s=\$3/1024; st=\$2/1024} END {printf \&quot;&lt;txt&gt;RAM %.1f/%.1fGB | SWAP %.1f/%.1fGB&lt;/txt&gt;\&quot;, r, t, s, st}'&quot;"/>
       <property name="update-interval" type="uint" value="2000"/>
@@ -547,8 +546,8 @@ if [ ! -f "$ZSHRC" ]; then
     chown "$CUSTOM_USER:$CUSTOM_GROUP" "$ZSHRC"
 fi
 
-# Set theme to random
-sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="random"/' "$ZSHRC"
+# Set theme to gnzh
+sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="gnzh"/' "$ZSHRC"
 
 # Configure plugins
 if grep -q "plugins=" "$ZSHRC" 2>/dev/null; then
