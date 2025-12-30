@@ -53,6 +53,8 @@ fun DistroCard(
     dataScienceDescription: String? = null,
     onCyberSecInstall: (() -> Unit)? = null,
     cyberSecDescription: String? = null,
+    onVideoEditInstall: (() -> Unit)? = null,
+    videoEditDescription: String? = null,
     onCustomize: (() -> Unit)? = null,
     customizeDescription: String? = null,
     onEnableHwAccel: (() -> Unit)? = null,
@@ -389,6 +391,29 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = cyberSecDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onVideoEditInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onVideoEditInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF673AB7) // Deep Purple for Creative/Media
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install Video Editing Tools", color = Color.White)
+                    }
+                    if (videoEditDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = videoEditDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,

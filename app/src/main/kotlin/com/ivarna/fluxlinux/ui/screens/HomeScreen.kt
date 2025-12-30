@@ -432,7 +432,26 @@ fun HomeScreen(
                         }
                     } else null,
                     cyberSecDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
-                        "Nmap, Wireshark, Metasploit, Aircrack-ng..." else null
+                        "Nmap, Wireshark, Metasploit, Aircrack-ng..." else null,
+                    onVideoEditInstall = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN) {
+                        {
+                            if (permissionState.status.isGranted) {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_video_editing_debian.sh")
+                                val intent = TermuxIntentFactory.buildRunFeatureScriptIntent(distro.id, scriptContent)
+                                try {
+                                    onStartService(intent)
+                                    android.widget.Toast.makeText(context, "Starting Video Edit Setup...", android.widget.Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Failed to start setup", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                        }
+                    } else null,
+                    videoEditDescription = if (distro.configuration?.family == com.ivarna.fluxlinux.core.model.DistroFamily.DEBIAN)
+                        "Kdenlive, Shotcut, VLC, FFmpeg & more." else null
                 )
             }
         }
