@@ -28,8 +28,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivarna.fluxlinux.core.data.Distro
-import com.ivarna.fluxlinux.ui.theme.GlassBorder
-import com.ivarna.fluxlinux.ui.theme.GlassWhiteLow
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.remember
 
@@ -39,32 +37,8 @@ fun DistroCard(
     isInstalled: Boolean = false,
     onInstall: () -> Unit,
     onUninstall: () -> Unit,
-    onLaunchCli: () -> Unit,
-    onLaunchGui: () -> Unit,
-    onWebDevInstall: (() -> Unit)? = null,
-    webDevDescription: String? = null,
-    onAppDevInstall: (() -> Unit)? = null,
-    appDevDescription: String? = null,
-    onGenDevInstall: (() -> Unit)? = null,
-    genDevDescription: String? = null,
-    onGameDevInstall: (() -> Unit)? = null,
-    gameDevDescription: String? = null,
-    onDataScienceInstall: (() -> Unit)? = null,
-    dataScienceDescription: String? = null,
-    onCyberSecInstall: (() -> Unit)? = null,
-    cyberSecDescription: String? = null,
-    onVideoEditInstall: (() -> Unit)? = null,
-    videoEditDescription: String? = null,
-    onDesignInstall: (() -> Unit)? = null,
-    designDescription: String? = null,
-    onOfficeInstall: (() -> Unit)? = null,
-    officeDescription: String? = null,
-    onEmulationInstall: (() -> Unit)? = null,
-    emulationDescription: String? = null,
-    onCustomize: (() -> Unit)? = null,
-    customizeDescription: String? = null,
-    onEnableHwAccel: (() -> Unit)? = null,
-    hwAccelDescription: String? = null,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToStart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -73,7 +47,7 @@ fun DistroCard(
             .padding(16.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
-            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(16.dp))
+            .border(BorderStroke(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)), RoundedCornerShape(16.dp))
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -100,8 +74,8 @@ fun DistroCard(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFFFF00E6),
-                                        Color(0xFF00E5FF)
+                                        androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                        androidx.compose.material3.MaterialTheme.colorScheme.tertiary
                                     )
                                 )
                             ),
@@ -127,14 +101,14 @@ fun DistroCard(
                             Box(
                                 modifier = Modifier
                                     .background(
-                                        Color(0xFFFFB74D),
+                                        androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
                                         RoundedCornerShape(4.dp)
                                     )
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = "COMING SOON",
-                                    color = Color.Black,
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -166,14 +140,14 @@ fun DistroCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (distro.prootSupported) Color(0xFF4CAF50) else Color(0xFF757575),
+                                if (distro.prootSupported) androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer,
                                 RoundedCornerShape(4.dp)
                             )
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "PRoot",
-                            color = Color.White,
+                            color = if (distro.prootSupported) androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -183,14 +157,14 @@ fun DistroCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (distro.chrootSupported) Color(0xFF2196F3) else Color(0xFF757575),
+                                if (distro.chrootSupported) androidx.compose.material3.MaterialTheme.colorScheme.tertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer,
                                 RoundedCornerShape(4.dp)
                             )
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "Chroot",
-                            color = Color.White,
+                            color = if (distro.chrootSupported) androidx.compose.material3.MaterialTheme.colorScheme.onTertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -200,7 +174,7 @@ fun DistroCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-                // Action Buttons - Conditional based on installation status
+            // Action Buttons - Conditional based on installation status
             if (!isInstalled) {
                 // Show Install button when not installed
                 Button(
@@ -208,355 +182,54 @@ fun DistroCard(
                     enabled = !distro.comingSoon,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                        disabledContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         if (distro.comingSoon) "Coming Soon" else "Install",
-                        color = if (distro.comingSoon) 
-                            androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) 
-                        else 
-                            androidx.compose.material3.MaterialTheme.colorScheme.onPrimary
+                        fontWeight = FontWeight.Bold
                     )
                 }
             } else {
-                // Show CLI/GUI/Uninstall when installed
+                // Show Settings & Start buttons when installed
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // CLI Button - Glass Style (Cyan)
-                    if (distro.id != "termux") {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF00E5FF)) // Vibrant Cyan
-                                .clickable(onClick = onLaunchCli)
-                                .padding(vertical = 12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "CLI",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-
-                    // GUI Button - Glass Style (Magenta)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFF00E6)) // Vibrant Magenta
-                            .clickable(onClick = onLaunchGui)
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
+                    // Settings Button
+                    Button(
+                        onClick = onNavigateToSettings,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "GUI",
-                            color = Color.Black,
+                            text = "Settings",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Start Button (Popup Launch)
+                    Button(
+                        onClick = onNavigateToStart, // This should trigger the Popup, passed from parent
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                            contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Start",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
                     }
-                }
-
-                if (onWebDevInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onWebDevInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2E7D32) // Forest Green
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Web Dev Tools", color = Color.White)
-                    }
-                    if (webDevDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = webDevDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onAppDevInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onAppDevInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6200EA) // Deep Purple
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install App Dev Pack", color = Color.White)
-                    }
-                    if (appDevDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = appDevDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onGenDevInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onGenDevInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFC2185B) // Pink 700
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install General Dev Tools", color = Color.White)
-                    }
-                    if (genDevDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = genDevDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onGameDevInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onGameDevInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE91E63) // Pink/Red
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Game Dev Tools", color = Color.White)
-                    }
-                    if (gameDevDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = gameDevDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-
-
-                if (onDataScienceInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onDataScienceInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF009688) // Teal 500
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Data Science Tools", color = Color.White)
-                    }
-                    if (dataScienceDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = dataScienceDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onCyberSecInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onCyberSecInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD32F2F) // Red for Security/Danger
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install CyberSec Tools", color = Color.White)
-                    }
-                    if (cyberSecDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = cyberSecDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onVideoEditInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onVideoEditInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF673AB7) // Deep Purple for Creative/Media
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Video Editing Tools", color = Color.White)
-                    }
-                    if (videoEditDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = videoEditDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onDesignInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onDesignInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFC2185B) // Pink/Magenta for Design
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Graphic Design Tools", color = Color.White)
-                    }
-                    if (designDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = designDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onOfficeInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onOfficeInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF0277BD) // Light Blue/Azure for Office
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Office Tools", color = Color.White)
-                    }
-                    if (officeDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = officeDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-
-
-                if (onEmulationInstall != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onEmulationInstall,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFEF6C00) // Orange/DeepOrange for Gaming
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Install Gaming & Emulation", color = Color.White)
-                    }
-                    if (emulationDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = emulationDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onCustomize != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onCustomize,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00ACC1) // Cyan
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Customize Desktop", color = Color.White)
-                    }
-                    if (customizeDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = customizeDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                if (onEnableHwAccel != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onEnableHwAccel,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF9800) // Orange
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Enable HW Acceleration", color = Color.White)
-                    }
-                    if (hwAccelDescription != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = hwAccelDescription,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Uninstall Button - Subtle Text Button aligned to end
-                androidx.compose.material3.TextButton(
-                    onClick = onUninstall,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(
-                        text = "Uninstall",
-                        color = Color(0xFFFF6B6B),
-                        fontSize = 14.sp
-                    )
                 }
             }
         }

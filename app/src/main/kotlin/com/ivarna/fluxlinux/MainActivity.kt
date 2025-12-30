@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.isGranted
 import com.ivarna.fluxlinux.ui.components.BottomTab
 import com.ivarna.fluxlinux.ui.components.GlassBottomNavigation
 import com.ivarna.fluxlinux.ui.components.GlassScaffold
@@ -39,7 +40,9 @@ enum class Screen {
     HOME,
     SETTINGS,
     TROUBLESHOOTING,
-    ROOT_ACCESS
+    ROOT_ACCESS,
+    INSTALL_WIZARD,
+    DISTRO_SETTINGS
 }
 
 class MainActivity : ComponentActivity() {
@@ -56,6 +59,7 @@ class MainActivity : ComponentActivity() {
             val uri = intent.data
             val result = uri?.getQueryParameter("result")
             val scriptName = uri?.getQueryParameter("name") ?: "unknown"
+            val installedComponents = uri?.getQueryParameter("components")
             
             android.util.Log.d("FluxLinux", "Deep Link received: result=$result, scriptName=$scriptName")
             
@@ -64,6 +68,14 @@ class MainActivity : ComponentActivity() {
                  if (scriptName.startsWith("distro_install_")) {
                      val distroId = scriptName.removePrefix("distro_install_")
                      StateManager.setDistroInstalled(this, distroId, true)
+                     
+                     // Mark components as installed if provided
+                     installedComponents?.split(",")?.forEach { compId ->
+                         if (compId.isNotBlank()) {
+                             StateManager.setComponentInstalled(this, distroId, compId, true)
+                         }
+                     }
+                     
                      android.widget.Toast.makeText(this, "$distroId Installed! ✅", android.widget.Toast.LENGTH_LONG).show()
                  } else if (scriptName.startsWith("distro_uninstall_")) {
                      val distroId = scriptName.removePrefix("distro_uninstall_")
@@ -127,6 +139,9 @@ class MainActivity : ComponentActivity() {
                 
                 var currentTab by remember { mutableStateOf(BottomTab.HOME) }
                 
+                // Selected Distro for Wizard/Settings
+                var selectedDistro by remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
+                
                 // Refresh key to force UI update on resume
                 var refreshKey by remember { mutableStateOf(0) }
                 val lifecycleOwner = LocalLifecycleOwner.current
@@ -148,6 +163,16 @@ class MainActivity : ComponentActivity() {
                     try { startActivity(intent) } catch (e: Exception) { android.util.Log.e("FluxLinux", "StartActivity failed", e) }
                 }
                 
+                // Navigation Callbacks
+                val onNavigateToInstall: (com.ivarna.fluxlinux.core.data.Distro) -> Unit = { distro ->
+                    selectedDistro = distro
+                    currentScreen = Screen.INSTALL_WIZARD
+                }
+                val onNavigateToDistroSettings: (com.ivarna.fluxlinux.core.data.Distro) -> Unit = { distro ->
+                    selectedDistro = distro
+                    currentScreen = Screen.DISTRO_SETTINGS
+                }
+                
                 @Composable
                 fun MainScreenContent(
                     tab: BottomTab,
@@ -160,7 +185,10 @@ class MainActivity : ComponentActivity() {
                                 hazeState = hazeState,
                                 scriptRefreshTrigger = refreshKey,
                                 onStartService = onStartServiceStub,
-                                onStartActivity = onStartActivityStub
+                                onStartActivity = onStartActivityStub,
+                                // Pass navigation callbacks
+                                onNavigateToInstall = onNavigateToInstall,
+                                onNavigateToSettings = onNavigateToDistroSettings
                             )
                         }
                         BottomTab.DISTROS -> {
@@ -168,7 +196,8 @@ class MainActivity : ComponentActivity() {
                                 permissionState = permissionState,
                                 hazeState = hazeState,
                                 onStartService = onStartServiceStub,
-                                onStartActivity = onStartActivityStub
+                                onStartActivity = onStartActivityStub,
+                                onNavigateToInstall = onNavigateToInstall
                             )
                         }
                     }
@@ -312,8 +341,84 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                    Screen.INSTALL_WIZARD -> {
+                         val hazeState = remember { HazeState() }
+                         if (selectedDistro != null) {
+                             com.ivarna.fluxlinux.ui.screens.InstallConfigScreen(
+                                 distro = selectedDistro!!,
+                                 onBack = { currentScreen = Screen.HOME }, // Or Screen.DISTROS depending on where they came from? Let's just go Home for now or maintain history.
+                                 // Actually for simplicity, back goes to tab view.
+                                 hazeState = hazeState,
+                                 onInstallStart = { components ->
+                                     if (permissionState.status.isGranted) {
+                                         val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildCompoundInstallIntent(this@MainActivity, selectedDistro!!, components)
+                                         try {
+                                             onStartServiceStub(intent)
+                                             android.widget.Toast.makeText(this@MainActivity, "Starting Installation...", android.widget.Toast.LENGTH_LONG).show()
+                                             currentScreen = Screen.HOME // Go back to home to see progress
+                                         } catch (e: Exception) {
+                                             android.util.Log.e("FluxLinux", "Install failed", e)
+                                             android.widget.Toast.makeText(this@MainActivity, "Failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                                         }
+                                     } else {
+                                         permissionState.launchPermissionRequest()
+                                     }
+                                 }
+                             )
+                         } else {
+                             currentScreen = Screen.HOME
+                         }
+                    }
+                    Screen.DISTRO_SETTINGS -> {
+                         val hazeState = remember { HazeState() }
+                         if (selectedDistro != null) {
+                             com.ivarna.fluxlinux.ui.screens.DistroSettingsScreen(
+                                 distro = selectedDistro!!,
+                                 onBack = { currentScreen = Screen.HOME },
+                                 hazeState = hazeState,
+                                 onInstallComponent = { component ->
+                                     if (permissionState.status.isGranted) {
+                                         val scriptManager = com.ivarna.fluxlinux.core.data.ScriptManager(this@MainActivity)
+                                         val scriptContent = scriptManager.getScriptContent(component.scriptName)
+                                         val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildRunFeatureScriptIntent(selectedDistro!!.id, scriptContent)
+                                         try {
+                                             onStartServiceStub(intent)
+                                             android.widget.Toast.makeText(this@MainActivity, "Installing ${component.name}...", android.widget.Toast.LENGTH_SHORT).show()
+                                         } catch(e: Exception) {
+                                             android.util.Log.e("FluxLinux", "Component install failed", e)
+                                         }
+                                     } else {
+                                         permissionState.launchPermissionRequest()
+                                     }
+                                 },
+                                 onUninstallDistro = {
+                                     // Navigate to Home first, then trigger uninstall
+                                     // This is a bit disjointed. The uninstall logic was embedded in HomeScreen.
+                                     // Using TermuxIntentFactory directly here.
+                                      if (permissionState.status.isGranted) {
+                                          val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildUninstallIntent(selectedDistro!!.id)
+                                          try {
+                                              onStartServiceStub(intent)
+                                              StateManager.setDistroInstalled(this@MainActivity, selectedDistro!!.id, false)
+                                              android.widget.Toast.makeText(this@MainActivity, "Uninstalling...", android.widget.Toast.LENGTH_SHORT).show()
+                                              currentScreen = Screen.HOME
+                                          } catch(e: Exception) {
+                                              android.util.Log.e("FluxLinux", "Uninstall failed", e)
+                                          }
+                                      } else {
+                                          permissionState.launchPermissionRequest()
+                                      }
+                                 },
+                                 onStartActivity = onStartActivityStub,
+                                 onNavigateToStart = { /* Not used in Settings, but if needed */ }
+                             )
+                         } else {
+                             currentScreen = Screen.HOME
+                         }
+                    }
                 }
             }
         }
     }
 }
+

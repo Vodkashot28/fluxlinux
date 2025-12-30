@@ -6,8 +6,91 @@ import com.ivarna.fluxlinux.ui.theme.FluxAccentCyan
 import androidx.compose.ui.graphics.Color
 import com.ivarna.fluxlinux.R
 
+
 object DistroRepository {
     
+    // Shared Components for Debian-based distros
+    private val debianComponents = listOf(
+        DistroComponent(
+            id = "hw_accel",
+            name = "Hardware Acceleration",
+            description = "VirGL & Zink drivers for GPU acceleration. Mandatory for GUI.",
+            scriptName = "common/setup_hw_accel_debian.sh",
+            sizeEstimate = "50 MB",
+            isMandatory = true
+        ),
+        DistroComponent(
+            id = "customization",
+            name = "Desktop Customization",
+            description = "FluxLinux Theme, Wallpapers, Fonts, and 2x Scaling.",
+            scriptName = "common/setup_customization_debian.sh",
+            sizeEstimate = "200 MB"
+        ),
+        DistroComponent(
+            id = "app_dev",
+            name = "App Development",
+            description = "Android SDK, Flutter, IntelliJ IDEA, OpenJDK.",
+            scriptName = "common/setup_appdev_debian.sh",
+            sizeEstimate = "2.5 GB"
+        ),
+        DistroComponent(
+            id = "web_dev",
+            name = "Web Development",
+            description = "Node.js, VS Code, Nginx, Python, Git.",
+            scriptName = "common/setup_webdev_debian.sh",
+            sizeEstimate = "800 MB"
+        ),
+        DistroComponent(
+            id = "gen_dev",
+            name = "General Coding",
+            description = "C++, Rust, Go, LunarVim, Neovim, Build Essentials.",
+            scriptName = "common/setup_gengdev_debian.sh",
+            sizeEstimate = "800 MB"
+        ),
+        DistroComponent(
+            id = "cybersec",
+            name = "Cyber Security",
+            description = "Kali Tools, Metasploit, Nmap, Wireshark, Aircrack-ng.",
+            scriptName = "common/setup_cybersec_debian.sh",
+            sizeEstimate = "2 GB"
+        ),
+        DistroComponent(
+            id = "data_science",
+            name = "Data Science",
+            description = "Jupyter, Python Data Stack (Pandas, NumPy), R.",
+            scriptName = "common/setup_datascience_debian.sh",
+            sizeEstimate = "1 GB"
+        ),
+        DistroComponent(
+            id = "gamedev",
+            name = "Game Development",
+            description = "Godot Engine, Blender, Raylib.",
+            scriptName = "common/setup_gamedev_debian.sh",
+            sizeEstimate = "1 GB"
+        ),
+         DistroComponent(
+            id = "video_editing",
+            name = "Video Editing",
+            description = "Kdenlive, Shotcut, OpenShot, Flowblade.",
+            scriptName = "common/setup_video_editing_debian.sh",
+            sizeEstimate = "1 GB"
+        ),
+        DistroComponent(
+            id = "office",
+            name = "Office Suite",
+            description = "LibreOffice, PDF Viewer, Email Client.",
+            scriptName = "common/setup_office_debian.sh",
+            sizeEstimate = "500 MB"
+        ),
+        DistroComponent(
+            id = "emulation",
+            name = "Retro Emulation",
+            description = "RetroArch, various emulator cores.",
+            scriptName = "common/setup_emulation_debian.sh",
+            sizeEstimate = "1 GB"
+        )
+    )
+
     val supportedDistros = listOf(
         // Currently Available
         Distro(
@@ -19,7 +102,8 @@ object DistroRepository {
             comingSoon = false,
             prootSupported = true,
             chrootSupported = true,
-            configuration = SupportedDistro.DEBIAN
+            configuration = SupportedDistro.DEBIAN,
+            components = debianComponents
         ),
         
         Distro(
@@ -44,7 +128,8 @@ object DistroRepository {
             comingSoon = false,
             prootSupported = false,
             chrootSupported = true,
-            configuration = SupportedDistro.DEBIAN
+            configuration = SupportedDistro.DEBIAN,
+            components = debianComponents
         ),
         
         // Coming Soon - Sorted alphabetically

@@ -36,7 +36,7 @@ fun CompactDistroCard(
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+            .border(BorderStroke(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant), RoundedCornerShape(12.dp))
     ) {
         Row(
             modifier = Modifier
@@ -73,14 +73,14 @@ fun CompactDistroCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                Color(0xFFFFB74D),
+                                androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
                                 RoundedCornerShape(3.dp)
                             )
                             .padding(horizontal = 5.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "SOON",
-                            color = Color.Black,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -94,14 +94,14 @@ fun CompactDistroCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            if (distro.prootSupported) Color(0xFF4CAF50) else Color(0xFF757575),
+                            if (distro.prootSupported) androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(3.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "P",
-                        color = Color.White,
+                        color = if (distro.prootSupported) androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -111,14 +111,14 @@ fun CompactDistroCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            if (distro.chrootSupported) Color(0xFF2196F3) else Color(0xFF757575),
+                            if (distro.chrootSupported) androidx.compose.material3.MaterialTheme.colorScheme.tertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(3.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "C",
-                        color = Color.White,
+                        color = if (distro.chrootSupported) androidx.compose.material3.MaterialTheme.colorScheme.onTertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )

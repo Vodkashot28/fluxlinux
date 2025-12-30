@@ -26,9 +26,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivarna.fluxlinux.R
-import com.ivarna.fluxlinux.ui.theme.FluxAccentCyan
-import com.ivarna.fluxlinux.ui.theme.GlassWhiteLow
-import com.ivarna.fluxlinux.ui.theme.GlassBorder
+
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -126,7 +124,7 @@ fun OnboardingScreen(
                 // Get Started Button
                 Button(
                     onClick = onGetStarted,
-                    colors = ButtonDefaults.buttonColors(containerColor = FluxAccentCyan),
+                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -134,7 +132,7 @@ fun OnboardingScreen(
                 ) {
                     Text(
                         "Get Started",
-                        color = Color.Black,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )

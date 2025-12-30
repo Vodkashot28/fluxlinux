@@ -162,7 +162,7 @@ fun SettingsScreen(
                                 "Environment Setup",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
 
@@ -170,7 +170,7 @@ fun SettingsScreen(
                             val setupCompleted = remember(refreshKey.value) { mutableStateOf(StateManager.isTermuxInitialized(context) || StateManager.getScriptStatus(context, "setup_termux")) }
                             val tweaksApplied = remember(refreshKey.value) { mutableStateOf(StateManager.getScriptStatus(context, "termux_tweaks")) }
                             
-                            val FluxGreen = Color(0xFF50fa7b)
+
                             
                             // Setup Environment Button
                             Button(
@@ -209,10 +209,10 @@ fun SettingsScreen(
                                 },
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (setupCompleted.value) Color.Transparent else FluxAccentCyan,
-                                    contentColor = if (setupCompleted.value) FluxGreen else FluxBackgroundStart
+                                    containerColor = if (setupCompleted.value) Color.Transparent else MaterialTheme.colorScheme.primary,
+                                    contentColor = if (setupCompleted.value) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onPrimary
                                 ),
-                                border = if (setupCompleted.value) BorderStroke(1.dp, FluxGreen) else null,
+                                border = if (setupCompleted.value) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null,
                                 modifier = Modifier.fillMaxWidth().height(50.dp)
                             ) {
                                 Row(
@@ -223,10 +223,11 @@ fun SettingsScreen(
                                         Icon(
                                             imageVector = Icons.Rounded.CheckCircle,
                                             contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.secondary
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Environment Initialized", fontWeight = FontWeight.Bold)
+                                        Text("Environment Initialized", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                                     } else {
                                         Text("Initialize Environment (Setup)", fontWeight = FontWeight.Bold)
                                     }
@@ -256,10 +257,10 @@ fun SettingsScreen(
                                 },
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (tweaksApplied.value) Color.Transparent else FluxAccentMagenta,
-                                    contentColor = if (tweaksApplied.value) FluxGreen else Color.White
+                                    containerColor = if (tweaksApplied.value) Color.Transparent else MaterialTheme.colorScheme.secondary,
+                                    contentColor = if (tweaksApplied.value) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSecondary
                                 ),
-                                border = if (tweaksApplied.value) BorderStroke(1.dp, FluxGreen) else null,
+                                border = if (tweaksApplied.value) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null,
                                 modifier = Modifier.fillMaxWidth().height(50.dp)
                             ) {
                                 Row(
@@ -270,10 +271,11 @@ fun SettingsScreen(
                                         Icon(
                                             imageVector = Icons.Rounded.CheckCircle,
                                             contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.secondary
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Tweaks Applied", fontWeight = FontWeight.Bold)
+                                        Text("Tweaks Applied", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                                     } else {
                                         Text("Apply Termux Tweaks", fontWeight = FontWeight.Bold)
                                     }
@@ -289,7 +291,7 @@ fun SettingsScreen(
                                 "Prerequisites",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             
@@ -315,17 +317,17 @@ fun SettingsScreen(
                                                     refreshKey.value++
                                                 }
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = GlassBorder),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("Install Termux", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
+                                            Text("Install Termux", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                         if (termuxProgress.value > 0f) {
-                                            LinearProgressIndicator(progress = { termuxProgress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = FluxAccentCyan)
+                                            LinearProgressIndicator(progress = { termuxProgress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = MaterialTheme.colorScheme.secondary)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF50fa7b), modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Column {
                                                 Text("Termux ✓", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -350,17 +352,17 @@ fun SettingsScreen(
                                                     refreshKey.value++
                                                 }
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = GlassBorder),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("Install X11", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
+                                            Text("Install X11", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                         if (x11Progress.value > 0f) {
-                                            LinearProgressIndicator(progress = { x11Progress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = FluxAccentCyan)
+                                            LinearProgressIndicator(progress = { x11Progress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = MaterialTheme.colorScheme.secondary)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF50fa7b), modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Column {
                                                 Text("Termux:X11 ✓", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -380,7 +382,7 @@ fun SettingsScreen(
                                 "Troubleshooting",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             
@@ -394,12 +396,12 @@ fun SettingsScreen(
                              Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color(0xFF1E1E1E), androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
                                     .padding(12.dp)
                             ) {
                                 Text(
                                     text = fixCommand,
-                                    color = Color(0xFF50fa7b),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 12.sp,
                                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                                 )
@@ -419,10 +421,10 @@ fun SettingsScreen(
                                             android.widget.Toast.makeText(context, "Copied! Opening Termux...", android.widget.Toast.LENGTH_LONG).show()
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = FluxAccentMagenta),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Copy & Open Termux", fontSize = 12.sp, color = Color.White)
+                                    Text("Copy & Open Termux", fontSize = 12.sp, color = MaterialTheme.colorScheme.onTertiary)
                                 }
                                 
                                 Button(
@@ -430,10 +432,10 @@ fun SettingsScreen(
                                         StateManager.setConnectionFixed(context, true)
                                         android.widget.Toast.makeText(context, "Marked as fixed", android.widget.Toast.LENGTH_SHORT).show()
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = GlassBorder),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Mark Resolved", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Mark Resolved", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -446,7 +448,7 @@ fun SettingsScreen(
                                 "General Settings",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
                             
@@ -487,8 +489,8 @@ fun SettingsScreen(
                                 
                                 Box {
                                     TextButton(onClick = { themeExpanded = true }) {
-                                        Text(currentTheme.name, color = MaterialTheme.colorScheme.primary)
-                                        Icon(Icons.Default.ArrowDropDown, null, tint = MaterialTheme.colorScheme.primary)
+                                        Text(currentTheme.name, color = MaterialTheme.colorScheme.secondary)
+                                        Icon(Icons.Default.ArrowDropDown, null, tint = MaterialTheme.colorScheme.secondary)
                                     }
                                     
                                     DropdownMenu(
@@ -527,7 +529,7 @@ fun SettingsScreen(
                                 "Advanced",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(top=8.dp, bottom = 12.dp)
                             )
                             
@@ -567,7 +569,7 @@ fun SettingsScreen(
                                 "Installation Mode",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
@@ -593,8 +595,8 @@ fun SettingsScreen(
                                 )
                                 Text("Chroot (Root Required)", color = MaterialTheme.colorScheme.onSurface)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Box(modifier = Modifier.background(Color(0xFFFF6B6B), androidx.compose.foundation.shape.RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                                    Text("ROOT", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Box(modifier = Modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.error, androidx.compose.foundation.shape.RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
+                                    Text("ROOT", color = androidx.compose.material3.MaterialTheme.colorScheme.onError, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
 
@@ -607,7 +609,7 @@ fun SettingsScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Setup Guide", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary) // Keep white for buttons on glass? Or adaptive? GlassBorder is whiteish.
+                                    Text("Setup Guide", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
                                 }
                                 Button(
                                     onClick = { onNavigateToTroubleshooting?.invoke() },
@@ -629,7 +631,7 @@ fun SettingsScreen(
                                 "Storage Management",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             
@@ -643,10 +645,10 @@ fun SettingsScreen(
                                 }
                                 Button(
                                     onClick = { android.widget.Toast.makeText(context, "App Reset", android.widget.Toast.LENGTH_SHORT).show() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B).copy(alpha = 0.2f)),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Reset All", fontSize = 12.sp, color = Color(0xFFFF6B6B))
+                                    Text("Reset All", fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
                                 }
                             }
                         }
@@ -673,7 +675,7 @@ fun SettingsScreen(
                                     "Termux:X11 Configuration",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.secondary
                                 )
                                 IconButton(
                                     onClick = { TermuxX11Preferences.openTermuxX11Preferences(context) }
@@ -681,7 +683,7 @@ fun SettingsScreen(
                                     Icon(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = "Open Termux:X11 Settings",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = MaterialTheme.colorScheme.secondary
                                     )
                                 }
                             }
@@ -705,7 +707,7 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text("Display Scale", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Text("${displayScale.toInt()}%", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    Text("${displayScale.toInt()}%", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
                                 }
                                 Slider(
                                     value = displayScale,
@@ -939,10 +941,10 @@ fun SettingsScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text("FluxLinux", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("FluxLinux", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                             Text("v0.1 • Dec 25, 2025", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Made with ❤️ in Kotlin", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            Text("Made with ❤️ in Kotlin", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
                         }
                     }
 
@@ -955,7 +957,7 @@ fun SettingsScreen(
                                 "Special Thanks",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             
@@ -973,7 +975,7 @@ fun SettingsScreen(
                                         .padding(vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Rounded.Favorite, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.Favorite, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(credit.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
                                 }
@@ -1000,8 +1002,8 @@ fun SettingsScreen(
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
-                                    Text("Abhay Raj", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                    Text("@abhay-byte", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                    Text("Abhay Raj", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                                    Text("@abhay-byte", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
                                 }
                             }
                             Spacer(modifier = Modifier.height(12.dp))
@@ -1016,7 +1018,7 @@ fun SettingsScreen(
 
                     GlassSettingCard {
                         Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
-                            Text("Connect With Me", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 12.dp))
+                            Text("Connect With Me", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(bottom = 12.dp))
                             
                             val links = listOf(
                                 SocialLink("GitHub", "https://github.com/abhay-byte", R.drawable.ic_github),
@@ -1031,7 +1033,7 @@ fun SettingsScreen(
                                     modifier = Modifier.fillMaxWidth().clickable { openUrl(context, link.url) }.padding(vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(painter=painterResource(link.iconRes), null, tint=MaterialTheme.colorScheme.primary, modifier=Modifier.size(20.dp))
+                                    Icon(painter=painterResource(link.iconRes), null, tint=MaterialTheme.colorScheme.secondary, modifier=Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Text(link.name, color=MaterialTheme.colorScheme.onSurface)
                                 }
@@ -1061,7 +1063,7 @@ fun SettingsScreen(
                                 "Star this Repository",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
                     }

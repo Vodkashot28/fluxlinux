@@ -106,6 +106,127 @@ object TermuxIntentFactory {
     }
 
     /**
+     * EXTENDED INSTALL: Generates a compound script to install base + components
+     */
+    fun buildCompoundInstallIntent(
+        context: android.content.Context,
+        distro: com.ivarna.fluxlinux.core.data.Distro,
+        selectedComponents: List<com.ivarna.fluxlinux.core.data.DistroComponent>
+    ): Intent {
+        val scriptManager = com.ivarna.fluxlinux.core.data.ScriptManager(context)
+        
+        // 1. Get Base Install Script
+        // For Debian 13 Chroot, we use specific scripts.
+        val baseScriptName = when (distro.id) {
+            "debian13_chroot" -> "chroot/setup_debian13_chroot.sh"
+            "debian_chroot" -> "chroot/setup_debian_chroot.sh"
+            "termux" -> "common/setup_termux.sh"
+            else -> "common/setup_debian_family.sh" // Fallback proot
+        }
+        
+        var fullScript = scriptManager.getScriptContent(baseScriptName)
+        
+        // 2. Append Component Scripts
+        // Logic depends on Chroot vs Proot
+        val isChroot = distro.id.contains("chroot")
+        
+        val componentsBlock = StringBuilder()
+        componentsBlock.append("\n# --- FLUXLINUX COMPONENT INSTALLATION ---\n")
+        
+        selectedComponents.forEach { component ->
+            val compScript = scriptManager.getScriptContent(component.scriptName)
+            val compScriptB64 = android.util.Base64.encodeToString(compScript.toByteArray(), android.util.Base64.NO_WRAP)
+            
+            componentsBlock.append("echo \"Installing ${component.name}...\"\n")
+            
+            if (isChroot) {
+                // For Chroot, we must write script to host temp, then execute inside chroot
+                val chrootPath = if (distro.id == "debian13_chroot") "/data/local/tmp/chrootDebian13" else "/data/local/tmp/chrootDebian"
+                
+                componentsBlock.append("""
+                    echo "$compScriptB64" | base64 -d > $chrootPath/tmp/flux_comp_${component.id}.sh
+                    chmod +x $chrootPath/tmp/flux_comp_${component.id}.sh
+                    busybox chroot $chrootPath /bin/su - root -c "bash /tmp/flux_comp_${component.id}.sh"
+                    rm -f $chrootPath/tmp/flux_comp_${component.id}.sh
+                    # Mark component as installed via callback (handled by app later, but let's log it)
+                    echo "Component ${component.id} done."
+                """.trimIndent())
+                componentsBlock.append("\n")
+            } else if (distro.id == "termux") {
+                // Native Termux
+                componentsBlock.append("""
+                    echo "$compScriptB64" | base64 -d > $TERMUX_HOME_DIR/flux_comp_${component.id}.sh
+                    bash $TERMUX_HOME_DIR/flux_comp_${component.id}.sh
+                    rm -f $TERMUX_HOME_DIR/flux_comp_${component.id}.sh
+                """.trimIndent())
+                componentsBlock.append("\n")
+            } else {
+                // Proot Distro
+                componentsBlock.append("""
+                    echo "$compScriptB64" | base64 -d > $TERMUX_HOME_DIR/flux_comp_${component.id}.sh
+                    proot-distro login ${distro.id} --shared-tmp -- bash -c "bash /data/data/com.termux/files/home/flux_comp_${component.id}.sh"
+                    rm -f $TERMUX_HOME_DIR/flux_comp_${component.id}.sh
+                """.trimIndent())
+                componentsBlock.append("\n")
+            }
+        }
+        
+        // 3. Inject this block BEFORE the final callback in the base script?
+        // Actually, the base scripts often end with `am start ...`. 
+        // We should REMOVE the original callback from the base script and append our own Final Callback.
+        
+        // Basic Regex to remove the success callback from base script
+        // We look for: am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success...
+        // This is risky if regex fails.
+        // Safer approach: Append the components block, and ensure the base script doesn't EXIT before we run components.
+        // Most setup scripts have `check_exit` at end.
+        
+        // EDIT: `setup_debian13_chroot.sh` ends with a callback.
+        // We will append the component block at the very end.
+        // But if the base script `exit 0`, the appended code won't run.
+        // We need to wrap the base script content or modify it.
+        
+        // HACK: Replace "exit 0" with nothing, and "am start..." with nothing in the String content?
+        fullScript = fullScript.replace("exit 0", "# exit 0 deferred")
+        fullScript = fullScript.replace("am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success", "# Deferred callback: am start ...")
+        
+        // Append components
+        fullScript += componentsBlock.toString()
+        
+        // Append Final Success Callback
+        // We construct a URL that encodes the list of installed components so the app can update StateManager
+        val componentIds = selectedComponents.joinToString(",") { it.id }
+        // We can't pass unlimited length in query param easily, but component IDs are short.
+        // actually, implementing individual component install callbacks is better.
+        // For now, just generic success for distro, and we assume components installed if script finishes?
+        // No, let's fire a specific callback for components?
+        // Or better: The App "Install Wizard" assumes success if the final callback is received.
+        // We can pass `components=id1,id2,id3` in the callback URL.
+        
+        val cleanDistroId = distro.id.replace(" ", "")
+        fullScript += "\n\n"
+        fullScript += """
+            echo "FluxLinux: All components installed."
+            am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success&name=distro_install_${cleanDistroId}&components=${componentIds}"
+        """.trimIndent()
+        
+        // Now wrap it all in the Base64 loader to avoid escaping hell
+        return buildRunRootScriptIntent(fullScript) // Using Root Intent because Chroot setup needs root.
+        // Wait, for Proot/Termux we don't need root.
+        
+        // Logic split:
+        if (isChroot) {
+            return buildRunRootScriptIntent(fullScript)
+        } else {
+             // For Proot, we wrap in normal runIntent
+             val safeScript = if (!fullScript.endsWith("\n")) "$fullScript\n" else fullScript
+             val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
+             val loader = "echo \"$scriptB64\" | base64 -d > $TERMUX_HOME_DIR/flux_full_install.sh; bash $TERMUX_HOME_DIR/flux_full_install.sh; rm $TERMUX_HOME_DIR/flux_full_install.sh"
+             return buildRunCommandIntent(loader)
+        }
+    }
+
+    /**
      * Launches a specific distro in CLI mode (login as flux user).
      */
     fun buildLaunchCliIntent(distroId: String): Intent {

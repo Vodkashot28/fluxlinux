@@ -307,4 +307,21 @@ object StateManager {
     fun getUnexpectedKeyboardVersion(context: Context): String {
         return getPackageVersion(context, "juloo.keyboard2") ?: "Not Installed"
     }
+    
+    /**
+     * Check if a distro component is installed
+     */
+    fun isComponentInstalled(context: Context, distroId: String, componentId: String): Boolean {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        return prefs.getBoolean("distro_${distroId}_component_${componentId}", false)
+    }
+
+    /**
+     * Mark a distro component as installed
+     */
+    fun setComponentInstalled(context: Context, distroId: String, componentId: String, installed: Boolean) {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("distro_${distroId}_component_${componentId}", installed).apply()
+        android.util.Log.d("StateManager", "Distro $distroId component $componentId status set to: $installed")
+    }
 }

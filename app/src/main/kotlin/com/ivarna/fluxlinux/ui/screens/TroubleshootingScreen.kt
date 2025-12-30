@@ -45,21 +45,17 @@ fun TroubleshootingScreen(
 
     Box(
         modifier = Modifier.fillMaxSize()
-            .background(
-                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0F0C29), Color(0xFF24243E))
-                )
-            )
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
             .haze(state = hazeState)
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Troubleshooting", color = Color.White) },
+                    title = { Text("Troubleshooting", color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Rounded.ArrowBack, "Back", tint = Color.White)
+                            Icon(Icons.Rounded.ArrowBack, "Back", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -95,14 +91,14 @@ fun ExpandableIssueCard(issue: TroubleshootingItem) {
             ) {
                 Text(
                     text = issue.title,
-                    color = Color.White,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.7f)
+                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
             
@@ -111,7 +107,7 @@ fun ExpandableIssueCard(issue: TroubleshootingItem) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = issue.content,
-                        color = Color(0xFFDDDDDD),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )

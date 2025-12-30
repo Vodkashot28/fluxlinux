@@ -39,10 +39,10 @@ fun RootAccessScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Root Access", color = Color.White) },
+                title = { Text("Root Access", color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Rounded.ArrowBack, "Back", tint = Color.White)
+                        Icon(Icons.Rounded.ArrowBack, "Back", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -55,11 +55,7 @@ fun RootAccessScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0F0C29), Color(0xFF24243E))
-                    )
-                )
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             Column(
@@ -75,13 +71,13 @@ fun RootAccessScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(RoundedCornerShape(24.dp))
-                        .background(GlassWhiteLow),
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (checkComplete && isRooted) Icons.Default.Lock else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = if (checkComplete && isRooted) Color(0xFF50fa7b) else Color(0xFFFF6B6B),
+                        tint = if (checkComplete && isRooted) androidx.compose.material3.MaterialTheme.colorScheme.secondary else androidx.compose.material3.MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(64.dp)
                     )
                 }
@@ -89,58 +85,58 @@ fun RootAccessScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 if (!checkComplete) {
-                    CircularProgressIndicator(color = FluxAccentCyan)
+                    CircularProgressIndicator(color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Checking for root access...", color = Color.Gray)
+                    Text("Checking for root access...", color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 } else {
                     if (isRooted) {
                         Text(
                             "Root Access Detected",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF50fa7b)
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.secondary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Your device is rooted. You can enable Chroot mode for better performance and full hardware access.",
                             textAlign = TextAlign.Center,
-                            color = Color(0xFFDDDDDD)
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(40.dp))
                         Button(
                             onClick = onEnableChroot,
-                            colors = ButtonDefaults.buttonColors(containerColor = FluxAccentCyan),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
                             modifier = Modifier.fillMaxWidth().height(50.dp)
                         ) {
-                            Text("Enable Chroot Mode", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text("Enable Chroot Mode", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Text(
                             "No Root Access",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF6B6B)
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Your device does not appear to be rooted. Chroot mode requires root access to function.",
                             textAlign = TextAlign.Center,
-                            color = Color(0xFFDDDDDD)
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Please continue using PRoot mode (Default). It works on all devices without root.",
                             textAlign = TextAlign.Center,
-                            color = Color.Gray,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(40.dp))
                         Button(
                             onClick = onBack,
-                            colors = ButtonDefaults.buttonColors(containerColor = GlassBorder),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.outline),
                             modifier = Modifier.fillMaxWidth().height(50.dp)
                         ) {
-                            Text("Return to Settings", color = Color.White)
+                            Text("Return to Settings", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }

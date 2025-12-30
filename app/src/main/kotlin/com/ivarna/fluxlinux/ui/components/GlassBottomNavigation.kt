@@ -83,9 +83,9 @@ fun GlassBottomNavigation(
                         )
                     },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedIconColor = MaterialTheme.colorScheme.secondary,
                         unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.secondary,
                         unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         indicatorColor = Color.Transparent
                     )
