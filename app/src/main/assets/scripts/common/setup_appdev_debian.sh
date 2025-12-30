@@ -479,21 +479,43 @@ fi
 
 # 5. IntelliJ IDEA Community
 IDEA_ROOT="/opt/intellij"
-# Check for idea.sh binary
-if [ ! -f "$IDEA_ROOT/bin/idea.sh" ]; then
-    
-    # Recent version: 2025.3.1 (Unified, AArch64)
-    IDEA_VER="2025.3.1"
-    # Note: 'ideaIC' (Community) is now just 'idea' (Unified) for 2025.3+
-    IDEA_URL="https://download.jetbrains.com/idea/idea-${IDEA_VER}-aarch64.tar.gz"
+# Recent version: 2025.3.1 (Unified, AArch64)
+IDEA_VER="2025.3.1"
+IDEA_URL="https://download.jetbrains.com/idea/idea-${IDEA_VER}-aarch64.tar.gz"
 
-    echo "FluxLinux: Installing IntelliJ IDEA Community ($IDEA_VER)..."
+echo "FluxLinux: Checking IntelliJ IDEA..."
+INSTALL_NEEDED=false
+
+if [ ! -f "$IDEA_ROOT/bin/idea.sh" ]; then
+    echo " - Not installed."
+    INSTALL_NEEDED=true
+else
+    # Check installed version via product-info.json
+    if [ -f "$IDEA_ROOT/product-info.json" ]; then
+        INSTALLED_VER=$(grep -Po '"version": "\K[^"]*' "$IDEA_ROOT/product-info.json")
+        echo " - Found installed version: $INSTALLED_VER"
+        if [ "$INSTALLED_VER" != "$IDEA_VER" ]; then
+            echo " - Version mismatch (Target: $IDEA_VER)."
+            INSTALL_NEEDED=true
+        else
+            echo " - Version Check OK ($IDEA_VER)."
+        fi
+    else
+        echo " - Version info missing. Forcing update."
+        INSTALL_NEEDED=true
+    fi
+fi
+
+if [ "$INSTALL_NEEDED" = true ]; then
+    echo "FluxLinux: Installing IntelliJ IDEA Unified ($IDEA_VER)..."
     
-    # Clean partial
+    # Clean partial/old
     if [ -d "$IDEA_ROOT" ]; then
+        echo " - Removing existing/old installation..."
         rm -rf "$IDEA_ROOT"
     fi
     mkdir -p "$IDEA_ROOT"
+    
     wget -q --show-progress "$IDEA_URL" -O /tmp/idea.tar.gz || handle_error "IntelliJ Download"
     
     echo "Extracting..."
@@ -523,17 +545,18 @@ EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=IntelliJ IDEA Community Edition
+Name=IntelliJ IDEA
 Icon=$IDEA_ROOT/bin/idea.svg
 Exec="/usr/local/bin/idea" %f
-Comment=Capable and Ergonomic IDE for JVM
+Comment=Capstone IDE for JVM
 Categories=Development;IDE;
 Terminal=false
-StartupWMClass=jetbrains-idea-ce
+StartupWMClass=jetbrains-idea
 EOF
 
+    echo " [✅] IntelliJ IDEA Installed ($IDEA_VER)"
 else
-    echo "FluxLinux: IntelliJ IDEA already installed."
+    echo "FluxLinux: IntelliJ IDEA is up-to-date."
 fi
 
 # 6. React Native Setup (Environment)
