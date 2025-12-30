@@ -253,6 +253,22 @@ fun HomeScreen(
                     },
                     onLaunchGui = {
                         if (permissionState.status.isGranted) {
+                            // Start floating keyboard service if overlay permission is granted
+                            if (android.provider.Settings.canDrawOverlays(context)) {
+                                try {
+                                    val keyboardIntent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                        context.startForegroundService(keyboardIntent)
+                                    } else {
+                                        context.startService(keyboardIntent)
+                                    }
+                                    isFloatingKeyboardRunning = true
+                                } catch (e: Exception) {
+                                    android.util.Log.e("FluxLinux", "Failed to start keyboard service", e)
+                                }
+                            }
+                            
+                            // Launch GUI
                             val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                             try {
                                 onStartService(intent)
