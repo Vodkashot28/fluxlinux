@@ -91,32 +91,45 @@ if [ "$MODE" = "adreno" ]; then
 fi
 
 if [ "$MODE" = "mali" ]; then
-    # Install Leegao Vulkan Wrapper (Self-Contained)
-    # URL provided by user: v0.0.5r5
-    WRAPPER_URL="https://github.com/leegao/bionic-vulkan-wrapper/releases/download/v0.0.5r5/libvulkan_wrapper.so"
-    LIB_PATH="/usr/lib/libvulkan_wrapper.so"
+    # Install Leegao Vulkan Wrapper (Copy from Host)
+    # We use the Pipetto package installed by setup_termux.sh
+    
+    TERMUX_PREFIX="/data/data/com.termux/files/usr"
+    HOST_LIB_PATH="$TERMUX_PREFIX/lib/libvulkan_wrapper.so"
+    
+    # Fallback search if not in standard path
+    if [ ! -f "$HOST_LIB_PATH" ]; then
+        HOST_LIB_PATH=$(find "$TERMUX_PREFIX/lib" -name "libvulkan_wrapper.so" 2>/dev/null | head -n 1)
+    fi
+
+    TARGET_LIB="/usr/lib/libvulkan_wrapper.so"
     ICD_DIR="/etc/vulkan/icd.d"
     ICD_FILE="$ICD_DIR/wrapper_icd.json"
 
-    echo "FluxLinux: Downloading Mali Vulkan Wrapper..."
-    curl -L -o "$LIB_PATH" "$WRAPPER_URL"
-    chmod +x "$LIB_PATH"
+    if [ -n "$HOST_LIB_PATH" ] && [ -f "$HOST_LIB_PATH" ]; then
+        echo "FluxLinux: Found Host Wrapper at $HOST_LIB_PATH"
+        echo "FluxLinux: Copying to $TARGET_LIB..."
+        cp "$HOST_LIB_PATH" "$TARGET_LIB"
+        chmod +x "$TARGET_LIB"
 
-    if [ -f "$LIB_PATH" ]; then
         echo "FluxLinux: Configuring Wrapper ICD..."
         mkdir -p "$ICD_DIR"
         cat <<EOF > "$ICD_FILE"
 {
     "file_format_version": "1.0.0",
     "ICD": {
-        "library_path": "$LIB_PATH",
+        "library_path": "$TARGET_LIB",
         "api_version": "1.1.0"
     }
 }
 EOF
-        echo "FluxLinux: Wrapper Installed to $LIB_PATH"
+        echo "FluxLinux: Wrapper Configured Successfully!"
     else
-        echo "Error: Failed to download wrapper library."
+        echo "Error: Host Vulkan Wrapper not found in Termux."
+        echo "checked: $TERMUX_PREFIX/lib/libvulkan_wrapper.so"
+        echo ""
+        echo "Please run the 'Setup Termux' script from the app menu first!"
+        echo "This installs the required 'vulkan-wrapper-android' package."
         exit 1
     fi
 fi
