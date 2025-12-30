@@ -57,6 +57,8 @@ fun DistroCard(
     videoEditDescription: String? = null,
     onDesignInstall: (() -> Unit)? = null,
     designDescription: String? = null,
+    onOfficeInstall: (() -> Unit)? = null,
+    officeDescription: String? = null,
     onCustomize: (() -> Unit)? = null,
     customizeDescription: String? = null,
     onEnableHwAccel: (() -> Unit)? = null,
@@ -439,6 +441,29 @@ fun DistroCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = designDescription,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                if (onOfficeInstall != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onOfficeInstall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0277BD) // Light Blue/Azure for Office
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install Office Tools", color = Color.White)
+                    }
+                    if (officeDescription != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = officeDescription,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 12.sp,
                             lineHeight = 14.sp,
