@@ -70,7 +70,10 @@ echo "FluxLinux: Installing Joplin (GUI - ARM64 AppImage)..."
 # Since we are in PROOT, we must Extract the AppImage.
 
 JOPLIN_VERSION="3.1.20"
-JOPLIN_URL="https://github.com/leaguecn/joplin-arm64-build/releases/download/v${JOPLIN_VERSION}/Joplin-${JOPLIN_VERSION}-arm64.AppImage"
+# Based on search results, the asset might be named generic "Joplin-arm64.AppImage" or "Joplin-3.1.20-arm64.AppImage"
+# Failing URL was: .../Joplin-3.1.20-arm64.AppImage
+# Trying likely alternative from this specific repo's naming convention
+JOPLIN_URL="https://github.com/leaguecn/joplin-arm64-build/releases/download/v${JOPLIN_VERSION}/Joplin-arm64.AppImage"
 INSTALL_DIR="/opt/joplin"
 
 if [ ! -d "$INSTALL_DIR" ]; then
