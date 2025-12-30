@@ -253,7 +253,7 @@ echo "Cleaning internal XFCE4 session..."
 \$BB chroot \$DEBIANPATH /bin/su - root -c "killall -9 xfce4-session xfwm4 xfdesktop xfce4-panel dbus-launch dbus-daemon" >/dev/null 2>&1
 
 echo "Starting Debian 13 Chroot GUI ($USERNAME)..."
-\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && dbus-launch --exit-with-session startxfce4'
+\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=/tmp && dbus-launch --exit-with-session startxfce4'
 EOF
     chmod +x "$LAUNCH_SCRIPT"
     success "Launch script created."
@@ -363,7 +363,7 @@ mkdir -p \$DEBIANPATH/sdcard
 
 # Launch GUI as user
 echo "Starting Debian 13 Chroot GUI ($USERNAME)..."
-\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && dbus-launch --exit-with-session startxfce4'
+\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=/tmp && dbus-launch --exit-with-session startxfce4'
 EOF
         chmod +x "$LAUNCH_SCRIPT"
         success "Core launch script updated: $LAUNCH_SCRIPT"
@@ -432,7 +432,7 @@ echo "Cleaning internal XFCE4 session..."
 \$BB chroot \$DEBIANPATH /bin/su - root -c "killall -9 xfce4-session xfwm4 xfdesktop xfce4-panel dbus-launch dbus-daemon" >/dev/null 2>&1
 
 echo "Starting Debian 13 Chroot GUI ($USERNAME)..."
-\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && dbus-launch --exit-with-session startxfce4'
+\$BB chroot \$DEBIANPATH /bin/su - $USERNAME -c 'export DISPLAY=:0 && export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=/tmp && dbus-launch --exit-with-session startxfce4'
 EOF
         chmod +x "$LAUNCH_SCRIPT"
         success "Launch script created."
