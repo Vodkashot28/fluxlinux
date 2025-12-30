@@ -26,10 +26,18 @@ apt install -y \
     fonts-noto \
     fonts-liberation \
     fonts-dejavu \
+    fonts-dejavu \
     nodejs \
-    npm \
     libsecret-1-dev \
     || handle_error "Dependencies & Fonts"
+
+# Conditional NPM Install (Fix for NodeSource Conflict)
+# If setup_webdev_debian.sh ran, nodejs includes npm.
+# If not, Debian split packages might need explicit npm.
+if ! command -v npm >/dev/null; then
+    echo "FluxLinux: NPM not found (bundled), installing explicitly..."
+    apt install -y npm || echo " [⚠️] NPM install warning (might be bundled)"
+fi
 
 # 2. LibreOffice Suite
 echo "FluxLinux: Installing LibreOffice Suite..."
