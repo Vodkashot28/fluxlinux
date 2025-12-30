@@ -27,54 +27,137 @@ apt-get install -y \
 # 2. Detect Architecture
 ARCH=$(dpkg --print-architecture)
 if [ "$ARCH" != "arm64" ]; then
-    echo "Warning: Turnip drivers are optimized for arm64 (Adreno). Your arch is $ARCH."
+    echo "Warning: Drivers are optimized for arm64. Your arch is $ARCH."
 fi
 
-# 3. Install Turnip (Mesa Turnip/Zink)
-# Reference: https://github.com/sabamdarif/termux-desktop
-TURNIP_VERSION="25.3.2"
-# Note: Using aarch64 for URL mapping
-DL_ARCH="aarch64"
-if [ "$ARCH" != "arm64" ]; then DL_ARCH="$ARCH"; fi
+# 3. GPU Selection Menu
+echo "============================================"
+echo "      Select your GPU / Acceleration Mode"
+echo "============================================"
+echo "1) Adreno (Turnip + Zink)"
+echo "   - Best for Snapdragon devices."
+echo "   - Installs custom Mesa/Turnip drivers inside Debian."
+echo ""
+echo "2) Mali / Other (Zink + Host Wrapper)"
+echo "   - For Mali/Exynos/Mediatek devices."
+echo "   - REQUIRES 'vulkan-wrapper-android' installed in locally."
+echo "   - Uses Zink (OpenGL over Vulkan)."
+echo ""
+echo "3) Generic (VirGL)"
+echo "   - Universal compatibility."
+echo "   - Requires 'virgl_test_server' running on Host."
+echo "   - Good for desktop, slower for games."
+echo "============================================"
+read -r -p "Enter choice [1-3]: " GPU_CHOICE
 
-URL="https://github.com/sabamdarif/termux-desktop/releases/download/turnip-${TURNIP_VERSION}/turnip-${TURNIP_VERSION}-${DL_ARCH}.zip"
+case "$GPU_CHOICE" in
+    1)
+        MODE="adreno"
+        ;;
+    2)
+        MODE="mali"
+        ;;
+    3)
+        MODE="virgl"
+        ;;
+    *)
+        echo "Invalid choice. Defaulting to VirGL."
+        MODE="virgl"
+        ;;
+esac
 
-echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION}..."
-curl -L -o /tmp/turnip.zip "$URL"
+echo "FluxLinux: Configuring for $MODE..."
 
-if [ -f "/tmp/turnip.zip" ]; then
-    echo "FluxLinux: Installing Turnip..."
-    # Extract to /usr (overlays existing mesa libs or adds to local)
-    # The zip usually contains /lib, /share etc.
-    unzip -o /tmp/turnip.zip -d /usr
-    rm /tmp/turnip.zip
-    
-    # 4. Create Launch Wrapper
-    echo "FluxLinux: Creating 'gpu-launch' wrapper..."
-    cat <<EOF > /usr/local/bin/gpu-launch
+if [ "$MODE" = "adreno" ]; then
+    # Install Turnip (Mesa Turnip/Zink)
+    # Reference: https://github.com/sabamdarif/termux-desktop
+    TURNIP_VERSION="25.3.2"
+    DL_ARCH="aarch64"
+    if [ "$ARCH" != "arm64" ]; then DL_ARCH="$ARCH"; fi
+
+    URL="https://github.com/sabamdarif/termux-desktop/releases/download/turnip-${TURNIP_VERSION}/turnip-${TURNIP_VERSION}-${DL_ARCH}.zip"
+
+    echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION}..."
+    curl -L -o /tmp/turnip.zip "$URL"
+
+    if [ -f "/tmp/turnip.zip" ]; then
+        echo "FluxLinux: Installing Turnip..."
+        unzip -o /tmp/turnip.zip -d /usr
+        rm /tmp/turnip.zip
+    else
+        echo "Error: Failed to download Turnip drivers."
+        exit 1
+    fi
+fi
+
+# 4. Create Launch Wrapper
+echo "FluxLinux: Creating 'gpu-launch' wrapper..."
+
+cat <<EOF > /usr/local/bin/gpu-launch
 #!/bin/bash
-# Wrapper to launch apps with Turnip/Zink acceleration on Adreno
+# FluxLinux GPU Launcher
 
-# Turnip (Adreno Vulkan) + Zink (OpenGL over Vulkan)
-export MESA_LOADER_DRIVER_OVERRIDE=zink
-export GALLIUM_DRIVER=zink
-export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.${DL_ARCH}.json 
+MODE="$MODE"
+ARCH="$ARCH"
+DL_ARCH="aarch64" # Default for wrapper naming
+if [ "\$ARCH" != "arm64" ]; then DL_ARCH="\$ARCH"; fi
 
-# OpenGL Version Overrides (Improve compatibility)
-export MESA_GL_VERSION_OVERRIDE=4.6
-export MESA_GLES_VERSION_OVERRIDE=3.2
-export MESA_GLSL_VERSION_OVERRIDE=460
+# Reset vars
+unset GALLIUM_DRIVER
+unset MESA_LOADER_DRIVER_OVERRIDE
+unset VK_ICD_FILENAMES
 
-# Performance hints
-export TU_DEBUG=noconform
+if [ "\$MODE" = "adreno" ]; then
+    # Turnip (Adreno Vulkan) + Zink
+    export MESA_LOADER_DRIVER_OVERRIDE=zink
+    export GALLIUM_DRIVER=zink
+    export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.\${DL_ARCH}.json
+    export TU_DEBUG=noconform
+    # OpenGL Overrides
+    export MESA_GL_VERSION_OVERRIDE=4.6
+    export MESA_GLES_VERSION_OVERRIDE=3.2
+    export MESA_GLSL_VERSION_OVERRIDE=460
 
+elif [ "\$MODE" = "mali" ]; then
+    # Zink over Host Wrapper (Mali)
+    # Points to Termux installation of wrapper
+    TERMUX_PREFIX="/data/data/com.termux/files/usr"
+    WRAPPER_PATH="\$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.\${DL_ARCH}.json"
+    
+    if [ -f "\$WRAPPER_PATH" ]; then
+        export VK_ICD_FILENAMES="\$WRAPPER_PATH"
+        export MESA_LOADER_DRIVER_OVERRIDE=zink
+        export GALLIUM_DRIVER=zink
+        export MESA_GL_VERSION_OVERRIDE=4.6
+        export MESA_GLES_VERSION_OVERRIDE=3.2
+        # Mali specific optimizations
+        export MESA_VK_WSI_PRESENT_MODE=mailbox
+        export MESA_VK_WSI_DEBUG=blit 
+    else
+        echo "Warning: Host Vulkan Wrapper not found at \$WRAPPER_PATH"
+        echo "Please install 'vulkan-wrapper-android' in Termux."
+        # Fallback to software? Or let it fail/try virgl?
+    fi
+
+elif [ "\$MODE" = "virgl" ]; then
+    # VirGL (Client)
+    export GALLIUM_DRIVER=virpipe
+    export MESA_GL_VERSION_OVERRIDE=4.0
+    export MESA_GLES_VERSION_OVERRIDE=3.1
+    export MESA_GLSL_VERSION_OVERRIDE=400
+fi
+
+# Execute Application
 exec "\$@"
 EOF
-    chmod +x /usr/local/bin/gpu-launch
-    
-    echo "FluxLinux: GPU Drivers Installed!"
-    echo "Usage: gpu-launch <application>"
-    echo "Example: gpu-launch glxgears"
-else
-    echo "Error: Failed to download Turnip drivers."
+
+chmod +x /usr/local/bin/gpu-launch
+
+echo "FluxLinux: GPU Drivers Configured for $MODE!"
+echo "Usage: gpu-launch <application>"
+if [ "$MODE" = "virgl" ]; then
+    echo "Note: Ensure 'virgl_test_server' is running in Termux."
+elif [ "$MODE" = "mali" ]; then
+    echo "Note: Ensure 'vulkan-wrapper-android' is installed in Termux."
 fi
+
