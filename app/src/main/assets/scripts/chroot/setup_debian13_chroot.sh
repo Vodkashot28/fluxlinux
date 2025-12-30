@@ -135,6 +135,10 @@ configure_debian_chroot() {
     $BB mount -t tmpfs -o size=512M tmpfs "$DEBIANPATH/dev/shm" || goodbye
 
     # Mount sdcard
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
     mkdir -p "$DEBIANPATH/sdcard"
     $BB mount --bind /sdcard "$DEBIANPATH/sdcard" || goodbye
 
@@ -244,6 +248,10 @@ mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
 mkdir -p \$DEBIANPATH/sdcard
 \$BB mount --bind /sdcard \$DEBIANPATH/sdcard
 
@@ -358,6 +366,10 @@ mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
 mkdir -p \$DEBIANPATH/sdcard
 \$BB mount --bind /sdcard \$DEBIANPATH/sdcard
 
@@ -423,6 +435,10 @@ mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
 mkdir -p \$DEBIANPATH/sdcard
 \$BB mount --bind /sdcard \$DEBIANPATH/sdcard
 
@@ -525,6 +541,10 @@ mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm
 
 # Mount sdcard
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
 mkdir -p \$DEBIANPATH/sdcard
 \$BB mount --bind /sdcard \$DEBIANPATH/sdcard
 

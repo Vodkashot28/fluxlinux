@@ -169,6 +169,59 @@ fun DistroScreen(
                         } else null,
                         appDevDescription = if (distro.id == "debian" || distro.id == "debian_chroot" || distro.id == "debian13_chroot") 
                             "Installs Android SDK, Flutter, JDK, IntelliJ, and more." else null,
+
+                        onGenDevInstall = if (distro.id == "debian" || distro.id == "debian_chroot" || distro.id == "debian13_chroot") {
+                            {
+                                val scriptManager = ScriptManager(context)
+                                val scriptContent = scriptManager.getScriptContent("common/setup_gengdev_debian.sh")
+                                val scriptName = "setup_gengdev_debian.sh"
+
+                                val command = if (distro.id.contains("chroot")) {
+                                    // Chroot Command
+                                    val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
+                                    val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.DEFAULT)
+                                    val chunkedEchos = "cat << 'EOF_B64' > \"\${S}.b64\"\n$scriptB64\nEOF_B64\n"
+                                    """
+                                        S="/data/local/tmp/$scriptName"
+                                        if [ "${'$'}(id -u)" != "0" ]; then S="${'$'}HOME/$scriptName"; fi
+                                        $chunkedEchos
+                                        base64 -d "${'$'}S.b64" > "${'$'}S"
+                                        rm -f "${'$'}S.b64"
+                                        chmod +x "${'$'}S"
+                                        if [ "${'$'}(id -u)" = "0" ]; then
+                                            # Execute inside chroot
+                                            TARGET_SCRIPT="/opt/$scriptName"
+                                            cp "${'$'}S" "${'$'}TARGET_SCRIPT"
+                                            chmod +x "${'$'}TARGET_SCRIPT"
+                                            chroot /data/local/tmp/chrootdebian /bin/bash -c "/opt/$scriptName"
+                                        else
+                                            echo "⚠️ PLEASE RUN AS ROOT ⚠️"
+                                        fi
+                                    """.trimIndent()
+                                } else {
+                                    // Proot Command
+                                    val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
+                                    val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.DEFAULT)
+                                     """
+                                        echo "$scriptB64" | base64 -d > ~/setup_gengdev.sh
+                                        chmod +x ~/setup_gengdev.sh
+                                        ~/setup_gengdev.sh
+                                    """.trimIndent()
+                                }
+
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("FluxLinux Gen Dev", command)
+                                clipboard.setPrimaryClip(clip)
+                                
+                                val launchIntent = TermuxIntentFactory.buildOpenTermuxIntent(context)
+                                if (launchIntent != null) {
+                                    onStartActivity(launchIntent)
+                                    android.widget.Toast.makeText(context, "Gen Dev Script Copied! Paste in Termux.", android.widget.Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        } else null,
+                        genDevDescription = if (distro.id == "debian" || distro.id == "debian_chroot" || distro.id == "debian13_chroot") 
+                            "Installs Rust, Go, C++, LunarVim, VS Code & more." else null,
                             
                         onCustomize = if (distro.id == "debian" || distro.id == "debian_chroot" || distro.id == "debian13_chroot") {
                              {
