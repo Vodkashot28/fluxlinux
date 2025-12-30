@@ -64,15 +64,63 @@ apt install -y \
     xournalpp \
     || handle_error "PDF Tools Installation"
 
-# 5. Joplin (Note Taking)
-echo "FluxLinux: Installing Joplin (Terminal Edition)..."
-# We install the terminal version as it's ARM64 safe and reliable in PROOT
-if ! command -v joplin >/dev/null; then
-    # Configure npm to use a user-writable directory to avoid root issues if needed,
-    # but here we are root/sudo so global install is fine.
-    npm install -g joplin --unsafe-perm=true --allow-root || echo " [⚠️] Joplin NPM install failed"
+# 5. Joplin (Note Taking - GUI)
+echo "FluxLinux: Installing Joplin (GUI - ARM64 AppImage)..."
+# We actally need the GUI version as requested.
+# Since we are in PROOT, we must Extract the AppImage.
+
+JOPLIN_VERSION="3.1.20"
+JOPLIN_URL="https://github.com/leaguecn/joplin-arm64-build/releases/download/v${JOPLIN_VERSION}/Joplin-${JOPLIN_VERSION}-arm64.AppImage"
+INSTALL_DIR="/opt/joplin"
+
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "Downloading Joplin ARM64..."
+    mkdir -p /tmp/joplin_install
+    wget -O /tmp/joplin_install/joplin.AppImage "$JOPLIN_URL" || echo " [⚠️] Joplin Download Failed"
+    
+    if [ -f "/tmp/joplin_install/joplin.AppImage" ]; then
+        echo "Extracting AppImage (Bypassing FUSE)..."
+        chmod +x /tmp/joplin_install/joplin.AppImage
+        cd /tmp/joplin_install
+        ./joplin.AppImage --appimage-extract >/dev/null 2>&1
+        
+        echo "Moving to $INSTALL_DIR..."
+        mkdir -p "$INSTALL_DIR"
+        mv squashfs-root/* "$INSTALL_DIR/"
+        
+        # Cleanup
+        cd /
+        rm -rf /tmp/joplin_install
+        
+        # Create Launcher Wrapper
+        echo "Creating Launcher..."
+        cat <<EOF > /usr/bin/joplin-desktop
+#!/bin/bash
+export PROOT_NO_SECCOMP=1
+# AppImages in Proot often need --no-sandbox
+exec "$INSTALL_DIR/AppRun" --no-sandbox "\$@"
+EOF
+        chmod +x /usr/bin/joplin-desktop
+        
+        # Create Desktop Entry
+        mkdir -p /usr/share/applications
+        cat <<EOF > /usr/share/applications/joplin.desktop
+[Desktop Entry]
+Name=Joplin
+Comment=Joplin for Desktop
+Exec=/usr/bin/joplin-desktop %u
+Icon=$INSTALL_DIR/usr/share/icons/hicolor/512x512/apps/joplin.png
+Type=Application
+Terminal=false
+Categories=Office;NoteTaking;
+MimeType=x-scheme-handler/joplin;
+EOF
+        echo " [✅] Joplin GUI Installed"
+    else
+        echo " [❌] Joplin Download Failed - Skipping"
+    fi
 else
-    echo " [ℹ️] Joplin already installed."
+    echo " [ℹ️] Joplin GUI already installed."
 fi
 
 # 6. Verification
@@ -85,7 +133,7 @@ verify_installation() {
     if command -v thunderbird >/dev/null; then echo " [✅] Thunderbird"; else echo " [❌] Thunderbird Missing"; fi
     if command -v evince >/dev/null; then echo " [✅] Evince"; else echo " [❌] Evince Missing"; fi
     if command -v xournalpp >/dev/null; then echo " [✅] Xournal++"; else echo " [❌] Xournal++ Missing"; fi
-    if command -v joplin >/dev/null; then echo " [✅] Joplin (CLI)"; else echo " [❌] Joplin Missing"; fi
+    if command -v joplin-desktop >/dev/null; then echo " [✅] Joplin (GUI)"; else echo " [❌] Joplin Missing"; fi
 
     echo "------------------------------------------------"
     echo "🎉 Office Setup Complete!"
@@ -93,5 +141,5 @@ verify_installation() {
 
 verify_installation
 
-echo "Note: To use Joplin, type 'joplin' in the terminal. For LibreOffice/Thunderbird, check the Applications menu."
+echo "Note: Joplin is installed as a Desktop App. Check your Applications menu."
 read -p "Press Enter to close..."
