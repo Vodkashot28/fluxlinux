@@ -31,10 +31,11 @@ apt install -y \
     debian-keyring \
     debian-archive-keyring \
     apt-transport-https \
-    software-properties-common \
+    apt-transport-https \
     xz-utils \
     libgl1-mesa-dri \
-    libgl1-mesa-glx \
+    libglx-mesa0 \
+    libgl1 \
     mesa-vulkan-drivers \
     || handle_error "Dependencies"
 
