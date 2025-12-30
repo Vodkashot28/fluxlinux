@@ -28,6 +28,16 @@ termux-x11 :0 >/dev/null &
 # Wait a bit until termux-x11 gets started
 sleep 3
 
+# Start VirGL server for hardware acceleration (if using VirGL mode)
+# Kill any existing virgl server first
+pkill -9 -f virgl_test_server 2>/dev/null
+# Start VirGL server in background
+if command -v virgl_test_server_android >/dev/null 2>&1; then
+    echo "Starting VirGL server for hardware acceleration..."
+    virgl_test_server_android >/dev/null 2>&1 &
+    sleep 1
+fi
+
 # Launch Termux X11 main activity (CRITICAL for display)
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 2
