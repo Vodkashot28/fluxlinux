@@ -538,6 +538,11 @@ su -s /bin/bash - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-
 su -s /bin/bash - "$CUSTOM_USER" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting '$ZSH_CUSTOM/plugins/zsh-syntax-highlighting'" 2>/dev/null
 su -s /bin/bash - "$CUSTOM_USER" -c "git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git '$ZSH_CUSTOM/plugins/zsh-autocomplete'" 2>/dev/null
 
+# Install agnosterzak theme
+echo "FluxLinux: Installing agnosterzak theme..."
+su -s /bin/bash - "$CUSTOM_USER" -c "mkdir -p '$ZSH_CUSTOM/themes'"
+su -s /bin/bash - "$CUSTOM_USER" -c "curl -fsSL https://raw.githubusercontent.com/zakaziko99/agnosterzak-ohmyzsh-theme/master/agnosterzak.zsh-theme -o '$ZSH_CUSTOM/themes/agnosterzak.zsh-theme'" 2>/dev/null
+
 # Install pokemon-colorscripts
 echo "FluxLinux: Installing pokemon-colorscripts..."
 POKEMON_TEMP="/tmp/pokemon-colorscripts"
@@ -556,7 +561,7 @@ if [ ! -f "$ZSHRC" ] || ! grep -q "oh-my-zsh.sh" "$ZSHRC"; then
     echo "FluxLinux: Creating valid .zshrc..."
     cat <<EOF > "$ZSHRC"
 export ZSH="\$HOME/.oh-my-zsh"
-ZSH_THEME="gnzh"
+ZSH_THEME="agnosterzak"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)
 source \$ZSH/oh-my-zsh.sh
 
@@ -566,10 +571,10 @@ else
     # Update existing .zshrc settings
     # Update theme
     if grep -q "^ZSH_THEME=" "$ZSHRC"; then
-        sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="gnzh"/' "$ZSHRC"
+        sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="agnosterzak"/' "$ZSHRC"
     else
         # Insert theme before plugins or source
-        sed -i '1iZSH_THEME="gnzh"' "$ZSHRC"
+        sed -i '1iZSH_THEME="agnosterzak"' "$ZSHRC"
     fi
     
     # Update plugins
