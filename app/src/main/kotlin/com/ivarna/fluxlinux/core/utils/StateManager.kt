@@ -293,4 +293,18 @@ object StateManager {
         prefs.edit().putBoolean("script_${scriptName}_success", success).apply()
         android.util.Log.d("StateManager", "Script $scriptName status set to: $success")
     }
+    
+    /**
+     * Check if Unexpected Keyboard is installed
+     */
+    fun isUnexpectedKeyboardInstalled(context: Context): Boolean {
+        return isPackageInstalled(context, "juloo.keyboard2")
+    }
+    
+    /**
+     * Get Unexpected Keyboard version
+     */
+    fun getUnexpectedKeyboardVersion(context: Context): String {
+        return getPackageVersion(context, "juloo.keyboard2") ?: "Not Installed"
+    }
 }

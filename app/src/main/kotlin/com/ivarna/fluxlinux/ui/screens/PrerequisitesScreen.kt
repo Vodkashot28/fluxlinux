@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.ivarna.fluxlinux.core.utils.ApkInstaller
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.core.utils.RootUtils
+import com.ivarna.fluxlinux.core.utils.SystemInfoUtils
 import com.ivarna.fluxlinux.core.data.TermuxIntentFactory
 import com.ivarna.fluxlinux.core.data.ScriptManager
 import com.ivarna.fluxlinux.ui.theme.*
@@ -52,7 +53,7 @@ fun PrerequisitesScreen(
     
     // Step tracking
     var currentStep by remember { mutableStateOf(1) }
-    val totalSteps = 7
+    val totalSteps = 10
     
     // Package states
     val termuxInstalled = remember { mutableStateOf(StateManager.isTermuxInstalled(context)) }
@@ -171,7 +172,19 @@ fun PrerequisitesScreen(
                     onContinue = { currentStep = 7 }
                 )
                 
-                7 -> FinalInstructionsStep(
+                7 -> SystemCheckStep(
+                    onContinue = { currentStep = 8 }
+                )
+                
+                8 -> KeyboardInstallStep(
+                    onContinue = { currentStep = 9 }
+                )
+                
+                9 -> OverlayKeyboardStep(
+                    onContinue = { currentStep = 10 }
+                )
+                
+                10 -> FinalInstructionsStep(
                     onComplete = onComplete
                 )
             }
@@ -1275,6 +1288,511 @@ fun FinalInstructionsStep(
         ) {
             Text(
                 "Complete Setup",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun SystemCheckStep(
+    onContinue: () -> Unit
+) {
+    val context = LocalContext.current
+    val memoryInfo = remember { SystemInfoUtils.getMemoryInfo(context) }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Step 7: System Check",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Checking your system resources",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // RAM Info Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassWhiteLow)
+                .padding(20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "💾",
+                    fontSize = 32.sp,
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                Column {
+                    Text(
+                        text = "System RAM",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "%.2f GB".format(memoryInfo.totalRamGB),
+                        color = FluxAccentCyan,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            // RAM Info/Warning based on amount
+            when {
+                memoryInfo.totalRamGB >= 7f -> {
+                    // Good RAM, show recommendation
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF4CAF50).copy(alpha = 0.2f))
+                            .padding(12.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "✓ Good RAM",
+                                color = Color(0xFF4CAF50),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Your RAM is sufficient. For optimal performance, 12GB RAM would be great!",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+                memoryInfo.totalRamGB < 6f -> {
+                    // Critical low RAM
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFFF5252).copy(alpha = 0.2f))
+                            .padding(12.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "🚨 CRITICAL: Low RAM",
+                                color = Color(0xFFFF5252),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Minimum required RAM: 8GB\nYour system will experience severe performance issues and instability.",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+                // Between 6GB and 7GB - no message shown
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // SWAP Info Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GlassWhiteLow)
+                .padding(20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "🔄",
+                    fontSize = 32.sp,
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                Column {
+                    Text(
+                        text = "System SWAP",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "%.2f GB".format(memoryInfo.totalSwapGB),
+                        color = if (memoryInfo.totalSwapGB <= 7.9f) Color(0xFFFF5252) else FluxAccentCyan,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            // SWAP Critical Warning if < 8GB (with tolerance for floating point precision)
+            if (memoryInfo.totalSwapGB <= 7.9f) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFFF5252).copy(alpha = 0.2f))
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "🚨 CRITICAL: Low SWAP",
+                            color = Color(0xFFFF5252),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Minimum required SWAP: 8GB\nWithout sufficient SWAP, your Linux environment will be UNSTABLE and may crash.",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
+                            fontSize = 12.sp
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Button(
+                            onClick = {
+                                try {
+                                    val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
+                                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                    context.startActivity(intent)
+                                    Toast.makeText(context, "Enable more SWAP in system settings", Toast.LENGTH_LONG).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Go to Settings", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Next Button (always enabled - not a hard requirement)
+        Button(
+            onClick = onContinue,
+            colors = ButtonDefaults.buttonColors(containerColor = FluxAccentCyan),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                "Next",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun KeyboardInstallStep(
+    onContinue: () -> Unit
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val installer = remember { ApkInstaller(context) }
+    
+    // Keyboard installation state
+    val keyboardInstalled = remember { mutableStateOf(StateManager.isUnexpectedKeyboardInstalled(context)) }
+    val keyboardProgress = remember { mutableStateOf(0f) }
+    
+    // Refresh when app resumes
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                keyboardInstalled.value = StateManager.isUnexpectedKeyboardInstalled(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Step 8: Install Keyboard",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "⌨️",
+            fontSize = 64.sp
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Install Unexpected Keyboard for better Linux terminal experience",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Keyboard Installation Card
+        PrerequisiteItem(
+            name = "Unexpected Keyboard",
+            isInstalled = keyboardInstalled.value,
+            version = if (keyboardInstalled.value) StateManager.getUnexpectedKeyboardVersion(context) else null,
+            progress = keyboardProgress.value,
+            onInstall = {
+                Toast.makeText(context, "Downloading Unexpected Keyboard...", Toast.LENGTH_SHORT).show()
+                coroutineScope.launch {
+                    val url = "https://github.com/Julow/Unexpected-Keyboard/releases/download/1.32.1/juloo.keyboard2.apk"
+                    installer.downloadAndInstall(url, "unexpected-keyboard.apk") { progress, status ->
+                        keyboardProgress.value = progress
+                        android.util.Log.d("KeyboardInstall", status)
+                    }
+                    keyboardProgress.value = 0f
+                    keyboardInstalled.value = StateManager.isUnexpectedKeyboardInstalled(context)
+                }
+            }
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Info box
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "ℹ️ This keyboard is optimized for terminal use with special keys and shortcuts. Installation is optional but recommended.",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+                fontSize = 13.sp
+            )
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Next Button (always enabled - not a hard requirement)
+        Button(
+            onClick = onContinue,
+            colors = ButtonDefaults.buttonColors(containerColor = FluxAccentCyan),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                "Next",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun OverlayKeyboardStep(
+    onContinue: () -> Unit
+) {
+    val context = LocalContext.current
+    
+    // Check overlay permission for FluxLinux app
+    var hasOverlayPermission by remember { 
+        mutableStateOf(android.provider.Settings.canDrawOverlays(context)) 
+    }
+    
+    // Check if floating keyboard service is running
+    var isServiceRunning by remember { mutableStateOf(false) }
+    
+    // Refresh permission status on resume
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "Step 9: Floating Keyboard Button",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Permission Info Card
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    "⌨️ Floating Keyboard Toggle",
+                    color = FluxAccentCyan,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "A floating button will appear on your screen to quickly toggle the keyboard on/off. You can drag it to any edge and remove it by dragging to the bottom.",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                    fontSize = 15.sp
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        if (hasOverlayPermission) {
+            // Success State
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF50fa7b).copy(alpha = 0.2f))
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Granted",
+                    tint = Color(0xFF50fa7b),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    "Overlay Permission Granted ✓",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Enable/Disable Floating Button
+            Button(
+                onClick = {
+                    if (!isServiceRunning) {
+                        // Start floating keyboard service
+                        try {
+                            val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                context.startForegroundService(intent)
+                            } else {
+                                context.startService(intent)
+                            }
+                            isServiceRunning = true
+                            Toast.makeText(context, "Floating keyboard button enabled", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Failed to start service: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // Stop service
+                        try {
+                            val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
+                            context.stopService(intent)
+                            isServiceRunning = false
+                            Toast.makeText(context, "Floating keyboard button disabled", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Failed to stop service: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isServiceRunning) Color(0xFFFF5252) else FluxAccentMagenta
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    if (isServiceRunning) "Disable Floating Button" else "Enable Floating Button",
+                    fontSize = 16.sp,
+                    color = TextWhite
+                )
+            }
+        } else {
+            // Request Permission
+            Button(
+                onClick = { 
+                    try {
+                        val intent = android.content.Intent(
+                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = FluxAccentMagenta),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Grant Overlay Permission", fontSize = 16.sp, color = TextWhite)
+            }
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Next Button
+        Button(
+            onClick = onContinue,
+            colors = ButtonDefaults.buttonColors(containerColor = FluxAccentCyan),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                "Next",
                 color = Color.Black,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
