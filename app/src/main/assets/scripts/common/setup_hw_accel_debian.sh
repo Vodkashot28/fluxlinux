@@ -91,30 +91,36 @@ if [ "$MODE" = "adreno" ]; then
 fi
 
 if [ "$MODE" = "mali" ]; then
-    # Install Leegao Vulkan Wrapper (Copy from Host)
-    # We use the Pipetto package installed by setup_termux.sh
+    # Install Leegao Vulkan Wrapper (Self-Contained Extraction)
+    # 1. Download Pipetto .deb (Known good version)
+    WRAPPER_URL="https://github.com/sabamdarif/termux-desktop/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_aarch64.deb"
+    DEB_PATH="/tmp/vulkan-wrapper.deb"
+    EXTRACT_DIR="/tmp/wrapper_extract"
     
-    TERMUX_PREFIX="/data/data/com.termux/files/usr"
-    HOST_LIB_PATH="$TERMUX_PREFIX/lib/libvulkan_wrapper.so"
-    
-    # Fallback search if not in standard path
-    if [ ! -f "$HOST_LIB_PATH" ]; then
-        HOST_LIB_PATH=$(find "$TERMUX_PREFIX/lib" -name "libvulkan_wrapper.so" 2>/dev/null | head -n 1)
-    fi
+    echo "FluxLinux: Downloading Pipetto Vulkan Wrapper..."
+    curl -L -o "$DEB_PATH" "$WRAPPER_URL"
 
-    TARGET_LIB="/usr/lib/libvulkan_wrapper.so"
-    ICD_DIR="/etc/vulkan/icd.d"
-    ICD_FILE="$ICD_DIR/wrapper_icd.json"
+    if [ -f "$DEB_PATH" ]; then
+        echo "FluxLinux: Extracting wrapper..."
+        mkdir -p "$EXTRACT_DIR"
+        dpkg -x "$DEB_PATH" "$EXTRACT_DIR"
+        
+        # Find the .so file (Termux .deb usually has full path or relative)
+        FOUND_LIB=$(find "$EXTRACT_DIR" -name "libvulkan_wrapper.so" | head -n 1)
+        
+        TARGET_LIB="/usr/lib/libvulkan_wrapper.so"
+        ICD_DIR="/etc/vulkan/icd.d"
+        ICD_FILE="$ICD_DIR/wrapper_icd.json"
+        
+        if [ -n "$FOUND_LIB" ] && [ -f "$FOUND_LIB" ]; then
+            echo "FluxLinux: Found library at $FOUND_LIB"
+            echo "FluxLinux: Installing to $TARGET_LIB..."
+            cp "$FOUND_LIB" "$TARGET_LIB"
+            chmod +x "$TARGET_LIB"
 
-    if [ -n "$HOST_LIB_PATH" ] && [ -f "$HOST_LIB_PATH" ]; then
-        echo "FluxLinux: Found Host Wrapper at $HOST_LIB_PATH"
-        echo "FluxLinux: Copying to $TARGET_LIB..."
-        cp "$HOST_LIB_PATH" "$TARGET_LIB"
-        chmod +x "$TARGET_LIB"
-
-        echo "FluxLinux: Configuring Wrapper ICD..."
-        mkdir -p "$ICD_DIR"
-        cat <<EOF > "$ICD_FILE"
+            echo "FluxLinux: Configuring Wrapper ICD..."
+            mkdir -p "$ICD_DIR"
+            cat <<EOF > "$ICD_FILE"
 {
     "file_format_version": "1.0.0",
     "ICD": {
@@ -123,13 +129,17 @@ if [ "$MODE" = "mali" ]; then
     }
 }
 EOF
-        echo "FluxLinux: Wrapper Configured Successfully!"
+            echo "FluxLinux: Wrapper Installed Successfully!"
+        else
+            echo "Error: Could not find libvulkan_wrapper.so in extracted package."
+            exit 1
+        fi
+        
+        # Cleanup
+        rm "$DEB_PATH"
+        rm -rf "$EXTRACT_DIR"
     else
-        echo "Error: Host Vulkan Wrapper not found in Termux."
-        echo "checked: $TERMUX_PREFIX/lib/libvulkan_wrapper.so"
-        echo ""
-        echo "Please run the 'Setup Termux' script from the app menu first!"
-        echo "This installs the required 'vulkan-wrapper-android' package."
+        echo "Error: Failed to download wrapper package."
         exit 1
     fi
 fi
