@@ -12,19 +12,50 @@ fi
 echo "FluxLinux: Setting up Hardware Acceleration (Debian)..."
 
 # 1. Install Dependencies
-echo "FluxLinux: Installing Vulkan/Mesa dependencies..."
-apt-get update
-apt-get install -y \
-    mesa-utils \
-    libgl1-mesa-dri \
-    mesa-vulkan-drivers \
-    vulkan-tools \
-    curl \
-    unzip \
-    libvulkan1 \
-    libgl1 \
-    libglx0 \
-    xdg-desktop-portal
+# 1. Install Dependencies & Upgrade System
+echo "FluxLinux: Detecting Package Manager..."
+
+if command -v pacman &> /dev/null; then
+    # --- ARCH LINUX DETECTED ---
+    echo "Arch Linux detected (pacman). Running System Update..."
+    echo "This brings LLVM/Mesa to the absolute latest version."
+    pacman -Syu --noconfirm
+    
+    echo "FluxLinux: Installing Arch Dependencies..."
+    pacman -S --noconfirm \
+        mesa \
+        vulkan-radeon \
+        vulkan-swrast \
+        vulkan-tools \
+        mesa-utils \
+        curl \
+        unzip \
+        xdg-desktop-portal
+        
+    echo "FluxLinux: Arch Setup Complete."
+    # Skip Debian-specific Trixie upgrade as Arch is rolling
+    DO_UPGRADE="n" 
+
+elif command -v apt-get &> /dev/null; then
+    # --- DEBIAN/UBUNTU DETECTED ---
+    echo "Debian/Ubuntu detected (apt)."
+    echo "FluxLinux: Installing Vulkan/Mesa dependencies..."
+    apt-get update
+    apt-get install -y \
+        mesa-utils \
+        libgl1-mesa-dri \
+        mesa-vulkan-drivers \
+        vulkan-tools \
+        curl \
+        unzip \
+        libvulkan1 \
+        libgl1 \
+        libglx0 \
+        xdg-desktop-portal
+else
+    echo "Error: Neither apt nor pacman found. Cannot install dependencies."
+    exit 1
+fi
 
 # 2. Detect Architecture
 ARCH=$(dpkg --print-architecture)
@@ -32,24 +63,65 @@ if [ "$ARCH" != "arm64" ]; then
     echo "Warning: Drivers are optimized for arm64. Your arch is $ARCH."
 fi
 
+# 2.5 Upgrade System (Optional)
+echo "============================================"
+echo "      System Upgrade Options"
+echo "============================================"
+echo "Current LLVM/Mesa versions might be old (Stable)."
+echo "Do you want to upgrade Debian to 'Trixie' (Testing)?"
+echo "This installs LLVM 18+ / Mesa 24+ for better performance."
+echo ""
+echo "Note: This downloads ~1GB of updates and takes time."
+echo "============================================"
+read -r -p "Upgrade to Trixie now? [y/N]: " DO_UPGRADE
+if [[ "$DO_UPGRADE" =~ ^[Yy]$ ]]; then
+    echo "FluxLinux: Switching sources to Trixie..."
+    cp /etc/apt/sources.list /etc/apt/sources.list.bak
+    echo "deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware" > /etc/apt/sources.list
+    echo "deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+    echo "deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+    
+    echo "FluxLinux: Updating package lists..."
+    apt-get update
+    
+    echo "FluxLinux: Performing Distribution Upgrade..."
+    # Force confnew to avoid interactive prompts
+    apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y
+    
+    echo "FluxLinux: Re-installing Mesa drivers..."
+    apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri mesa-utils vulkan-tools
+    
+    echo "FluxLinux: Upgrade Complete!"
+fi
+
+
 # 3. GPU Selection Menu
-echo "============================================"
-echo "      Select your GPU / Acceleration Mode"
-echo "============================================"
-echo "1) Adreno (Turnip + Zink)"
-echo "   - Best for Snapdragon devices"
-echo "   - Installs custom Mesa/Turnip drivers"
-echo "   - Highest performance for Adreno GPUs"
-echo ""
-echo "2) VirGL (Universal)"
-echo "   - Works with ALL GPU types (Adreno, Mali, etc.)"
-echo "   - Requires 'virgl_test_server' running in Termux"
-echo "   - Good compatibility, moderate performance"
-echo ""
-echo "============================================"
-echo "Note: Mali/Exynos users should use VirGL (option 2)"
-echo "============================================"
-read -r -p "Enter choice [1-2]: " GPU_CHOICE
+if [ -n "$FLUX_GPU" ] && [ "$FLUX_GPU" != "manual" ] && [ "$FLUX_GPU" != "ask" ]; then
+    echo "FluxLinux: Auto-detected GPU preference: $FLUX_GPU"
+    if [ "$FLUX_GPU" == "turnip" ]; then
+        GPU_CHOICE="1"
+    else
+        GPU_CHOICE="2"
+    fi
+else
+    echo "============================================"
+    echo "      Select your GPU / Acceleration Mode"
+    echo "============================================"
+    echo "1) Adreno (Turnip + Zink)"
+    echo "   - Best for Snapdragon devices"
+    echo "   - Installs custom Mesa/Turnip drivers"
+    echo "   - Highest performance for Adreno GPUs"
+    echo ""
+    echo "2) VirGL (Universal)"
+    echo "   - Works with ALL GPU types (Adreno, Mali, etc.)"
+    echo "   - Requires 'virgl_test_server' running in Termux"
+    echo "   - Good compatibility, moderate performance"
+    echo ""
+    echo "============================================"
+    echo "Note: Mali/Exynos users should use VirGL (option 2)"
+    echo "============================================"
+    read -r -p "Enter choice [1-2]: " GPU_CHOICE
+fi
 
 case "$GPU_CHOICE" in
     1)

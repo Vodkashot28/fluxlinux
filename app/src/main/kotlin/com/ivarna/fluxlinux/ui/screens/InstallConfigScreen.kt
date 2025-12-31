@@ -32,10 +32,12 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 fun InstallConfigScreen(
     distro: Distro,
     onBack: () -> Unit,
-    onInstallStart: (List<DistroComponent>) -> Unit,
+    onInstallStart: (List<DistroComponent>, String, String) -> Unit,
     hazeState: HazeState
 ) {
     var desktopEnv by remember { mutableStateOf("XFCE4") }
+    var selectedTheme by remember { mutableStateOf("dark") } // dark, light, cyber
+    var selectedGpu by remember { mutableStateOf("auto") } // auto, virgl, turnip, manual
     val selectedComponents = remember { mutableStateListOf<String>() }
 
     // Pre-select mandatory components
@@ -73,7 +75,7 @@ fun InstallConfigScreen(
                  Button(
                     onClick = {
                         val componentsToInstall = distro.components.filter { selectedComponents.contains(it.id) }
-                        onInstallStart(componentsToInstall)
+                        onInstallStart(componentsToInstall, selectedTheme, selectedGpu)
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -142,11 +144,63 @@ fun InstallConfigScreen(
                     }
                 }
             }
-
-            // Section 2: Features / Components
+            
+            // Section 2: Theme Selection (New)
             item {
                 Text(
-                    text = "2. Select Features",
+                    text = "2. Appearance Theme",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+                        .padding(16.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ThemeOption(name = "Dark Mode (Default)", desc = "Sleek and easy on eyes.", id = "dark", selected = selectedTheme == "dark", onSelect = { selectedTheme = "dark" })
+                        ThemeOption(name = "Light Mode", desc = "Clean and bright.", id = "light", selected = selectedTheme == "light", onSelect = { selectedTheme = "light" })
+                    }
+                }
+            }
+
+            // Section 3: Graphics Acceleration (New)
+            item {
+                Text(
+                    text = "3. Graphics Acceleration",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+                        .padding(16.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ThemeOption(name = "Auto Detect (Recommended)", desc = "Detects Snapdragon (Turnip) or uses VirGL.", id = "auto", selected = selectedGpu == "auto", onSelect = { selectedGpu = "auto" })
+                        ThemeOption(name = "VirGL (Universal)", desc = "Compatible with most devices.", id = "virgl", selected = selectedGpu == "virgl", onSelect = { selectedGpu = "virgl" })
+                        ThemeOption(name = "Turnip/Zink (Snapdragon)", desc = "High performance for Adreno.", id = "turnip", selected = selectedGpu == "turnip", onSelect = { selectedGpu = "turnip" })
+                        ThemeOption(name = "Ask during Customization", desc = "Prompts you later.", id = "ask", selected = selectedGpu == "ask", onSelect = { selectedGpu = "ask" })
+                    }
+                }
+            }
+
+            // Section 4: Features
+            item {
+                Text(
+                    text = "4. Select Features",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
@@ -238,6 +292,24 @@ fun ComponentSelectionCard(
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun ThemeOption(name: String, desc: String, id: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onSelect() }.padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onSelect,
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        )
+        Column {
+            Text(name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -2,11 +2,22 @@ package com.ivarna.fluxlinux.core.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Manages application state and package detection
  */
 object StateManager {
+    
+    // UI Refresh Trigger
+    private val _refreshTrigger = kotlinx.coroutines.flow.MutableStateFlow(0)
+    val refreshTrigger: kotlinx.coroutines.flow.StateFlow<Int> = _refreshTrigger.asStateFlow()
+    
+    fun triggerRefresh() {
+        _refreshTrigger.value += 1
+    }
     
     /**
      * Check if a package is installed

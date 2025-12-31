@@ -58,12 +58,21 @@ extract_all_assets() {
 }
 
 # 3. Theme Selection Prompt
-echo "------------------------------------------------"
-echo "Select Theme Preference:"
-echo "1) Dark (Default)"
-echo "2) Light"
-read -p "Enter choice [1-2]: " THEME_CHOICE
-echo "------------------------------------------------"
+if [ -n "$FLUX_THEME" ]; then
+    echo "FluxLinux: Auto-applying Theme: $FLUX_THEME"
+    if [ "$FLUX_THEME" == "light" ]; then
+        THEME_CHOICE="2"
+    else
+        THEME_CHOICE="1"
+    fi
+else
+    echo "------------------------------------------------"
+    echo "Select Theme Preference:"
+    echo "1) Dark (Default)"
+    echo "2) Light"
+    read -p "Enter choice [1-2]: " THEME_CHOICE
+    echo "------------------------------------------------"
+fi
 
 if [ "$THEME_CHOICE" == "2" ]; then
     echo "FluxLinux: Light Mode Selected."

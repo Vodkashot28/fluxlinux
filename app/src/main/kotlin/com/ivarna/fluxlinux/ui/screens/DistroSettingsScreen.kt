@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,14 +38,24 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 fun DistroSettingsScreen(
     distro: Distro,
     onBack: () -> Unit,
-    onInstallComponent: (DistroComponent) -> Unit,
+    onInstallComponent: (DistroComponent, Map<String, String>) -> Unit,
     onUninstallDistro: () -> Unit,
+    onReinstallDistro: () -> Unit,
     onNavigateToStart: (() -> Unit)? = null,
     onStartActivity: (android.content.Intent) -> Unit,
     hazeState: HazeState
 ) {
     val context = LocalContext.current
     var showUninstallDialog by remember { mutableStateOf(false) }
+    
+    // Config Dialog States
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showGpuDialog by remember { mutableStateOf(false) }
+    var activeComponent by remember { mutableStateOf<DistroComponent?>(null) }
+    
+    // Selections
+    var selectedTheme by remember { mutableStateOf("dark") }
+    var selectedGpu by remember { mutableStateOf("auto") }
 
     GlassScaffold(
         hazeState = hazeState,
@@ -117,7 +128,17 @@ fun DistroSettingsScreen(
                     ComponentSettingItem(
                         component = component,
                         isInstalled = isInstalled,
-                        onAction = { onInstallComponent(component) }
+                        onAction = { 
+                            if (component.scriptName.contains("setup_customization")) {
+                                activeComponent = component
+                                showThemeDialog = true
+                            } else if (component.scriptName.contains("setup_hw_accel")) {
+                                activeComponent = component
+                                showGpuDialog = true
+                            } else {
+                                onInstallComponent(component, emptyMap()) 
+                            }
+                        }
                     )
                 }
 
@@ -131,6 +152,23 @@ fun DistroSettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Reinstall Button (Redo Base Install)
+                    Button(
+                        onClick = onReinstallDistro,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Redo Base Installation", color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Danger Button (Adaptive Style)
                     Button(
@@ -239,6 +277,80 @@ fun DistroSettingsScreen(
                     }
                 }
             )
+        }
+    }
+
+    // Theme Configuration Dialog
+    if (showThemeDialog && activeComponent != null) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            title = { Text("Configure Customization", color = MaterialTheme.colorScheme.onSurface) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Select a theme to apply:", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    SettingsThemeOption(name = "Dark Mode (Default)", desc = "Sleek and professional.", id = "dark", selected = selectedTheme == "dark", onSelect = { selectedTheme = "dark" })
+                    SettingsThemeOption(name = "Light Mode", desc = "Clean and bright.", id = "light", selected = selectedTheme == "light", onSelect = { selectedTheme = "light" })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showThemeDialog = false
+                    onInstallComponent(activeComponent!!, mapOf("FLUX_THEME" to selectedTheme))
+                }) {
+                    Text("Apply")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showThemeDialog = false }) { Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
+        )
+    }
+
+    // GPU Configuration Dialog
+    if (showGpuDialog && activeComponent != null) {
+        AlertDialog(
+            onDismissRequest = { showGpuDialog = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            title = { Text("Configure Hardware Acceleration", color = MaterialTheme.colorScheme.onSurface) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Select acceleration mode:", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    SettingsThemeOption(name = "Auto Detect (Recommended)", desc = "Detects Snapdragon (Turnip) or uses VirGL.", id = "auto", selected = selectedGpu == "auto", onSelect = { selectedGpu = "auto" })
+                    SettingsThemeOption(name = "VirGL (Universal)", desc = "Compatible with most devices.", id = "virgl", selected = selectedGpu == "virgl", onSelect = { selectedGpu = "virgl" })
+                    SettingsThemeOption(name = "Turnip/Zink (Snapdragon)", desc = "High performance for Adreno.", id = "turnip", selected = selectedGpu == "turnip", onSelect = { selectedGpu = "turnip" })
+                    SettingsThemeOption(name = "Force Re-Detect", desc = "Ask interactively during install.", id = "ask", selected = selectedGpu == "ask", onSelect = { selectedGpu = "ask" })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showGpuDialog = false
+                    onInstallComponent(activeComponent!!, mapOf("FLUX_GPU" to selectedGpu))
+                }) {
+                    Text("Apply")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGpuDialog = false }) { Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
+        )
+    }
+}
+
+@Composable
+fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onSelect() }.padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onSelect,
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        )
+        Column {
+            Text(name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

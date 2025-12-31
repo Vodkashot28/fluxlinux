@@ -298,6 +298,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 \$BB mount --bind /proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
+# Mount Termux Tmp (For X11 Socket Sharing)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp
+
 # /dev/shm for Electron apps
 mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=256M tmpfs \$DEBIANPATH/dev/shm
@@ -391,47 +395,42 @@ EOF
     cat <<EOF > "$GUI_LAUNCHER"
 #!/bin/sh
 # Wrapper to start X11/Pulse and then the Chroot
-# Run this from Android Root Shell
+# Run this from Termux User Shell (via App)
 
-# 1. Kill old processes
-run_kill() {
-    killall -9 termux-x11 Xwayland pulseaudio virgl_test_server_android >/dev/null 2>&1
-    pkill -f com.termux.x11 >/dev/null 2>&1
-}
-run_kill
-sleep 1
-run_kill
+PREFIX="/data/data/com.termux/files/usr"
 
-# Clean up stale sockets
-rm -rf $TARGET_TERMUX_PREFIX/tmp/.X11-unix
-rm -rf $TARGET_TERMUX_PREFIX/tmp/.X0-lock
+# 1. Cleanup Stale Root Processes (Fixes Persistence)
+# We use su to ensure any previous Root-owned X11 sessions are killed.
+# Also clean the socket dir to ensure we can bind to it.
+su -c "$BB pkill -9 -f termux-x11; $BB rm -rf \$PREFIX/tmp/.X11-unix \$PREFIX/tmp/.X0-lock" >/dev/null 2>&1
 
-# 2. Start Termux:X11 App
+# 2. Cleanup User Processes
+pkill -9 -f termux-x11 >/dev/null 2>&1
+pkill -9 -f com.termux.x11 >/dev/null 2>&1
+killall -9 termux-x11 Xwayland pulseaudio virgl_test_server_android >/dev/null 2>&1
+
+# 3. Start Termux:X11 App
 echo "Starting X11 App..."
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null
 
-# 3. Mount Termux Tmp to Chroot Tmp (Fixes Wayland/X11 sockets)
-# Using Root Busybox
-$BB mount --bind $TARGET_TERMUX_PREFIX/tmp /data/local/tmp/chrootDebian/tmp 2>/dev/null
-
-# 4. Start XServer (Xwayland) in background
-export XDG_RUNTIME_DIR="$TARGET_TERMUX_PREFIX/tmp"
+# 4. Start XServer (Xwayland) in background (AS USER)
+export XDG_RUNTIME_DIR="\$PREFIX/tmp"
 export TMPDIR="\$XDG_RUNTIME_DIR"
-export LD_LIBRARY_PATH=$TARGET_TERMUX_PREFIX/lib
+export LD_LIBRARY_PATH=\$PREFIX/lib
 
-echo "Starting XServer..."
-$TARGET_TERMUX_PREFIX/bin/termux-x11 :0 -ac &
+echo "Starting XServer (User)..."
+\$PREFIX/bin/termux-x11 :0 -ac &
 
 sleep 3
 
-# 5. Start PulseAudio
+# 5. Start PulseAudio (AS USER)
 echo "Starting PulseAudio..."
-$TARGET_TERMUX_PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
-$TARGET_TERMUX_PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+\$PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
+\$PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 
-# 6. Launch Chroot
+# 6. Launch Chroot (Requires Root for Mounts)
 echo "Entering Chroot..."
-sh /data/local/tmp/start_debian.sh
+su -c "sh /data/local/tmp/start_debian.sh"
 EOF
     chmod +x "$GUI_LAUNCHER"
     success "GUI Launcher created: $GUI_LAUNCHER"

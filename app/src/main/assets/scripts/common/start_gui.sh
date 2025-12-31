@@ -3,67 +3,41 @@
 # Launch XFCE4 Desktop Environment in PRoot Distro
 # Based on LinuxDroidMaster reference implementation
 
-# Kill open X11 processes
-kill -9 $(pgrep -f "termux.x11") 2>/dev/null
-pkill -f com.termux.x11 2>/dev/null
+# WORKAROUND for X11 lock file permissions:
+# Use a unique XDG_RUNTIME_DIR to avoid conflicts with stale lock files
+export XDG_RUNTIME_DIR="$TMPDIR/fluxlinux-$$"
+mkdir -p "$XDG_RUNTIME_DIR"
 
-# Kill previous XFCE sessions to prevent zombies/conflicts
-pkill -9 -f startxfce4 2>/dev/null
-pkill -9 -f xfce4-session 2>/dev/null
-pkill -9 -f xfwm4 2>/dev/null
-pkill -9 -f xfdesktop 2>/dev/null
-pkill -9 -f xfce4-panel 2>/dev/null
+# Kill any existing X11 processes
+pkill -9 -f "termux.x11" 2>/dev/null
+pkill -9 -f "com.termux.x11" 2>/dev/null
 
-# Clean up /tmp locks if any (Native Mode mostly)
-rm -rf $TMPDIR/.X0-lock 2>/dev/null
-rm -rf $TMPDIR/.X11-unix/X0 2>/dev/null
+# Try to clean lock files (may fail without root, but that's OK now)
+rm -rf "$TMPDIR/.X0-lock" "$TMPDIR/.X11-unix/X0" 2>/dev/null
+
+# Wait for processes to terminate
+sleep 1
 
 # Enable PulseAudio over Network
 pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
 
-# Prepare termux-x11 session
-export XDG_RUNTIME_DIR=${TMPDIR}
+# Start termux-x11 with our custom runtime dir
 termux-x11 :0 >/dev/null &
 
-# Wait a bit until termux-x11 gets started
+# Wait for termux-x11 to start
 sleep 3
 
-# Start VirGL server for hardware acceleration (if using VirGL mode)
-# Kill any existing virgl server first
-pkill -9 -f virgl_test_server 2>/dev/null
-# Start VirGL server as a persistent background daemon
-if command -v virgl_test_server_android >/dev/null 2>&1; then
-    echo "Starting VirGL server for hardware acceleration..."
-    # Use nohup and setsid to detach from parent process
-    nohup setsid virgl_test_server_android >/dev/null 2>&1 &
-    sleep 2
-    # Verify server is running
-    if pgrep -f virgl_test_server >/dev/null; then
-        echo "VirGL server started successfully"
-    else
-        echo "Warning: VirGL server may not have started"
-    fi
-fi
-
-# Launch Termux X11 main activity (CRITICAL for display)
+# Launch Termux X11 main activity
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-sleep 2
+sleep 1
 
-# Apply stored X11 preferences
-# Using direct restore method (< file) as verified in sabamdarif/termux-desktop
-# This correctly handles spaces in parameters (e.g. extra_keys_config) which $(cat) breaks
-if [ -f "$HOME/.fluxlinux/x11_preferences.list" ]; then
-    echo "Applying X11 Preferences..."
-    termux-x11-preference < "$HOME/.fluxlinux/x11_preferences.list"
-fi
-
-# Login in PRoot Environment with proper environment setup
+# Login in PRoot Environment
 # Usage: ./start_gui.sh <distro_alias>
 DISTRO=${1:-debian}
+
 if [ "$DISTRO" == "termux" ]; then
     echo "Launching GUI for Termux Native..."
     export PULSE_SERVER=127.0.0.1
-    export XDG_RUNTIME_DIR=${TMPDIR}
     env DISPLAY=:0 startxfce4
 else
     echo "Launching GUI for $DISTRO (PRoot)..."
