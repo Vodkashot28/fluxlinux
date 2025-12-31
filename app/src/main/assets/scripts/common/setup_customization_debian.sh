@@ -119,64 +119,301 @@ rm "$TEMP_WP_ZIP"
 chown "$CUSTOM_USER:$CUSTOM_GROUP" "$WALLPAPER_DIR"/*
 
 
-# Set Font
-# Install JetBrains Mono Nerd Font (From Repository Release)
-FONT_DIR="/usr/local/share/fonts/NerdFonts"
-if [ ! -d "$FONT_DIR" ]; then
+# Install JetBrains Mono Nerd Font
+# Using proper Debian font location: /usr/share/fonts/truetype/
+FONT_DIR="/usr/share/fonts/truetype/jetbrains-mono-nerd"
+FONT_INSTALLED=false
+
+# Check if font already installed
+if fc-list | grep -qi "JetBrainsMono Nerd"; then
+    echo "FluxLinux: JetBrains Mono Nerd Font already installed."
+    FONT_INSTALLED=true
+fi
+
+if [ "$FONT_INSTALLED" = false ]; then
     echo "FluxLinux: Installing JetBrains Mono Nerd Font..."
+    
+    # Create font directory
     mkdir -p "$FONT_DIR"
-    extract_all_assets "$BASE_URL/font.zip" "$FONT_DIR"
-    fc-cache -f
+    
+    # Download from official Nerd Fonts GitHub releases
+    NERD_FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+    TEMP_ZIP="/tmp/JetBrainsMono.zip"
+    
+    echo " - Downloading JetBrains Mono Nerd Font..."
+    wget -q --show-progress "$NERD_FONT_URL" -O "$TEMP_ZIP" || {
+        echo "FluxLinux: Direct download failed, trying from release..."
+        wget -q --show-progress "$BASE_URL/font.zip" -O "$TEMP_ZIP" || handle_error "Font Download"
+    }
+    
+    # Extract only .ttf files (ignore nested folders, Windows-only formats)
+    echo " - Extracting font files..."
+    unzip -o -j "$TEMP_ZIP" "*.ttf" -d "$FONT_DIR" 2>/dev/null || \
+    unzip -o "$TEMP_ZIP" -d "$FONT_DIR" 2>/dev/null
+    
+    # Clean up any non-font files that might have been extracted
+    find "$FONT_DIR" -type f ! -name "*.ttf" ! -name "*.otf" -delete 2>/dev/null
+    
+    # Remove temp file
+    rm -f "$TEMP_ZIP"
+    
+    # Set correct permissions
+    chmod 644 "$FONT_DIR"/*.ttf 2>/dev/null
+    chmod 644 "$FONT_DIR"/*.otf 2>/dev/null
+    
+    # Rebuild font cache (system-wide, verbose)
+    echo " - Rebuilding font cache..."
+    fc-cache -fv "$FONT_DIR"
+    
+    # Also rebuild user cache
+    su -s /bin/bash - "$CUSTOM_USER" -c "fc-cache -f" 2>/dev/null
+    
+    # Verify installation
+    if fc-list | grep -qi "JetBrainsMono Nerd"; then
+        echo "FluxLinux: ✓ JetBrains Mono Nerd Font installed successfully!"
+    else
+        echo "FluxLinux: ⚠ Font may not be properly registered. Checking installed files..."
+        ls -la "$FONT_DIR"
+    fi
 fi
 # 4. Apply Settings for User 'flux'
-# We use xfconf-query inside a dbus-launch session to ensure settings stick even if GUI not running.
+# Write directly to XML config files (dbus-launch creates ephemeral sessions that don't persist)
 echo "FluxLinux: Applying XFCE4 Settings..."
 
-apply_xfce_settings() {
-    # Helper to set properties
-    # $1 = Channel, $2 = Property, $3 = Type, $4 = Value
-    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c $1 -p $2 -n -t $3 -s '$4'"
-    # Note: '-n' creates if not exists
-}
+XFCONF_DIR="$USER_HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$XFCONF_DIR"
 
-# 2x Scaling
-apply_xfce_settings "xsettings" "/Gdk/WindowScalingFactor" "int" "2"
+# Generate xsettings.xml (Theme, Icons, Cursor, Fonts, Scaling)
+echo "FluxLinux: Writing xsettings.xml..."
+cat <<EOF > "$XFCONF_DIR/xsettings.xml"
+<?xml version="1.0" encoding="UTF-8"?>
 
-# Apply Theme
-if [ -n "$SEL_THEME" ]; then
-    echo "FluxLinux: Applying Theme '$SEL_THEME'"
-    apply_xfce_settings "xsettings" "/Net/ThemeName" "string" "$SEL_THEME"
-    apply_xfce_settings "xfwm4" "/general/theme" "string" "$SEL_THEME"
-fi
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="$SEL_THEME"/>
+    <property name="IconThemeName" type="string" value="$SEL_ICON"/>
+    <property name="EnableEventSounds" type="bool" value="false"/>
+    <property name="EnableInputFeedbackSounds" type="bool" value="false"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="CursorThemeName" type="string" value="$SEL_CURSOR"/>
+    <property name="CursorThemeSize" type="int" value="52"/>
+    <property name="FontName" type="string" value="JetBrainsMono Nerd Font 10"/>
+    <property name="MonospaceFontName" type="string" value="JetBrainsMono Nerd Font Mono 10"/>
+    <property name="DecorationLayout" type="string" value="menu:minimize,maximize,close"/>
+  </property>
+  <property name="Gdk" type="empty">
+    <property name="WindowScalingFactor" type="int" value="2"/>
+  </property>
+  <property name="Xft" type="empty">
+    <property name="Antialias" type="int" value="1"/>
+    <property name="HintStyle" type="string" value="hintslight"/>
+    <property name="RGBA" type="string" value="rgb"/>
+  </property>
+</channel>
+EOF
 
-# Apply Icon Theme
-if [ -n "$SEL_ICON" ]; then
-    echo "FluxLinux: Applying Icon Theme '$SEL_ICON'"
-    apply_xfce_settings "xsettings" "/Net/IconThemeName" "string" "$SEL_ICON"
-fi
+# Generate xfwm4.xml (Window Manager Theme and Title Font)
+echo "FluxLinux: Writing xfwm4.xml..."
+cat <<EOF > "$XFCONF_DIR/xfwm4.xml"
+<?xml version="1.0" encoding="UTF-8"?>
 
-# Apply Cursor Theme
-if [ -n "$SEL_CURSOR" ]; then
-    echo "FluxLinux: Applying Cursor Theme '$SEL_CURSOR'"
-    apply_xfce_settings "xsettings" "/Gtk/CursorThemeName" "string" "$SEL_CURSOR"
-fi
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="$SEL_THEME"/>
+    <property name="title_font" type="string" value="JetBrainsMono Nerd Font Bold 10"/>
+    <property name="button_layout" type="string" value="O|HMC"/>
+    <property name="placement_ratio" type="int" value="20"/>
+    <property name="scroll_workspaces" type="bool" value="false"/>
+    <property name="show_dock_shadow" type="bool" value="true"/>
+    <property name="show_frame_shadow" type="bool" value="true"/>
+    <property name="snap_to_border" type="bool" value="true"/>
+    <property name="snap_to_windows" type="bool" value="true"/>
+    <property name="use_compositing" type="bool" value="true"/>
+    <property name="tile_on_move" type="bool" value="true"/>
+    <property name="wrap_windows" type="bool" value="true"/>
+  </property>
+</channel>
+EOF
 
-# Apply Fonts
-apply_xfce_settings "xsettings" "/Gtk/FontName" "string" "JetBrainsMono Nerd Font 10"
-apply_xfce_settings "xsettings" "/Gtk/MonospaceFontName" "string" "JetBrainsMono Nerd Font Mono 10"
-apply_xfce_settings "xfwm4" "/general/title_font" "string" "JetBrainsMono Nerd Font Bold 10"
-
-# Set Wallpaper (xfce4-desktop)
-MONITORS="monitor0 monitor1 monitorVNC-0 monitorbuiltin builtin monitorHDMI-A-0 monitorVirtual-0 monitorVirtual1"
+# Generate xfce4-desktop.xml (Wallpaper)
+echo "FluxLinux: Writing xfce4-desktop.xml..."
 WALLPAPER_PATH="$WALLPAPER_DIR/$SEL_WALLPAPER"
+MONITORS="monitor0 monitor1 monitorVNC-0 monitorbuiltin builtin monitorHDMI-A-0 monitorVirtual-0 monitorVirtual1"
 
-echo "FluxLinux: Applying Wallpaper to [$MONITORS]..."
+# Build monitor properties dynamically
+MONITOR_PROPS=""
 for M in $MONITORS; do
-    # Image
-    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/last-image -n -t string -s '$WALLPAPER_PATH'"
-    # Style (Zoomed=5)
-    su -s /bin/bash - "$CUSTOM_USER" -c "DISPLAY=:0 dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/$M/workspace0/image-style -n -t int -s 5"
+    MONITOR_PROPS="$MONITOR_PROPS
+    <property name=\"$M\" type=\"empty\">
+      <property name=\"workspace0\" type=\"empty\">
+        <property name=\"last-image\" type=\"string\" value=\"$WALLPAPER_PATH\"/>
+        <property name=\"image-style\" type=\"int\" value=\"5\"/>
+        <property name=\"color-style\" type=\"int\" value=\"0\"/>
+      </property>
+    </property>"
 done
+
+cat <<EOF > "$XFCONF_DIR/xfce4-desktop.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">$MONITOR_PROPS
+    </property>
+  </property>
+  <property name="desktop-icons" type="empty">
+    <property name="style" type="int" value="2"/>
+    <property name="file-icons" type="empty">
+      <property name="show-home" type="bool" value="true"/>
+      <property name="show-filesystem" type="bool" value="false"/>
+      <property name="show-trash" type="bool" value="true"/>
+      <property name="show-removable" type="bool" value="true"/>
+    </property>
+  </property>
+</channel>
+EOF
+
+# Fix ownership
+chown -R "$CUSTOM_USER:$CUSTOM_GROUP" "$XFCONF_DIR"
+echo "FluxLinux: XFCE4 settings applied successfully!"
+
+# Generate xfce4-keyboard-shortcuts.xml (Custom Keyboard Shortcuts)
+# Note: Angle brackets in key names must be XML-escaped as &lt; and &gt;
+echo "FluxLinux: Writing keyboard shortcuts..."
+cat <<'SHORTCUTEOF' > "$XFCONF_DIR/xfce4-keyboard-shortcuts.xml"
+<?xml version="1.1" encoding="UTF-8"?>
+
+<channel name="xfce4-keyboard-shortcuts" version="1.0">
+  <property name="commands" type="empty">
+    <property name="default" type="empty">
+      <property name="&lt;Alt&gt;F1" type="empty"/>
+      <property name="&lt;Alt&gt;F2" type="empty">
+        <property name="startup-notify" type="empty"/>
+      </property>
+      <property name="&lt;Alt&gt;F3" type="empty">
+        <property name="startup-notify" type="empty"/>
+      </property>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;Delete" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;l" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="empty"/>
+      <property name="XF86Display" type="empty"/>
+      <property name="&lt;Super&gt;p" type="empty"/>
+      <property name="&lt;Primary&gt;Escape" type="empty"/>
+      <property name="XF86WWW" type="empty"/>
+      <property name="HomePage" type="empty"/>
+      <property name="XF86Mail" type="empty"/>
+      <property name="Print" type="empty"/>
+      <property name="&lt;Alt&gt;Print" type="empty"/>
+      <property name="&lt;Shift&gt;Print" type="empty"/>
+      <property name="&lt;Super&gt;e" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;f" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;Escape" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Shift&gt;Escape" type="empty"/>
+      <property name="&lt;Super&gt;r" type="empty">
+        <property name="startup-notify" type="empty"/>
+      </property>
+      <property name="&lt;Alt&gt;&lt;Super&gt;s" type="empty"/>
+    </property>
+    <property name="custom" type="empty">
+      <property name="&lt;Primary&gt;w" type="string" value="xfce4-appfinder"/>
+      <property name="&lt;Primary&gt;b" type="string" value="exo-open --launch WebBrowser"/>
+      <property name="&lt;Primary&gt;e" type="string" value="thunar"/>
+      <property name="&lt;Primary&gt;t" type="string" value="exo-open --launch TerminalEmulator"/>
+      <property name="&lt;Primary&gt;&lt;Shift&gt;s" type="string" value="xfce4-screenshooter -r"/>
+      <property name="&lt;Primary&gt;q" type="string" value="xfce4-session-logout"/>
+      <property name="&lt;Primary&gt;at" type="string" value="xfce4-screenshooter -r"/>
+      <property name="&lt;Alt&gt;F2" type="string" value="xfce4-appfinder --collapsed">
+        <property name="startup-notify" type="bool" value="true"/>
+      </property>
+      <property name="&lt;Alt&gt;Print" type="string" value="xfce4-screenshooter -w"/>
+      <property name="&lt;Super&gt;r" type="string" value="xfce4-appfinder -c">
+        <property name="startup-notify" type="bool" value="true"/>
+      </property>
+      <property name="XF86WWW" type="string" value="exo-open --launch WebBrowser"/>
+      <property name="XF86Mail" type="string" value="exo-open --launch MailReader"/>
+      <property name="&lt;Alt&gt;F3" type="string" value="xfce4-appfinder">
+        <property name="startup-notify" type="bool" value="true"/>
+      </property>
+      <property name="Print" type="string" value="xfce4-screenshooter"/>
+      <property name="&lt;Primary&gt;Escape" type="string" value="xfdesktop --menu"/>
+      <property name="&lt;Shift&gt;Print" type="string" value="xfce4-screenshooter -r"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;Delete" type="string" value="xfce4-session-logout"/>
+      <property name="&lt;Alt&gt;&lt;Super&gt;s" type="string" value="orca"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="exo-open --launch TerminalEmulator"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;f" type="string" value="thunar"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;l" type="string" value="xflock4"/>
+      <property name="&lt;Alt&gt;F1" type="string" value="xfce4-popup-applicationsmenu"/>
+      <property name="&lt;Super&gt;p" type="string" value="xfce4-display-settings --minimal"/>
+      <property name="&lt;Primary&gt;&lt;Shift&gt;Escape" type="string" value="xfce4-taskmanager"/>
+      <property name="&lt;Super&gt;e" type="string" value="thunar"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;Escape" type="string" value="xkill"/>
+      <property name="HomePage" type="string" value="exo-open --launch WebBrowser"/>
+      <property name="XF86Display" type="string" value="xfce4-display-settings --minimal"/>
+      <property name="override" type="bool" value="true"/>
+    </property>
+  </property>
+  <property name="xfwm4" type="empty">
+    <property name="default" type="empty">
+      <property name="&lt;Alt&gt;Insert" type="empty"/>
+      <property name="Escape" type="empty"/>
+      <property name="Left" type="empty"/>
+      <property name="Right" type="empty"/>
+      <property name="Up" type="empty"/>
+      <property name="Down" type="empty"/>
+      <property name="&lt;Alt&gt;Tab" type="empty"/>
+      <property name="&lt;Alt&gt;&lt;Shift&gt;Tab" type="empty"/>
+      <property name="&lt;Alt&gt;Delete" type="empty"/>
+      <property name="&lt;Alt&gt;F4" type="empty"/>
+      <property name="&lt;Alt&gt;F6" type="empty"/>
+      <property name="&lt;Alt&gt;F7" type="empty"/>
+      <property name="&lt;Alt&gt;F8" type="empty"/>
+      <property name="&lt;Alt&gt;F9" type="empty"/>
+      <property name="&lt;Alt&gt;F10" type="empty"/>
+      <property name="&lt;Alt&gt;F11" type="empty"/>
+      <property name="&lt;Alt&gt;F12" type="empty"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;d" type="empty"/>
+      <property name="&lt;Super&gt;Tab" type="empty"/>
+      <property name="&lt;Super&gt;KP_Left" type="empty"/>
+      <property name="&lt;Super&gt;KP_Right" type="empty"/>
+      <property name="&lt;Super&gt;KP_Down" type="empty"/>
+      <property name="&lt;Super&gt;KP_Up" type="empty"/>
+    </property>
+    <property name="custom" type="empty">
+      <property name="&lt;Alt&gt;F4" type="string" value="close_window_key"/>
+      <property name="&lt;Super&gt;KP_Down" type="string" value="tile_down_key"/>
+      <property name="&lt;Super&gt;KP_Up" type="string" value="tile_up_key"/>
+      <property name="&lt;Super&gt;KP_Right" type="string" value="tile_right_key"/>
+      <property name="&lt;Super&gt;KP_Left" type="string" value="tile_left_key"/>
+      <property name="Right" type="string" value="right_key"/>
+      <property name="Down" type="string" value="down_key"/>
+      <property name="&lt;Alt&gt;Tab" type="string" value="cycle_windows_key"/>
+      <property name="&lt;Alt&gt;F6" type="string" value="stick_window_key"/>
+      <property name="&lt;Alt&gt;F10" type="string" value="maximize_window_key"/>
+      <property name="&lt;Alt&gt;Delete" type="string" value="del_workspace_key"/>
+      <property name="&lt;Super&gt;Tab" type="string" value="switch_window_key"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;d" type="string" value="show_desktop_key"/>
+      <property name="&lt;Alt&gt;F7" type="string" value="move_window_key"/>
+      <property name="Up" type="string" value="up_key"/>
+      <property name="&lt;Alt&gt;F11" type="string" value="fullscreen_key"/>
+      <property name="Escape" type="string" value="cancel_key"/>
+      <property name="&lt;Alt&gt;&lt;Shift&gt;Tab" type="string" value="cycle_reverse_windows_key"/>
+      <property name="&lt;Alt&gt;F12" type="string" value="above_key"/>
+      <property name="&lt;Alt&gt;F8" type="string" value="resize_window_key"/>
+      <property name="&lt;Alt&gt;F9" type="string" value="hide_window_key"/>
+      <property name="Left" type="string" value="left_key"/>
+      <property name="&lt;Alt&gt;Insert" type="string" value="add_workspace_key"/>
+      <property name="override" type="bool" value="true"/>
+    </property>
+  </property>
+  <property name="providers" type="array">
+    <value type="string" value="xfwm4"/>
+    <value type="string" value="commands"/>
+  </property>
+</channel>
+SHORTCUTEOF
+
+echo "FluxLinux: Keyboard shortcuts configured!"
 
 
 # 5. Configure XFCE4 Panel
@@ -191,7 +428,6 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
   <property name="configver" type="int" value="2"/>
   <property name="panels" type="array">
     <value type="int" value="1"/>
-    <value type="int" value="2"/>
     <property name="dark-mode" type="bool" value="true"/>
     <property name="panel-1" type="empty">
       <property name="position" type="string" value="p=6;x=0;y=0"/>
@@ -204,7 +440,6 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
         <value type="int" value="2"/>
         <value type="int" value="3"/>
         <value type="int" value="33"/>
-        <value type="int" value="20"/>
         <value type="int" value="21"/>
         <value type="int" value="32"/>
         <value type="int" value="23"/>
@@ -219,23 +454,7 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
         <value type="int" value="10"/>
       </property>
     </property>
-    <property name="panel-2" type="empty">
-      <property name="autohide-behavior" type="uint" value="1"/>
-      <property name="position" type="string" value="p=10;x=0;y=0"/>
-      <property name="length" type="uint" value="1"/>
-      <property name="position-locked" type="bool" value="true"/>
-      <property name="size" type="uint" value="48"/>
-      <property name="plugin-ids" type="array">
-        <value type="int" value="11"/>
-        <value type="int" value="12"/>
-        <value type="int" value="13"/>
-        <value type="int" value="14"/>
-        <value type="int" value="15"/>
-        <value type="int" value="16"/>
-        <value type="int" value="17"/>
-        <value type="int" value="18"/>
-      </property>
-    </property>
+
   </property>
   <property name="plugins" type="empty">
     <property name="plugin-1" type="string" value="applicationsmenu">
@@ -281,33 +500,6 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
       <property name="style" type="uint" value="0"/>
     </property>
     <property name="plugin-10" type="string" value="actions"/>
-    <property name="plugin-11" type="string" value="showdesktop"/>
-    <property name="plugin-12" type="string" value="separator"/>
-    <property name="plugin-13" type="string" value="launcher">
-      <property name="items" type="array">
-        <value type="string" value="17669070471.desktop"/>
-      </property>
-    </property>
-    <property name="plugin-14" type="string" value="launcher">
-      <property name="items" type="array">
-        <value type="string" value="17669070472.desktop"/>
-      </property>
-    </property>
-    <property name="plugin-15" type="string" value="launcher">
-      <property name="items" type="array">
-        <value type="string" value="17669070473.desktop"/>
-      </property>
-    </property>
-    <property name="plugin-16" type="string" value="launcher">
-      <property name="items" type="array">
-        <value type="string" value="17669070474.desktop"/>
-      </property>
-    </property>
-    <property name="plugin-17" type="string" value="separator"/>
-    <property name="plugin-18" type="string" value="directorymenu">
-      <property name="base-directory" type="string" value="/home/flux"/>
-    </property>
-    <property name="plugin-20" type="string" value="cpufreq"/>
     <property name="plugin-21" type="string" value="cpugraph">
       <property name="update-interval" type="int" value="2"/>
       <property name="time-scale" type="int" value="0"/>
@@ -491,6 +683,7 @@ TERM_CONFIG_DIR="$USER_HOME/.config/xfce4/terminal"
 mkdir -p "$TERM_CONFIG_DIR"
 cat <<EOF > "$TERM_CONFIG_DIR/terminalrc"
 [Configuration]
+FontUseSystem=TRUE
 FontName=JetBrainsMono Nerd Font 12
 MiscAlwaysShowTabs=FALSE
 MiscBell=FALSE
