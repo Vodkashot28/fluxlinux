@@ -2,6 +2,7 @@
 # setup_office_debian.sh
 # Installs Office Productivity Stack
 # Target: Debian 13 (Trixie) ARM64
+# Compatible with: Chroot and Proot
 
 # Error Handler
 handle_error() {
@@ -21,14 +22,13 @@ echo "Target: Debian 13 (Trixie) - ARM64"
 echo "FluxLinux: Installing Dependencies..."
 export DEBIAN_FRONTEND=noninteractive
 apt update -y
+
+# Install essential fonts first (these are small and reliable)
 apt install -y \
     dbus-x11 \
-    fonts-noto \
+    fonts-noto-core \
     fonts-liberation \
     fonts-dejavu \
-    fonts-dejavu \
-    nodejs \
-    libsecret-1-dev \
     || handle_error "Dependencies & Fonts"
 
 # Conditional NPM Install (Fix for NodeSource Conflict)
@@ -41,17 +41,25 @@ fi
 
 # 2. LibreOffice Suite
 echo "FluxLinux: Installing LibreOffice Suite..."
-# LibreOffice: Full open source office suite
-# libreoffice-gtk3: Better integration with GTK/XFCE
-apt install -y \
+# Use --no-install-recommends to avoid large optional packages like fonts-noto-extra
+# which can fail in proot environments due to resource constraints
+apt install -y --no-install-recommends \
     libreoffice \
     libreoffice-gtk3 \
-    || handle_error "LibreOffice Installation"
+    || {
+        echo "⚠️ LibreOffice install had issues, attempting to fix..."
+        # Fix any broken packages (common in proot with large fonts)
+        apt --fix-broken install -y
+        dpkg --configure -a
+        # Retry with just the core package
+        apt install -y --no-install-recommends libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-gtk3 \
+            || handle_error "LibreOffice Installation"
+    }
 
 # 3. Email & PIM
 echo "FluxLinux: Installing Email & Organization Tools..."
 # Thunderbird: Email client
-apt install -y \
+apt install -y --no-install-recommends \
     thunderbird \
     || handle_error "Thunderbird Installation"
 
@@ -59,10 +67,14 @@ apt install -y \
 echo "FluxLinux: Installing PDF Tools..."
 # Evince: Document Viewer
 # Xournal++: Note taking & PDF Annotation
-apt install -y \
+apt install -y --no-install-recommends \
     evince \
     xournalpp \
     || handle_error "PDF Tools Installation"
+
+# 5. Optional: Try to install extra fonts (non-fatal if fails)
+echo "FluxLinux: Installing additional fonts (optional)..."
+apt install -y fonts-noto 2>/dev/null || echo " [⚠️] Optional fonts skipped (proot limitation)"
 
 # 6. Verification
 verify_installation() {
