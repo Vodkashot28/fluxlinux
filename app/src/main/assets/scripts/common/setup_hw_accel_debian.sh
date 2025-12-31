@@ -158,6 +158,18 @@ elif [ "$MODE" = "virgl" ]; then
     export MESA_GL_VERSION_OVERRIDE=4.0
     export MESA_GLES_VERSION_OVERRIDE=3.1
     export MESA_NO_ERROR=1
+    
+    # Set socket path explicitly for chroot environments
+    # Default socket is /tmp/.virgl_test (created by virgl_test_server)
+    export VTEST_SOCKET_NAME=${VTEST_SOCKET_NAME:-/tmp/.virgl_test}
+    
+    # Diagnostic logging
+    if [ "$FLUX_GPU_DEBUG" = "1" ]; then
+        echo "[DEBUG] GALLIUM_DRIVER=$GALLIUM_DRIVER"
+        echo "[DEBUG] VTEST_SOCKET_NAME=$VTEST_SOCKET_NAME"
+        echo "[DEBUG] XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+        ls -la /tmp/.virgl_test 2>/dev/null && echo "[DEBUG] VirGL socket exists" || echo "[DEBUG] VirGL socket NOT FOUND at /tmp/.virgl_test"
+    fi
 fi
 
 # Execute Application

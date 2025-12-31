@@ -793,8 +793,9 @@ curl -fsSL https://raw.githubusercontent.com/abhay-byte/Linux_Setup/dev/config/t
     -o "$USER_HOME/.local/share/fastfetch/presets/termux.jsonc" 2>/dev/null
 
 # Add fastfetch and pokemon to .zshrc startup (if not already present)
+# Use gpu-launch to enable GPU info detection via VirGL
 if ! grep -q 'fastfetch --config termux' "$ZSHRC"; then
-    sed -i '1ifastfetch --config termux' "$ZSHRC"
+    sed -i '1igpu-launch fastfetch --config termux' "$ZSHRC"
 fi
 
 if ! grep -q 'pokemon-colorscripts' "$ZSHRC"; then

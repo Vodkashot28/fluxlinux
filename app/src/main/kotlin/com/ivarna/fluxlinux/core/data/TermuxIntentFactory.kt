@@ -301,7 +301,28 @@ object TermuxIntentFactory {
 
         if (distroId == "debian13_chroot") {
             // Launch Debian 13 Chroot GUI using Android Root (su)
-            return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_debian13_gui.sh\"", runInBackground = true)
+            // IMPORTANT: Start VirGL and PulseAudio in Termux context FIRST (not root)
+            // This fixes socket/permission issues
+            val command = """
+                echo "FluxLinux: Starting services in Termux context..."
+                
+                # VirGL server
+                if [ -x "${'$'}PREFIX/bin/virgl_test_server_android" ]; then
+                    nohup setsid ${'$'}PREFIX/bin/virgl_test_server_android >/dev/null 2>&1 &
+                    sleep 1
+                    echo "[OK] VirGL server started"
+                fi
+                
+                # PulseAudio server
+                ${'$'}PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null
+                ${'$'}PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
+                echo "[OK] PulseAudio started"
+                
+                sleep 1
+                echo "FluxLinux: Launching Chroot GUI..."
+                su -c "sh /data/local/tmp/start_debian13_gui.sh"
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = true)
         }
         
         if (distroId == "arch_chroot") {

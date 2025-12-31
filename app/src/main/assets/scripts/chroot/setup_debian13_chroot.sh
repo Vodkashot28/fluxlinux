@@ -465,9 +465,9 @@ EOF
 # Wrapper to start X11/Pulse and then the Chroot
 # Run this from Android Root Shell
 
-# 1. Kill old processes
+# 1. Kill old processes (except VirGL and PulseAudio - managed by Termux/FluxLinux app)
 run_kill() {
-    killall -9 termux-x11 Xwayland pulseaudio virgl_test_server_android >/dev/null 2>&1
+    killall -9 termux-x11 Xwayland >/dev/null 2>&1
     pkill -f com.termux.x11 >/dev/null 2>&1
 }
 run_kill
@@ -482,9 +482,12 @@ rm -rf $TARGET_TERMUX_PREFIX/tmp/.X0-lock
 echo "Starting X11 App..."
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null
 
-# 3. Mount Termux Tmp to Chroot Tmp (Fixes Wayland/X11 sockets)
+# 3. Mount Termux Tmp to Chroot Tmp (Fixes Wayland/X11/VirGL sockets)
 # Using Root Busybox
 $BB mount --bind $TARGET_TERMUX_PREFIX/tmp /data/local/tmp/chrootDebian13/tmp 2>/dev/null
+
+# Fix Permissions for VirGL socket access (critical!)
+chmod -R 1777 $TARGET_TERMUX_PREFIX/tmp
 
 # 4. Start XServer (Xwayland) in background
 export XDG_RUNTIME_DIR="$TARGET_TERMUX_PREFIX/tmp"
@@ -496,17 +499,21 @@ $TARGET_TERMUX_PREFIX/bin/termux-x11 :0 -ac &
 
 sleep 3
 
-# 5. Start PulseAudio
-echo "Starting PulseAudio..."
-$TARGET_TERMUX_PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
-# Explicitly load module again to be safe (Termux/Proot quirk)
-$TARGET_TERMUX_PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
+# 5. PulseAudio - Check only (started by FluxLinux app in Termux context)
+# DO NOT start from root context - same issue as VirGL
+echo "Checking PulseAudio..."
+pgrep -f pulseaudio >/dev/null && echo "[OK] PulseAudio running" || echo "[!] PulseAudio not running - audio may fail"
 
-# 6. Start VirGL server for hardware acceleration
-if [ -x "$TARGET_TERMUX_PREFIX/bin/virgl_test_server_android" ]; then
-    echo "Starting VirGL server for hardware acceleration..."
-    nohup setsid $TARGET_TERMUX_PREFIX/bin/virgl_test_server_android >/dev/null 2>&1 &
-    sleep 2
+# 6. VirGL Server - Check only (DO NOT start from root context!)
+# VirGL is started by FluxLinux app in Termux context with correct permissions
+# Starting from root would overwrite the socket with wrong permissions
+echo "Checking VirGL server..."
+if pgrep -f virgl_test_server >/dev/null; then
+    echo "[OK] VirGL server running"
+    ls -la $TARGET_TERMUX_PREFIX/tmp/.virgl_test 2>/dev/null || echo "[WARN] VirGL socket not visible"
+else
+    echo "[!] VirGL not running - GPU acceleration will NOT work"
+    echo "[!] Please restart the GUI from FluxLinux app"
 fi
 
 # 7. Launch Chroot
