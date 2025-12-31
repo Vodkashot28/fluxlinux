@@ -18,7 +18,6 @@ echo "FluxLinux: Detecting Package Manager..."
 if command -v pacman &> /dev/null; then
     # --- ARCH LINUX DETECTED ---
     echo "Arch Linux detected (pacman). Running System Update..."
-    echo "This brings LLVM/Mesa to the absolute latest version."
     pacman -Syu --noconfirm
     
     echo "FluxLinux: Installing Arch Dependencies..."
@@ -32,9 +31,7 @@ if command -v pacman &> /dev/null; then
         unzip \
         xdg-desktop-portal
         
-    echo "FluxLinux: Arch Setup Complete."
-    # Skip Debian-specific Trixie upgrade as Arch is rolling
-    DO_UPGRADE="n" 
+    echo "FluxLinux: Arch Setup Complete." 
 
 elif command -v apt-get &> /dev/null; then
     # --- DEBIAN/UBUNTU DETECTED ---
@@ -63,36 +60,6 @@ if [ "$ARCH" != "arm64" ]; then
     echo "Warning: Drivers are optimized for arm64. Your arch is $ARCH."
 fi
 
-# 2.5 Upgrade System (Optional)
-echo "============================================"
-echo "      System Upgrade Options"
-echo "============================================"
-echo "Current LLVM/Mesa versions might be old (Stable)."
-echo "Do you want to upgrade Debian to 'Trixie' (Testing)?"
-echo "This installs LLVM 18+ / Mesa 24+ for better performance."
-echo ""
-echo "Note: This downloads ~1GB of updates and takes time."
-echo "============================================"
-read -r -p "Upgrade to Trixie now? [y/N]: " DO_UPGRADE
-if [[ "$DO_UPGRADE" =~ ^[Yy]$ ]]; then
-    echo "FluxLinux: Switching sources to Trixie..."
-    cp /etc/apt/sources.list /etc/apt/sources.list.bak
-    echo "deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware" > /etc/apt/sources.list
-    echo "deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
-    echo "deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list
-    
-    echo "FluxLinux: Updating package lists..."
-    apt-get update
-    
-    echo "FluxLinux: Performing Distribution Upgrade..."
-    # Force confnew to avoid interactive prompts
-    apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y
-    
-    echo "FluxLinux: Re-installing Mesa drivers..."
-    apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri mesa-utils vulkan-tools
-    
-    echo "FluxLinux: Upgrade Complete!"
-fi
 
 
 # 3. GPU Selection Menu

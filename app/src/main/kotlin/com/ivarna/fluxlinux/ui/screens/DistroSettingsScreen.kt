@@ -1,10 +1,15 @@
 package com.ivarna.fluxlinux.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -124,10 +131,12 @@ fun DistroSettingsScreen(
                     val isInstalled = remember(component.id) { 
                         StateManager.isComponentInstalled(context, distro.id, component.id) 
                     }
+                    val details = componentDetailsMap[component.id]
                     
-                    ComponentSettingItem(
+                    ComponentManagementCard(
                         component = component,
                         isInstalled = isInstalled,
+                        details = details,
                         onAction = { 
                             if (component.scriptName.contains("setup_customization")) {
                                 activeComponent = component
@@ -233,7 +242,11 @@ fun DistroSettingsScreen(
                                 
                                 val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(context)
                                 if (launchIntent != null) {
+                                    // Optimistic State Update: Assume user will run the command
+                                    StateManager.setDistroInstalled(context, distro.id, false)
                                     onStartActivity(launchIntent)
+                                    // Navigate back to Home
+                                    onBack() 
                                     android.widget.Toast.makeText(context, "Command Copied! Type 'su' -> Enter -> Paste", android.widget.Toast.LENGTH_LONG).show()
                                 } else {
                                     android.widget.Toast.makeText(context, "Termux app not found!", android.widget.Toast.LENGTH_SHORT).show()
@@ -346,7 +359,7 @@ fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolea
         RadioButton(
             selected = selected,
             onClick = onSelect,
-            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.secondary)
         )
         Column {
             Text(name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
@@ -356,58 +369,141 @@ fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolea
 }
 
 @Composable
-fun ComponentSettingItem(
+fun ComponentManagementCard(
     component: DistroComponent,
     isInstalled: Boolean,
+    details: ComponentDetail?,
     onAction: () -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+            .clickable { expanded = !expanded } // Toggle expand on body click
             .padding(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = component.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (isInstalled) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Default.CheckCircle, contentDescription = "Installed", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top // Align top for better layout with description
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (details != null) {
+                            Icon(
+                                imageVector = details.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        
+                        Text(
+                            text = component.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isInstalled) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(Icons.Default.CheckCircle, contentDescription = "Installed", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
+                        }
                     }
+                    Text(
+                        text = component.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                     Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = "Est. Size: ${component.sizeEstimate}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
                 }
-                Text(
-                    text = component.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                // Action Button (Right aligned)
+               Column(
+                   horizontalAlignment = Alignment.CenterHorizontally,
+                   verticalArrangement = Arrangement.Center
+               ) {
+                    Button(
+                        onClick = onAction,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary,
+                            contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSecondary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        if (isInstalled) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Update", fontSize = 12.sp)
+                        } else {
+                            Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    
+                    if (details != null) {
+                         IconButton(
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (expanded) "Collapse" else "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+               }
             }
             
-            Button(
-                onClick = onAction,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
-                    contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
-                ),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(8.dp)
+            // Collapsible Content
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                if (isInstalled) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Update", fontSize = 12.sp)
-                } else {
-                    Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                if (details != null) {
+                    Column(modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Package Contents:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        details.packages.forEach { (pkg, size) ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "• $pkg",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                )
+                                Text(
+                                    text = size,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

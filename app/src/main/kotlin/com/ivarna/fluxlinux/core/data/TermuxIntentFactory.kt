@@ -137,8 +137,8 @@ object TermuxIntentFactory {
             }
         """.trimIndent() + "\n\n"
         
-        // 0. Prepend Termux Setup (Dependency Check) if not running it directly
-        if (distro.id != "termux") {
+        // 0. Prepend Termux Setup (Dependency Check) if not running it directly AND not Chroot
+        if (distro.id != "termux" && !distro.id.contains("chroot")) {
              val termuxSetup = scriptManager.getScriptContent("common/setup_termux.sh")
              // Strip the shebang and exit/callback from setup_termux
              var cleanSetup = termuxSetup.replace("#!/bin/bash", "")
@@ -237,9 +237,17 @@ object TermuxIntentFactory {
         runnerScript.append("$runnerCmd $targetPath\n")
         
         // --- ADD CALLBACK ---
+        // --- ADD CALLBACK ---
         val callbackName = "base_install"
         val callbackUrl = "fluxlinux://callback?result=success&name=$callbackName"
-        runnerScript.append("am start -a android.intent.action.VIEW -d \"$callbackUrl\"\n")
+        val errorUrl = "fluxlinux://callback?result=failure&name=$callbackName"
+        
+        runnerScript.append("if [ $? -eq 0 ]; then\n")
+        runnerScript.append("    am start -a android.intent.action.VIEW -d \"$callbackUrl\"\n")
+        runnerScript.append("else\n")
+        runnerScript.append("    echo \"FluxLinux: Installation Failed!\"\n")
+        runnerScript.append("    am start -a android.intent.action.VIEW -d \"$errorUrl\"\n")
+        runnerScript.append("fi\n")
         
         if (isChroot) {
             runnerScript.append("'")
@@ -327,8 +335,8 @@ object TermuxIntentFactory {
                 echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
                 chmod +x /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
                 busybox chroot /data/local/tmp/chrootDebian /bin/su - root -c "bash /tmp/flux_feature.sh";
-                rm -f /data/local/tmp/chrootDebian/tmp/flux_feature.sh
-                '
+                rm -f /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
+                ';
                 sleep 1; $callbackCmd
             """.trimIndent().replace("\n", " ")
             
@@ -337,13 +345,33 @@ object TermuxIntentFactory {
 
         if (distroId == "debian13_chroot") {
             // Debian 13 Chroot Feature Script
+            // Debian 13 Chroot Feature Script
+            // Uses generated helper for robustness, falls back to inline mounts if missing.
             val innerCommand = """
                 su -c '
-                echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
-                chmod +x /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
-                busybox chroot /data/local/tmp/chrootDebian13 /bin/su - root -c "bash /tmp/flux_feature.sh";
-                rm -f /data/local/tmp/chrootDebian13/tmp/flux_feature.sh
-                '
+                ROOT_RUNNER="/data/local/tmp/run_debian13_root.sh";
+                if [ -f "${'$'}ROOT_RUNNER" ]; then
+                    mkdir -p /data/local/tmp/chrootDebian13/tmp;
+                    echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                    chmod +x /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                    sh "${'$'}ROOT_RUNNER" "bash /tmp/flux_feature.sh";
+                    rm -f /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                else
+                    mnt=/data/local/tmp/chrootDebian13;
+                    mkdir -p ${'$'}mnt/tmp;
+                    mount -o remount,dev,suid /data >/dev/null 2>&1;
+                    mount -t proc proc ${'$'}mnt/proc >/dev/null 2>&1;
+                    mount -t sysfs sysfs ${'$'}mnt/sys >/dev/null 2>&1;
+                    mount -o bind /dev ${'$'}mnt/dev >/dev/null 2>&1;
+                    mount -o bind /dev/pts ${'$'}mnt/dev/pts >/dev/null 2>&1;
+                    mkdir -p ${'$'}mnt/dev/shm;
+                    mount -t tmpfs -o size=512M tmpfs ${'$'}mnt/dev/shm >/dev/null 2>&1;
+                    echo "$scriptB64" | base64 -d > ${'$'}mnt/tmp/flux_feature.sh;
+                    chmod +x ${'$'}mnt/tmp/flux_feature.sh;
+                    busybox chroot ${'$'}mnt /bin/su - root -c "bash /tmp/flux_feature.sh";
+                    rm -f ${'$'}mnt/tmp/flux_feature.sh;
+                fi;
+                ';
                 sleep 1; $callbackCmd
             """.trimIndent().replace("\n", " ")
             

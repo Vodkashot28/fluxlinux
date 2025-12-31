@@ -27,7 +27,7 @@ echo "FluxLinux: Starting XFCE4 Customization..."
 echo "FluxLinux: Installing customization tools..."
 export DEBIAN_FRONTEND=noninteractive
 apt update -y
-apt install -y xfce4-goodies curl unzip fontconfig || handle_error "Dependency Installation"
+apt install -y xfce4-goodies curl fastfetch wget unzip fontconfig || handle_error "Dependency Installation"
 
 # 2. Deploy Assets (From GitHub Release debian-v1)
 ASSET_REPO="abhay-byte/fluxlinux"
@@ -245,7 +245,7 @@ cat <<'EOF' > "$PANEL_CONFIG_DIR/xfce4-panel.xml"
       <property name="show-tooltips" type="bool" value="false"/>
       <property name="show-generic-names" type="bool" value="false"/>
       <property name="custom-menu" type="bool" value="false"/>
-      <property name="show-menu-icons" type="bool" value="false"/>
+      <property name="show-menu-icons" type="bool" value="true"/>
       <property name="show-button-title" type="bool" value="false"/>
     </property>
     <property name="plugin-2" type="string" value="tasklist">

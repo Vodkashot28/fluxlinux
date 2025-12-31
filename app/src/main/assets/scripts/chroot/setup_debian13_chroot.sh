@@ -181,7 +181,7 @@ mkdir -p \$DEBIANPATH/tmp
         export DEBIAN_FRONTEND=noninteractive
         apt update
         apt upgrade -y
-        apt install -y nano vim net-tools sudo git dbus-x11
+        apt install -y nano vim net-tools sudo git dbus-x11 wget unzip
     ' || goodbye
 
     # --- USER CREATION (Matches Guide) ---
@@ -401,7 +401,7 @@ EOF
         
         # Download RootFS (Debian 13 Trixie)
         # URL provided by update request
-        download_file "$DEBIANPATH" "rootfs.tar.xz" "https://blr1lxdmirror01.do.letsbuildthe.cloud/images/debian/trixie/arm64/default/20251224_05%3A24/rootfs.tar.xz"
+        download_file "$DEBIANPATH" "rootfs.tar.xz" "https://github.com/abhay-byte/fluxlinux/releases/download/rootfs/debian_13_rootfs.tar.xz"
         
         # Extract
         extract_file "$DEBIANPATH"
@@ -516,6 +516,43 @@ EOF
     chmod +x "$GUI_LAUNCHER"
     success "GUI Launcher created: $GUI_LAUNCHER"
     
+    # --- GENERATE ROOT COMMAND RUNNER (For App Scripts) ---
+    ROOT_RUNNER="/data/local/tmp/run_debian13_root.sh"
+    progress "Creating Root Runner at $ROOT_RUNNER..."
+    
+    cat <<EOF > "$ROOT_RUNNER"
+#!/bin/sh
+# Wrapper to run a command inside Chroot as Root (with mounts)
+
+DEBIANPATH="/data/local/tmp/chrootDebian13"
+BB="$BB"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+
+# 1. Mounts (Idempotent)
+\$BB mount -o remount,dev,suid /data >/dev/null 2>&1
+\$BB mount --bind /dev \$DEBIANPATH/dev >/dev/null 2>&1
+\$BB mount --bind /sys \$DEBIANPATH/sys >/dev/null 2>&1
+\$BB mount --bind /proc \$DEBIANPATH/proc >/dev/null 2>&1
+\$BB mount -t devpts devpts \$DEBIANPATH/dev/pts >/dev/null 2>&1
+mkdir -p \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm >/dev/null 2>&1
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp >/dev/null 2>&1
+mkdir -p \$DEBIANPATH/sdcard
+\$BB mount --bind /sdcard \$DEBIANPATH/sdcard >/dev/null 2>&1
+
+# 2. Execute Command
+CMD="\$@"
+if [ -z "\$CMD" ]; then
+    echo "Usage: \$0 <command>"
+    exit 1
+fi
+
+\$BB chroot \$DEBIANPATH /bin/su - root -c "\$CMD"
+EOF
+    chmod +x "$ROOT_RUNNER"
+    success "Root runner created."
+
     # --- GENERATE CLI LAUNCHER (Shell Only) ---
     CLI_SCRIPT="/data/local/tmp/enter_debian13.sh"
     progress "Creating CLI Launcher at $CLI_SCRIPT..."
