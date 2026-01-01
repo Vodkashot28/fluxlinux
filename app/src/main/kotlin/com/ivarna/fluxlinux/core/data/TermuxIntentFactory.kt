@@ -103,7 +103,24 @@ object TermuxIntentFactory {
         val command = if (distroId == "termux") {
             "pkg uninstall -y xfce4 xfce4-terminal tigervnc && echo 'FluxLinux: Termux Native Desktop Removed.' && sleep 3"
         } else {
-            "proot-distro remove $distroId && echo 'FluxLinux: $distroId Uninstalled.' && sleep 3"
+            // Try proot-distro remove, retry once if it fails, then fallback to manual removal
+            """
+            echo "Attempting to remove $distroId..."
+            if proot-distro remove $distroId 2>/dev/null; then
+                echo "FluxLinux: $distroId Uninstalled."
+            else
+                echo "First attempt failed, retrying..."
+                sleep 1
+                if proot-distro remove $distroId 2>/dev/null; then
+                    echo "FluxLinux: $distroId Uninstalled."
+                else
+                    echo "proot-distro command failed, using manual removal..."
+                    rm -rf ${'$'}PREFIX/var/lib/proot-distro/installed-rootfs/$distroId
+                    echo "FluxLinux: $distroId manually removed."
+                fi
+            fi
+            sleep 3
+            """.trimIndent()
         }
         return buildRunCommandIntent(command)
     }
@@ -333,7 +350,7 @@ object TermuxIntentFactory {
         // Standard Proot Launch
         // Execute the helper script created during setup
         val command = "bash $TERMUX_HOME_DIR/start_gui.sh $distroId"
-        return buildRunCommandIntent(command, runInBackground = true)
+        return buildRunCommandIntent(command, runInBackground = false)
     }
 
     /**

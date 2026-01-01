@@ -45,7 +45,7 @@ yes | apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--forc
 # fastfetch: System info display
 # git: Version control (for Oh My Zsh plugins)
 # unzip: For extracting fonts
-pkg install -y proot-distro x11-repo pulseaudio wget zsh fastfetch git unzip
+pkg install -y proot-distro x11-repo pulseaudio wget zsh fastfetch git unzip util-linux
 
 # 3. Install Termux:X11
 pkg install -y termux-x11-nightly
