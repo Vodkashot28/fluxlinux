@@ -40,7 +40,7 @@ update_shell_path() {
 
 echo "FluxLinux: Setting up General Software Engineering Environment..."
 TARGET_USER="flux"
-TARGET_GROUP="users"
+TARGET_GROUP=$(id -gn $TARGET_USER 2>/dev/null || echo "flux")
 
 # 1. Install System Dependencies & C/C++ Stack
 echo "FluxLinux: Installing System Dependencies & C/C++ Tools..."
@@ -208,10 +208,18 @@ EOF
     echo " [✅] VS Code installed"
 else
     echo " - VS Code already installed."
-    echo " [✅] VS Code installed"
-else
-    echo " - VS Code already installed."
 fi
+
+# Configure VS Code settings to disable extension signature verification
+# This runs every time to ensure settings are always applied
+echo " - Configuring VS Code settings..."
+mkdir -p /home/$TARGET_USER/.config/Code/User
+cat <<'VSCODE_SETTINGS' > /home/$TARGET_USER/.config/Code/User/settings.json
+{
+    "extensions.verifySignature": false
+}
+VSCODE_SETTINGS
+chown -R $TARGET_USER:$TARGET_GROUP /home/$TARGET_USER/.config
 
 
 

@@ -43,27 +43,6 @@ Pin-Priority: 1000
 apt update -y
 apt install -y firefox chromium || handle_error "Browser Installation"
 
-# Fix: Create Firefox Wrapper to prevent Sandboxing Crashes in Chroot
-echo "FluxLinux: Applying Firefox Crash Fixes..."
-cat <<EOF > /usr/local/bin/firefox
-#!/bin/sh
-# Firefox Wrapper for Android Chroot (Fixes GPU/Sandbox Crashes)
-# Disables Content Sandbox to prevent "AbnormalShutdown" IPC errors
-export MOZ_DISABLE_CONTENT_SANDBOX=1
-export MOZ_DISABLE_RDD_SANDBOX=1
-export MOZ_DISABLE_GMP_SANDBOX=1
-export MOZ_DISABLE_IPC_SANDBOX=1
-export MOZ_FORCE_DISABLE_E10S=1
-# Ensure software rendering is forced to prevent GPU crashes
-export LIBGL_ALWAYS_SOFTWARE=1
-export MOZ_WEBRENDER=0
-export ACCEL_LOG_DISABLE=1
-# Fix X11/Wayland nesting issues
-export MOZ_GTK_TITLEBAR_DECORATION=client
-export MOZ_X11_EGL=1
-exec /usr/bin/firefox "\$@" --no-remote
-EOF
-chmod +x /usr/local/bin/firefox
 
 # 3. Install Node.js (Latest v23)
 # 3. Install Node.js (Latest v23)
@@ -138,6 +117,17 @@ EOF
 else
     echo "FluxLinux: VS Code already installed."
 fi
+
+# Configure VS Code settings to disable extension signature verification
+# This runs every time to ensure settings are always applied
+echo "FluxLinux: Configuring VS Code settings..."
+mkdir -p /home/flux/.config/Code/User
+cat <<'VSCODE_SETTINGS' > /home/flux/.config/Code/User/settings.json
+{
+    "extensions.verifySignature": false
+}
+VSCODE_SETTINGS
+chown -R flux:$(id -gn flux 2>/dev/null || echo "flux") /home/flux/.config
 
 # 6. Install Antigravity Package
 echo "FluxLinux: Installing Antigravity..."
