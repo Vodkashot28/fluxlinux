@@ -39,11 +39,19 @@ termux-x11-preference touchMode:Trackpad pointerCapture:true
         termux-x11-preference showAdditionalKbd:false
         ```
 
-2.  **External App Access:**
-    If calling this from an external app (like FluxLinux via intent), you **must** enable external access in Termux:
-    1.  Edit `~/.termux/termux.properties`.
-    2.  Add/Uncomment: `allow-external-apps = true`.
-    3.  Run `termux-reload-settings`.
+2.  **External App Access (Manual Step):**
+    For FluxLinux (or any external app) to send commands to Termux, **you must manually configure this permission**.
+
+    1.  Open Termux.
+    2.  Run: `nano ~/.termux/termux.properties`
+    3.  Add or uncomment the line:
+        ```properties
+        allow-external-apps = true
+        ```
+    4.  Save (`Ctrl+O`, `Enter`) and Exit (`Ctrl+X`).
+    5.  Run: `termux-reload-settings`
+
+    > **Note:** The setup script does *not* do this for you automatically.
 
 3.  **Active Session:**
     The Termux:X11 application must be running (foreground or background) for the preferences to be applied.

@@ -79,6 +79,11 @@ fi
 # - start_gui.sh (Specific to distro family)
 # - flux_install.sh (Common installer)
 
+# 5. Configure Termux Permissions (Critical for App Communication)
+# REMOVED: User must manually configure 'allow-external-apps = true' in ~/.termux/termux.properties
+# per user request/security policy.
+
+
 echo "FluxLinux: Setup Complete"
 echo ""
 echo "📝 Optional: Run 'bash ~/termux_tweaks.sh' for enhanced terminal experience"
