@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.sp
 import com.ivarna.fluxlinux.core.data.Distro
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.PlayArrow
 
 @Composable
 fun DistroCard(
@@ -40,6 +43,8 @@ fun DistroCard(
     onUninstall: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToStart: () -> Unit,
+    onStop: () -> Unit = {},
+    onOpenDisplay: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -138,9 +143,20 @@ fun DistroCard(
                     }
                     Text(
                         text = distro.id,
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                         fontSize = 14.sp
                     )
+                }
+
+                // Settings Icon (Only if installed)
+                if (isInstalled) {
+                    androidx.compose.material3.IconButton(onClick = onNavigateToSettings) {
+                        androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 }
             }
 
@@ -215,36 +231,60 @@ fun DistroCard(
                     )
                 }
             } else {
-                // Show Settings & Start buttons when installed
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Settings Button
-                    Button(
-                        onClick = onNavigateToSettings,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                        modifier = Modifier.weight(1f)
+                // RUNNING State Handling
+                if (isGuiRunning) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = "Settings",
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                        // Open Display Button (Cyan - Primary Action)
+                        Button(
+                            onClick = onOpenDisplay,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF00E5FF), // Cyan
+                                contentColor = Color.Black
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Open X11",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
 
-                    // Start Button (Popup Launch)
+                        // Stop Button (Red - Destructive Action)
+                        Button(
+                            onClick = onStop,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFF5252), // Red
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.weight(0.5f) // Smaller
+                        ) {
+                            Text(
+                                text = "Stop",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                } else {
+                    // STOPPED State - Standard Start Button
                     Button(
                         onClick = onNavigateToStart, // This should trigger the Popup, passed from parent
                         colors = ButtonDefaults.buttonColors(
                             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                             contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
+                        androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Start",
                             fontWeight = FontWeight.Bold,

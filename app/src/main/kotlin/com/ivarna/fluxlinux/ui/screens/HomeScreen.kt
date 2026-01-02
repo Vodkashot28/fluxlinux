@@ -3,7 +3,9 @@ package com.ivarna.fluxlinux.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -248,7 +250,29 @@ fun HomeScreen(
                     onInstall = { onNavigateToInstall(distro) },
                     onUninstall = { /* Handled in Settings */ }, 
                     onNavigateToSettings = { onNavigateToSettings(distro) },
-                    onNavigateToStart = { distroToLaunch.value = distro }
+                    onNavigateToStart = { distroToLaunch.value = distro },
+                    onOpenDisplay = {
+                        val launchIntent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                        if (launchIntent != null) {
+                            context.startActivity(launchIntent)
+                        } else {
+                            android.widget.Toast.makeText(context, "Termux:X11 not installed", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onStop = {
+                        if (permissionState.status.isGranted) {
+                            val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                            try {
+                                onStartService(intent)
+                                StateManager.setGuiRunning(context, distro.id, false)
+                                android.widget.Toast.makeText(context, "Stopping GUI...", android.widget.Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                android.widget.Toast.makeText(context, "Stop failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            permissionState.launchPermissionRequest()
+                        }
+                    }
                 )
             }
         }
@@ -294,29 +318,96 @@ fun HomeScreen(
         // Actually, we can just put a Column in the 'text' slot.
     }
     
-    // Custom Launch Dialog (replacing the standard AlertDialog above for better control)
+    // Custom Launch Dialog
     if (distroToLaunch.value != null) {
         val distro = distroToLaunch.value!!
-        androidx.compose.ui.window.Dialog(onDismissRequest = { distroToLaunch.value = null }) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { distroToLaunch.value = null },
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false // Allow full width customization
+            ) 
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                    .fillMaxWidth(0.9f)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF1E1E1E).copy(alpha = 0.95f),
+                                Color(0xFF121212).copy(alpha = 0.98f)
+                            )
+                        )
+                    )
+                    .border(
+                        BorderStroke(1.dp, Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.15f),
+                                Color.Transparent
+                            )
+                        )),
+                        RoundedCornerShape(28.dp)
+                    )
             ) {
+                // Glow effect behind the top
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Header Icon
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (distro.iconRes != null) {
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = distro.iconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
                         text = "Start ${distro.name}",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Choose launch mode",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
                     
                     // CLI Button
                     if (distro.id != "termux") {
@@ -334,10 +425,16 @@ fun HomeScreen(
                                     permissionState.launchPermissionRequest()
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
                         ) {
-                            Text("Launch CLI", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Launch Terminal (CLI)", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            }
                         }
                         
                         Spacer(modifier = Modifier.height(16.dp))
@@ -349,7 +446,6 @@ fun HomeScreen(
                     Button(
                         onClick = {
                             if (permissionState.status.isGranted) {
-                                // Start floating keyboard service if overlay permission is granted
                                 if (android.provider.Settings.canDrawOverlays(context)) {
                                     try {
                                         val keyboardIntent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
@@ -358,15 +454,19 @@ fun HomeScreen(
                                         } else {
                                             context.startService(keyboardIntent)
                                         }
-                                    } catch (e: Exception) {
-                                        // Ignore
-                                    }
+                                    } catch (e: Exception) {}
                                 }
                                 
                                 val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                                 try {
                                     onStartService(intent)
                                     StateManager.setGuiRunning(context, distro.id, true)
+                                    // Auto-launch X11 after short delay or immediately
+                                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                                    if (x11Intent != null) {
+                                        context.startActivity(x11Intent)
+                                    }
+                                    distroToLaunch.value = null
                                 } catch (e: Exception) {
                                     android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                                 }
@@ -374,42 +474,50 @@ fun HomeScreen(
                                 permissionState.launchPermissionRequest()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00E6)),
-                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
                     ) {
-                         Text("Launch GUI", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Launch Desktop (GUI)", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        }
                     }
                     
-                    // Stop GUI Button (appears after GUI is launched)
                     if (isGuiRunning) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        
                         Button(
                             onClick = {
-                                if (permissionState.status.isGranted) {
-                                    val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
-                                    try {
-                                        onStartService(intent)
-                                        StateManager.setGuiRunning(context, distro.id, false)
-                                        android.widget.Toast.makeText(context, "Stopping GUI...", android.widget.Toast.LENGTH_SHORT).show()
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(context, "Stop failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    permissionState.launchPermissionRequest()
-                                }
+                                val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                onStartService(intent)
+                                StateManager.setGuiRunning(context, distro.id, false)
+                                distroToLaunch.value = null
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
                         ) {
-                             Text("Stop GUI", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Force Stop", fontWeight = FontWeight.SemiBold)
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
-                    TextButton(onClick = { distroToLaunch.value = null }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    androidx.compose.material3.TextButton(
+                        onClick = { distroToLaunch.value = null },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Cancel", 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }

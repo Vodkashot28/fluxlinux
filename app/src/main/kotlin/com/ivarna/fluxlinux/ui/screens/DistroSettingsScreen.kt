@@ -20,11 +20,13 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -68,10 +70,16 @@ fun DistroSettingsScreen(
         hazeState = hazeState,
         topBar = {
             TopAppBar(
-                title = { Text("Manage ${distro.name}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "Manage ${distro.name}", 
+                        color = MaterialTheme.colorScheme.secondary, 
+                        fontWeight = FontWeight.Bold 
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.secondary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,33 +93,82 @@ fun DistroSettingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 48.dp)
             ) {
                 
-                // Header (Adaptive Card)
+                // Header (Glass Card)
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(distro.color.copy(alpha = 0.15f))
-                            .border(1.dp, distro.color.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
-                            .padding(16.dp)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
+                                    )
+                                )
+                            )
+                            .border(
+                                1.dp, 
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.2f),
+                                        Color.Transparent
+                                    )
+                                ), 
+                                RoundedCornerShape(24.dp)
+                            )
+                            .padding(20.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = distro.color,
-                                modifier = Modifier.size(32.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (distro.iconRes != null) {
+                                    Icon(
+                                        painter = androidx.compose.ui.res.painterResource(id = distro.iconRes),
+                                        contentDescription = null,
+                                        tint = Color.Unspecified, 
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                } else {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                                }
+                            }
+                            
                             Spacer(modifier = Modifier.width(16.dp))
+                            
                             Column {
-                                Text(distro.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                Text("Status: Installed", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                Text(
+                                    distro.name, 
+                                    style = MaterialTheme.typography.headlineSmall, 
+                                    fontWeight = FontWeight.Bold, 
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(androidx.compose.foundation.shape.CircleShape)
+                                            .background(Color(0xFF4CAF50))
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "Installed & Ready", 
+                                        style = MaterialTheme.typography.bodyMedium, 
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
                             }
                         }
                     }
@@ -133,7 +190,7 @@ fun DistroSettingsScreen(
                     }
                     val details = componentDetailsMap[component.id]
                     
-                    ComponentManagementCard(
+                    ComponentManagementGlassCard(
                         component = component,
                         isInstalled = isInstalled,
                         details = details,
@@ -153,46 +210,51 @@ fun DistroSettingsScreen(
 
                 // Danger Zone
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Danger Zone",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.error,
+                        color = Color(0xFFFF5252),
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Reinstall Button (Redo Base Install)
-                    Button(
-                        onClick = onReinstallDistro,
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Redo Base Installation", color = MaterialTheme.colorScheme.onTertiaryContainer)
-                    }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Danger Button (Adaptive Style)
-                    Button(
-                        onClick = { showUninstallDialog = true },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Uninstall ${distro.name}", color = MaterialTheme.colorScheme.onErrorContainer)
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // Reinstall Button (Redo Base Install)
+                        Button(
+                            onClick = onReinstallDistro,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2C2C2C).copy(alpha = 0.5f),
+                                contentColor = Color(0xFFFF9E80)
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFF9E80).copy(alpha = 0.3f))
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Re-run Installation Script", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        
+                        // Uninstall Button
+                        Button(
+                            onClick = { showUninstallDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0x33FF5252),
+                                contentColor = Color(0xFFFF5252)
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFF5252).copy(alpha = 0.5f))
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Uninstall Distribution", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                     
                     Spacer(modifier = Modifier.height(50.dp))
@@ -201,159 +263,206 @@ fun DistroSettingsScreen(
         }
     )
     
-    // Uninstall Dialog Logic
+    // --- DIALOGS ---
+
+    // Uninstall Dialog
     if (showUninstallDialog) {
         val isChroot = distro.id == "debian_chroot" || distro.id == "debian13_chroot" || distro.id == "arch_chroot" || distro.id.contains("chroot")
         
-        if (isChroot) {
-             AlertDialog(
-                onDismissRequest = { showUninstallDialog = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                title = { Text("Manual Root Required", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
-                text = {
-                    Column {
-                        Text("To uninstall this Chroot environment, you must use Root (superuser) access manually.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("1. Click 'Proceed' to Copy Command & Open Termux.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                        Text("2. In Termux, type 'su' and press Enter.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                        Text("3. Paste the command and run it.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("The app will detect when uninstallation is complete.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        GlassDialog(onDismiss = { showUninstallDialog = false }) {
+             Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = Color(0xFFFF5252),
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = if(isChroot) "Manual Root Required" else "Uninstall ${distro.name}?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (isChroot) {
+                    Text(
+                        "To uninstall this Chroot environment, you must use Root (superuser) access manually.", 
+                        style = MaterialTheme.typography.bodyMedium, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(modifier = Modifier.background(Color.Black.copy(alpha=0.3f), RoundedCornerShape(8.dp)).padding(12.dp)) {
+                        Column {
+                             Text("1. Click 'Proceed' to Copy Command", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                             Text("2. Open Termux -> Type 'su'", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                             Text("3. Paste & Run", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                        }
                     }
-                },
-                confirmButton = {
+                } else {
+                     Text(
+                        "This will remove all data and files for ${distro.name}. This action cannot be undone.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
-                        onClick = {
-                             // ... (Existing logic for script generation) ...
-                            val scriptName = when(distro.id) {
-                                "debian_chroot" -> "chroot/uninstall_debian_chroot.sh"
-                                "debian13_chroot" -> "chroot/uninstall_debian13.sh"
-                                else -> "chroot/uninstall_debian_chroot.sh"
-                            }
-                            
-                            try {
-                                val scriptManager = com.ivarna.fluxlinux.core.data.ScriptManager(context)
-                                val scriptContent = scriptManager.getScriptContent(scriptName)
-                                val command = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.getSafeRootManualCommand(scriptContent, "uninstall_${distro.id}.sh")
-                                
-                                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                val clip = android.content.ClipData.newPlainText("FluxLinux Uninstall", command)
-                                clipboard.setPrimaryClip(clip)
-                                
-                                val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(context)
-                                if (launchIntent != null) {
-                                    // Optimistic State Update: Assume user will run the command
-                                    StateManager.setDistroInstalled(context, distro.id, false)
-                                    onStartActivity(launchIntent)
-                                    // Navigate back to Home
-                                    onBack() 
-                                    android.widget.Toast.makeText(context, "Command Copied! Type 'su' -> Enter -> Paste", android.widget.Toast.LENGTH_LONG).show()
-                                } else {
-                                    android.widget.Toast.makeText(context, "Termux app not found!", android.widget.Toast.LENGTH_SHORT).show()
+                        onClick = { showUninstallDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+                    
+                    Button(
+                        onClick = { 
+                            if (isChroot) {
+                                // ... (Script generation logic) ...
+                                val scriptName = when(distro.id) {
+                                    "debian_chroot" -> "chroot/uninstall_debian_chroot.sh"
+                                    "debian13_chroot" -> "chroot/uninstall_debian13.sh"
+                                    else -> "chroot/uninstall_debian_chroot.sh"
                                 }
-                            } catch (e: Exception) {
-                                android.widget.Toast.makeText(context, "Error preparing script: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                
+                                try {
+                                    val scriptManager = com.ivarna.fluxlinux.core.data.ScriptManager(context)
+                                    val scriptContent = scriptManager.getScriptContent(scriptName)
+                                    val command = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.getSafeRootManualCommand(scriptContent, "uninstall_${distro.id}.sh")
+                                    
+                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("FluxLinux Uninstall", command)
+                                    clipboard.setPrimaryClip(clip)
+                                    
+                                    val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(context)
+                                    if (launchIntent != null) {
+                                        StateManager.setDistroInstalled(context, distro.id, false)
+                                        onStartActivity(launchIntent)
+                                        onBack() 
+                                        android.widget.Toast.makeText(context, "Command Copied!", android.widget.Toast.LENGTH_LONG).show()
+                                    }
+                                } catch (e: Exception) {}
+                            } else {
+                                onUninstallDistro()
                             }
-                            showUninstallDialog = false
+                            showUninstallDialog = false 
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252), contentColor = Color.White),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Proceed")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showUninstallDialog = false }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if(isChroot) "Proceed" else "Uninstall")
                     }
                 }
-            )
-        } else {
-            AlertDialog(
-                onDismissRequest = { showUninstallDialog = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                title = { Text("Uninstall ${distro.name}?", color = MaterialTheme.colorScheme.onSurface) },
-                text = { Text("This will remove all data and files for ${distro.name}. This action cannot be undone.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showUninstallDialog = false
-                            onUninstallDistro()
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Text("Uninstall")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showUninstallDialog = false }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            )
+            }
         }
     }
 
     // Theme Configuration Dialog
     if (showThemeDialog && activeComponent != null) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text("Configure Customization", color = MaterialTheme.colorScheme.onSurface) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Select a theme to apply:", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    SettingsThemeOption(name = "Dark Mode (Default)", desc = "Sleek and professional.", id = "dark", selected = selectedTheme == "dark", onSelect = { selectedTheme = "dark" })
-                    SettingsThemeOption(name = "Light Mode", desc = "Clean and bright.", id = "light", selected = selectedTheme == "light", onSelect = { selectedTheme = "light" })
+        GlassDialog(onDismiss = { showThemeDialog = false }) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Customize Desktop", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                SettingsThemeOption(name = "Dark Mode (Default)", desc = "Sleek and professional.", id = "dark", selected = selectedTheme == "dark", onSelect = { selectedTheme = "dark" })
+                SettingsThemeOption(name = "Light Mode", desc = "Clean and bright.", id = "light", selected = selectedTheme == "light", onSelect = { selectedTheme = "light" })
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        showThemeDialog = false
+                        onInstallComponent(activeComponent!!, mapOf("FLUX_THEME" to selectedTheme))
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) {
+                    Text("Apply Theme")
                 }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    showThemeDialog = false
-                    onInstallComponent(activeComponent!!, mapOf("FLUX_THEME" to selectedTheme))
-                }) {
-                    Text("Apply")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showThemeDialog = false }) { Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-        )
+        }
     }
 
     // GPU Configuration Dialog
     if (showGpuDialog && activeComponent != null) {
-        AlertDialog(
-            onDismissRequest = { showGpuDialog = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text("Configure Hardware Acceleration", color = MaterialTheme.colorScheme.onSurface) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Select acceleration mode:", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    SettingsThemeOption(name = "Auto Detect (Recommended)", desc = "Detects Snapdragon (Turnip) or uses VirGL.", id = "auto", selected = selectedGpu == "auto", onSelect = { selectedGpu = "auto" })
-                    SettingsThemeOption(name = "VirGL (Universal)", desc = "Compatible with most devices.", id = "virgl", selected = selectedGpu == "virgl", onSelect = { selectedGpu = "virgl" })
-                    SettingsThemeOption(name = "Turnip/Zink (Snapdragon)", desc = "High performance for Adreno.", id = "turnip", selected = selectedGpu == "turnip", onSelect = { selectedGpu = "turnip" })
-                    SettingsThemeOption(name = "Force Re-Detect", desc = "Ask interactively during install.", id = "ask", selected = selectedGpu == "ask", onSelect = { selectedGpu = "ask" })
+        GlassDialog(onDismiss = { showGpuDialog = false }) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Hardware Acceleration", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                SettingsThemeOption(name = "Auto Detect (Recommended)", desc = "Detects Snapdragon (Turnip) or uses VirGL.", id = "auto", selected = selectedGpu == "auto", onSelect = { selectedGpu = "auto" })
+                SettingsThemeOption(name = "VirGL (Universal)", desc = "Compatible with most devices.", id = "virgl", selected = selectedGpu == "virgl", onSelect = { selectedGpu = "virgl" })
+                SettingsThemeOption(name = "Turnip/Zink (Snapdragon)", desc = "High performance for Adreno.", id = "turnip", selected = selectedGpu == "turnip", onSelect = { selectedGpu = "turnip" })
+                SettingsThemeOption(name = "Force Re-Detect", desc = "Ask interactively during install.", id = "ask", selected = selectedGpu == "ask", onSelect = { selectedGpu = "ask" })
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        showGpuDialog = false
+                        onInstallComponent(activeComponent!!, mapOf("FLUX_GPU" to selectedGpu))
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) {
+                    Text("Apply Configuration")
                 }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    showGpuDialog = false
-                    onInstallComponent(activeComponent!!, mapOf("FLUX_GPU" to selectedGpu))
-                }) {
-                    Text("Apply")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showGpuDialog = false }) { Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-        )
+        }
+    }
+}
+
+@Composable
+fun GlassDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF1E1E1E).copy(alpha = 0.95f),
+                            Color(0xFF121212).copy(alpha = 0.98f)
+                        )
+                    )
+                )
+                .border(
+                    BorderStroke(1.dp, Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.15f),
+                            Color.Transparent
+                        )
+                    )),
+                    RoundedCornerShape(28.dp)
+                )
+        ) {
+            content()
+        }
     }
 }
 
 @Composable
 fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolean, onSelect: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable { onSelect() }.padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() }
+            .padding(vertical = 8.dp)
+            .background(if(selected) MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
@@ -361,15 +470,16 @@ fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolea
             onClick = onSelect,
             colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.secondary)
         )
+        Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            Text(name, fontWeight = FontWeight.SemiBold, color = if(selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface)
             Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-fun ComponentManagementCard(
+fun ComponentManagementGlassCard(
     component: DistroComponent,
     isInstalled: Boolean,
     details: ComponentDetail?,
@@ -380,65 +490,80 @@ fun ComponentManagementCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                if (component.comingSoon) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-            .clickable(enabled = !component.comingSoon) { expanded = !expanded } // Toggle expand on body click
-            .padding(12.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)) // Glass background
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+            .clickable(enabled = !component.comingSoon) { expanded = !expanded }
+            .padding(16.dp)
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top // Align top for better layout with description
+                verticalAlignment = Alignment.Top
             ) {
+                // Icon + Info
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (details != null) {
                             Icon(
                                 imageVector = details.icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(24.dp),
                                 tint = if (component.comingSoon) MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f) else MaterialTheme.colorScheme.secondary
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                         }
                         
                         Text(
                             text = component.name,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (component.comingSoon) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
                         )
-                        if (component.comingSoon) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
-                                    .border(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text("Coming Soon", fontSize = 10.sp, color = MaterialTheme.colorScheme.tertiary)
-                            }
-                        } else if (isInstalled) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.Default.CheckCircle, contentDescription = "Installed", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
-                        }
                     }
-                    Text(
-                        text = component.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (component.comingSoon) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                     Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
-                        text = "Est. Size: ${component.sizeEstimate}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (component.comingSoon) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.tertiary
+                        text = component.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (component.comingSoon) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                     
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (component.comingSoon) {
+                            Box(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("Coming Soon", fontSize = 10.sp, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+                            }
+                        } else {
+                            Text(
+                                text = "Size: ${component.sizeEstimate}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                            if (isInstalled) {
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha=0.5f), RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(10.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Installed", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Action Button (Right aligned)
@@ -446,37 +571,36 @@ fun ComponentManagementCard(
                    horizontalAlignment = Alignment.CenterHorizontally,
                    verticalArrangement = Arrangement.Center
                ) {
-                    Button(
-                        onClick = onAction,
-                        enabled = !component.comingSoon,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary,
-                            contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSecondary,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        if (isInstalled && !component.comingSoon) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Update", fontSize = 12.sp)
-                        } else {
-                            Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                   if (!component.comingSoon) {
+                        Button(
+                            onClick = onAction,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f) else MaterialTheme.colorScheme.primary,
+                                contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(40.dp),
+                            elevation = ButtonDefaults.buttonElevation(0.dp)
+                        ) {
+                            if (isInstalled) {
+                                Text("Re-run", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            } else {
+                                Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
-                    }
-                    
-                    if (details != null) {
+                   }
+                   
+                   Spacer(modifier = Modifier.height(8.dp))
+                   
+                    if (details != null && !component.comingSoon) {
                          IconButton(
                             onClick = { expanded = !expanded },
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                 contentDescription = if (expanded) "Collapse" else "Expand",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -490,20 +614,20 @@ fun ComponentManagementCard(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 if (details != null) {
-                    Column(modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Package Contents:",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = "Included Packages",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         
                         details.packages.forEach { (pkg, size) ->
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
@@ -514,7 +638,7 @@ fun ComponentManagementCard(
                                 Text(
                                     text = size,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
