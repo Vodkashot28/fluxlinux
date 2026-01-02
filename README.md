@@ -1,45 +1,203 @@
 <div align="center">
   <img src="assets/logo/logo.webp" width="180" />
   <h1>FluxLinux</h1>
+  <p><strong>Run full Linux desktop environments on your Android device</strong></p>
+
+<a href="https://play.google.com/store/apps/details?id=com.ivarna.fluxlinux">
+  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
+</a>
+
+<a href="https://f-droid.org/packages/com.ivarna.fluxlinux">
+  <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"/>
+</a>
+
+---
+
+[![GitHub Downloads](https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success)](https://github.com/abhay-byte/fluxlinux/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow)](https://github.com/abhay-byte/fluxlinux/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=blue)](https://github.com/abhay-byte/fluxlinux/network/members)
+[![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-blue.svg?style=for-the-badge&logo=creativecommons&logoColor=white)](LICENSE)
+[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg?style=for-the-badge&logo=android&logoColor=white)](https://www.android.com)
+
 </div>
 
-**FluxLinux** is an advanced orchestrator application that transforms your Android device into a versatile Linux workstation. It seamlessly integrates **Termux**, **PRoot**, and **Termux:X11** to provide a full desktop experience (CLI & GUI) without requiring root access, while offering high-performance acceleration for rooted devices.
+---
+
+## 📱 Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="assets/screenshots/home.png" width="200" /><br/><b>Home</b></td>
+      <td align="center"><img src="assets/screenshots/distros.png" width="200" /><br/><b>Distros</b></td>
+      <td align="center"><img src="assets/screenshots/install.png" width="200" /><br/><b>Install</b></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="assets/screenshots/settings.png" width="200" /><br/><b>Settings</b></td>
+      <td align="center"><img src="assets/screenshots/desktop.png" width="200" /><br/><b>Desktop</b></td>
+      <td align="center"><img src="assets/screenshots/terminal.png" width="200" /><br/><b>Terminal</b></td>
+    </tr>
+  </table>
+</div>
+
+---
 
 ## 🚀 Vision
-Modern Android hardware is powerful enough to run desktop workloads, but the software ecosystem limits it. FluxLinux bridges this gap, enabling:
-*   **Full-Stack Web Development** (Node.js, Python, VS Code)
-*   **Desktop Gaming** (Box64/Wine for Windows/Linux games)
-*   **Cybersecurity** (Kali Linux tools)
-*   **Productivity** (LibreOffice, Firefox Desktop)
+
+Modern Android hardware is powerful enough to run desktop workloads, but the software ecosystem limits it. **FluxLinux** bridges this gap, enabling:
+
+- 🌐 **Full-Stack Web Development** — Node.js, Python, React, VS Code
+- 🎮 **Desktop Gaming** — Box64/Wine *(coming soon)*
+- 🔐 **Cybersecurity** — Nmap, Wireshark, Metasploit
+- 📊 **Data Science** — Jupyter, TensorFlow, PyTorch
+- 🎨 **Creative Tools** — GIMP, Blender, Inkscape
+- 📄 **Productivity** — LibreOffice, Firefox Desktop
+
+---
 
 ## ✨ Key Features
-*   **Rootless Containerization:** Uses `proot-distro` to run Ubuntu, Debian, Arch, and more on any Android 8+ device.
-*   **Hardware Acceleration:**
-    *   **Adreno GPUs:** Native Vulkan/OpenGL support via Turnip + Zink.
-    *   **Universal:** VirglRenderer support.
-*   **GUI & CLI:** One-click launch for Desktop Environments (XFCE, MATE, GNOME) or Headless shells.
-*   **Smart Orchestrator:** Automates complex setups using Termux Intents (no manual copy-pasting required).
-*   **Rooted "Turbo" Mode:** Detects root access to offer `chroot` based containers for native performance (zero overhead).
+
+| Feature | Description |
+|---------|-------------|
+| 🐧 **One-Tap Install** | Install Debian with XFCE4 desktop in minutes |
+| 🔓 **Rootless Mode** | Works on any Android 8+ device via PRoot |
+| ⚡ **Turbo Mode** | Native chroot performance for rooted devices |
+| 🎮 **GPU Acceleration** | Turnip (Adreno) + VirGL for graphics |
+| 🎨 **Custom Themes** | Beautiful XFCE4 with Space theme |
+| 📦 **Dev Stacks** | Pre-configured environments for coding |
+
+---
+
+## 🖼️ Desktop Experience
+
+<div align="center">
+  <img src="assets/screenshots/xfce_desktop.png" width="600" />
+  <p><em>Full XFCE4 desktop with hardware acceleration</em></p>
+</div>
+
+### Included Development Stacks
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">🌐<br/><b>Web Dev</b><br/>Node.js, React, VS Code</td>
+      <td align="center">📱<br/><b>App Dev</b><br/>Flutter, Kotlin, Android SDK</td>
+      <td align="center">🧬<br/><b>Data Science</b><br/>Jupyter, TensorFlow</td>
+    </tr>
+    <tr>
+      <td align="center">🎮<br/><b>Game Dev</b><br/>Godot Engine</td>
+      <td align="center">🔐<br/><b>Security</b><br/>Kali Tools</td>
+      <td align="center">🎨<br/><b>Graphics</b><br/>GIMP, Blender</td>
+    </tr>
+  </table>
+</div>
+
+---
 
 ## 🛠 Architecture
-FluxLinux acts as a "Launcher" and "Manager" for the underlying Termux ecosystem.
-*   **Host:** Android OS
-*   **Environment:** Termux (Bionic Libc)
-*   **Display:** Termux:X11 (Wayland/XServer)
-*   **Engine:** PRoot (Rootless) OR Chroot (Rooted)
 
-For detailed technical documentation, please refer to the [docs/](docs/) directory:
-*   [Reference Index](docs/reference.md)
-*   [Architecture & Design](docs/architecture.md)
-*   [Component Deep Dive](docs/components.md)
-*   [Technical Specifications](docs/technical_specs.md)
-*   [Implementation Roadmap](docs/roadmap.md)
+```
+┌─────────────────────────────────────────────┐
+│              FluxLinux App                  │
+│         (Kotlin + Jetpack Compose)          │
+├─────────────────────────────────────────────┤
+│                  Termux                      │
+│              (Terminal Host)                 │
+├─────────────────────────────────────────────┤
+│     PRoot (Rootless)  │  Chroot (Rooted)    │
+├─────────────────────────────────────────────┤
+│              Debian 13 (Trixie)             │
+│           XFCE4 + Development Tools          │
+├─────────────────────────────────────────────┤
+│              Termux:X11                      │
+│        (Display Server + GPU Accel)          │
+└─────────────────────────────────────────────┘
+```
 
-## 📦 Installation & Usage
-*(Coming Soon - Application under active development)*
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [**Scripts Reference**](docs/scripts_reference.md) | All installation and setup scripts |
+| [**Hardware Acceleration**](docs/hardware_acceleration.md) | GPU setup guide (Turnip/VirGL) |
+| [**Script Execution Workflow**](docs/script_execution_workflow.md) | How scripts are executed |
+| [**Testing Reference**](docs/testing_reference.md) | Sample projects for testing |
+| [**Assets Reference**](docs/assets_reference.md) | Themes, icons, wallpapers |
+| [**Architecture**](docs/architecture.md) | System design overview |
+| [**Technical Specs**](docs/technical_specs.md) | Technical specifications |
+| [**Roadmap**](docs/roadmap.md) | Development roadmap |
+
+---
+
+## 📦 Installation
+
+### Requirements
+
+- Android 8.0+ (API 26+)
+- [Termux](https://f-droid.org/packages/com.termux/) (from F-Droid)
+- [Termux:X11](https://github.com/termux/termux-x11) (for GUI)
+
+### Install
+
+1. Download FluxLinux from [Releases](https://github.com/abhay-byte/fluxlinux/releases)
+2. Install Termux from F-Droid
+3. Install Termux:X11
+4. Open FluxLinux and follow setup wizard
+
+<div align="center">
+  <img src="assets/screenshots/setup_wizard.png" width="250" />
+  <p><em>Easy setup wizard</em></p>
+</div>
+
+---
+
+## 🎮 GPU Acceleration
+
+FluxLinux supports hardware-accelerated graphics:
+
+| GPU Type | Driver | Performance |
+|----------|--------|-------------|
+| Adreno (Qualcomm) | Turnip + Zink | 🟢 Excellent |
+| Mali (ARM) | VirGL | 🟡 Good |
+| PowerVR (MediaTek) | VirGL | 🟡 Good |
+| Other | VirGL | 🟡 Good |
+
+<div align="center">
+  <img src="assets/screenshots/hardware_acceleration/1.png" width="250" />
+  <p><em>GPU driver selection</em></p>
+</div>
+
+See [Hardware Acceleration Guide](docs/hardware_acceleration.md) for details.
+
+---
 
 ## 🤝 Contributing
+
 Contributions are welcome! Please check the [Roadmap](docs/roadmap.md) to see active development phases.
 
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
 ## 📄 License
-TBD
+
+This project is licensed under **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by <a href="https://github.com/abhay-byte">Abhay Raj</a></p>
+  <p>
+    <a href="https://github.com/abhay-byte/fluxlinux">GitHub</a> •
+    <a href="https://github.com/abhay-byte/fluxlinux/issues">Issues</a> •
+    <a href="docs/">Documentation</a>
+  </p>
+</div>

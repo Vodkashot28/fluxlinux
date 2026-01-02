@@ -1,0 +1,31 @@
+Categories:
+  - Development
+  - System
+License: CC-BY-NC-4.0
+AuthorName: Abhay Raj
+AuthorWebSite: https://github.com/abhay-byte
+SourceCode: https://github.com/abhay-byte/fluxlinux
+IssueTracker: https://github.com/abhay-byte/fluxlinux/issues
+
+AutoName: FluxLinux
+
+RepoType: git
+Repo: https://github.com/abhay-byte/fluxlinux
+Binaries: https://github.com/abhay-byte/fluxlinux/releases/download/v%v/app-release.apk
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: a24adfb3b96878b289c7f9087841703d147481cd
+    subdir: app
+    sudo:
+      - apt-get update
+    gradle:
+      - yes
+
+AllowedAPKSigningKeys: 
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0
+CurrentVersionCode: 1
