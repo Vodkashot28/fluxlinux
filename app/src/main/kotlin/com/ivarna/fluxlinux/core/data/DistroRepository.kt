@@ -83,11 +83,19 @@ object DistroRepository {
             sizeEstimate = "500 MB"
         ),
         DistroComponent(
+            id = "graphic_design",
+            name = "Graphic Design",
+            description = "GIMP, Inkscape, Krita, and Blender for creative work.",
+            scriptName = "common/setup_graphic_design_debian.sh",
+            sizeEstimate = "1.2 GB"
+        ),
+        DistroComponent(
             id = "emulation",
             name = "Retro Emulation",
             description = "RetroArch, various emulator cores.",
             scriptName = "common/setup_emulation_debian.sh",
-            sizeEstimate = "1 GB"
+            sizeEstimate = "1 GB",
+            comingSoon = true
         )
     )
 

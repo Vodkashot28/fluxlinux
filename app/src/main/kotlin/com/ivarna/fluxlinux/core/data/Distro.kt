@@ -10,7 +10,8 @@ data class DistroComponent(
     val description: String,
     val scriptName: String,
     val sizeEstimate: String,
-    val isMandatory: Boolean = false
+    val isMandatory: Boolean = false,
+    val comingSoon: Boolean = false
 )
 
 data class Distro(

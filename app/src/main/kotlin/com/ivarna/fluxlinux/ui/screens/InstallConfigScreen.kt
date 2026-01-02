@@ -403,14 +403,21 @@ fun ComponentSelectionCard(
     details: ComponentDetail?
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val isDisabled = component.isMandatory || component.comingSoon
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
-            .clickable(enabled = !component.isMandatory) { onToggle(!isSelected) }
+            .background(
+                when {
+                    component.comingSoon -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    isSelected -> MaterialTheme.colorScheme.surfaceVariant
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                }
+            )
+            .border(1.dp, if (isSelected && !component.comingSoon) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+            .clickable(enabled = !isDisabled) { onToggle(!isSelected) }
             .padding(12.dp)
     ) {
         Column {
@@ -419,10 +426,15 @@ fun ComponentSelectionCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Checkbox(
-                    checked = isSelected,
+                    checked = isSelected && !component.comingSoon,
                     onCheckedChange = null, // Handled by parent container click
-                    enabled = !component.isMandatory,
-                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.secondary, uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant, checkmarkColor = MaterialTheme.colorScheme.onSecondary)
+                    enabled = !isDisabled,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = MaterialTheme.colorScheme.secondary, 
+                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledUncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        checkmarkColor = MaterialTheme.colorScheme.onSecondary
+                    )
                 )
                 
                 Column(modifier = Modifier.padding(start = 8.dp, top = 2.dp).weight(1f)) {
@@ -433,7 +445,7 @@ fun ComponentSelectionCard(
                                 imageVector = details.icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = if (component.comingSoon) MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f) else MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -442,11 +454,21 @@ fun ComponentSelectionCard(
                             text = component.name,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (component.comingSoon) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
                         )
                     }
                     
-                    if (component.isMandatory) {
+                    if (component.comingSoon) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                                .border(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("Coming Soon", fontSize = 10.sp, color = MaterialTheme.colorScheme.tertiary)
+                        }
+                    } else if (component.isMandatory) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Box(
                             modifier = Modifier
@@ -470,7 +492,7 @@ fun ComponentSelectionCard(
                     Text(
                         text = "Est. Size: ${component.sizeEstimate}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = if (component.comingSoon) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.tertiary
                     )
                 }
 

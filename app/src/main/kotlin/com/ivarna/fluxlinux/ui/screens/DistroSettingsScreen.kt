@@ -381,9 +381,12 @@ fun ComponentManagementCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .background(
+                if (component.comingSoon) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-            .clickable { expanded = !expanded } // Toggle expand on body click
+            .clickable(enabled = !component.comingSoon) { expanded = !expanded } // Toggle expand on body click
             .padding(12.dp)
     ) {
         Column {
@@ -398,7 +401,7 @@ fun ComponentManagementCard(
                                 imageVector = details.icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = if (component.comingSoon) MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f) else MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -407,9 +410,19 @@ fun ComponentManagementCard(
                             text = component.name,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (component.comingSoon) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
                         )
-                        if (isInstalled) {
+                        if (component.comingSoon) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("Coming Soon", fontSize = 10.sp, color = MaterialTheme.colorScheme.tertiary)
+                            }
+                        } else if (isInstalled) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(Icons.Default.CheckCircle, contentDescription = "Installed", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
                         }
@@ -417,14 +430,14 @@ fun ComponentManagementCard(
                     Text(
                         text = component.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (component.comingSoon) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                      Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
                         text = "Est. Size: ${component.sizeEstimate}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = if (component.comingSoon) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.tertiary
                     )
                 }
 
@@ -435,15 +448,18 @@ fun ComponentManagementCard(
                ) {
                     Button(
                         onClick = onAction,
+                        enabled = !component.comingSoon,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary,
-                            contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSecondary
+                            contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSecondary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        if (isInstalled) {
+                        if (isInstalled && !component.comingSoon) {
                             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Update", fontSize = 12.sp)
