@@ -181,7 +181,7 @@ FluxLinux supports hardware-accelerated graphics:
 |----------|--------|-------------|
 | Adreno (Qualcomm) | Turnip + Zink | 🟢 Excellent |
 | Mali (ARM) | VirGL | 🟡 Good |
-| PowerVR (MediaTek) | VirGL | 🟡 Good |
+| Mali/PowerVR (MediaTek) | VirGL | 🟡 Good |
 | Other | VirGL | 🟡 Good |
 
 📖 [Hardware Acceleration Guide](docs/hardware_acceleration.md)
