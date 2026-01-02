@@ -96,22 +96,38 @@ Modern Android hardware is powerful enough to run desktop workloads, but the sof
 
 ## 🛠 Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│              FluxLinux App                  │
-│         (Kotlin + Jetpack Compose)          │
-├─────────────────────────────────────────────┤
-│                  Termux                      │
-│              (Terminal Host)                 │
-├─────────────────────────────────────────────┤
-│     PRoot (Rootless)  │  Chroot (Rooted)    │
-├─────────────────────────────────────────────┤
-│              Debian 13 (Trixie)             │
-│           XFCE4 + Development Tools          │
-├─────────────────────────────────────────────┤
-│              Termux:X11                      │
-│        (Display Server + GPU Accel)          │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Android["📱 Android Device"]
+        FluxLinux["🚀 FluxLinux App<br/>(Kotlin + Jetpack Compose)"]
+        
+        subgraph Termux["🔧 Termux Environment"]
+            TermuxHost["Terminal Host"]
+            
+            subgraph Container["Linux Container"]
+                PRoot["🔓 PRoot<br/>(Rootless)"]
+                Chroot["⚡ Chroot<br/>(Rooted)"]
+            end
+            
+            subgraph Distro["🐧 Debian 13 Trixie"]
+                XFCE["XFCE4 Desktop"]
+                DevTools["Development Tools"]
+            end
+        end
+        
+        subgraph Display["🖥️ Display System"]
+            X11["Termux:X11"]
+            GPU["GPU Acceleration<br/>(Turnip/VirGL)"]
+        end
+    end
+    
+    FluxLinux --> TermuxHost
+    TermuxHost --> PRoot
+    TermuxHost --> Chroot
+    PRoot --> Distro
+    Chroot --> Distro
+    Distro --> X11
+    X11 --> GPU
 ```
 
 ---
