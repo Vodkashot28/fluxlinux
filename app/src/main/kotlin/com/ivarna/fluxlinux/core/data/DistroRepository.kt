@@ -142,6 +142,16 @@ object DistroRepository {
         
         // Coming Soon - Sorted alphabetically
         Distro(
+            id = "termux_next",
+            name = "Termux",
+            description = "Upcoming features for the native Termux environment.",
+            color = FluxAccentCyan,
+            iconRes = R.drawable.distro_termux,
+            comingSoon = true,
+            prootSupported = false,
+            chrootSupported = false
+        ),
+        Distro(
             id = "adelie",
             name = "Adélie Linux",
             description = "Independent Linux distribution committed to integrity and simplicity.",
