@@ -220,7 +220,7 @@ fun DistroCard(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                         disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
                         disabledContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -275,7 +275,7 @@ fun DistroCard(
                         onClick = onNavigateToStart, // This should trigger the Popup, passed from parent
                         colors = ButtonDefaults.buttonColors(
                             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                            contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+                            contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {

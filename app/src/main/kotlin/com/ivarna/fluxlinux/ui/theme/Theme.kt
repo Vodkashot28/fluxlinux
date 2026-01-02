@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -26,16 +27,16 @@ private val DarkColorScheme = darkColorScheme(
     surface = FluxDarkGrey,
 )
 
-// Fallback Light Scheme (Cream Primary, Dark Grey Secondary)
+// Fallback Light Scheme (Soft Cream Primary, Dark Text)
 private val LightColorScheme = lightColorScheme(
     primary = BrandCream,
-    onPrimary = androidx.compose.ui.graphics.Color.Black,
-    secondary = FluxDarkGrey, // Dark Secondary for Light Mode (High Contrast)
-    onSecondary = FluxCream,
+    onPrimary = FluxDarkGrey,
+    secondary = FluxDarkGrey,
+    onSecondary = Color.White,
     tertiary = FluxAccentMagenta,
-    background = FluxCream,
+    background = Color(0xFFFAFAFA), // Very light grey/white for clean look
     onBackground = FluxDarkGrey,
-    surface = BrandCream,
+    surface = Color.White, // Clean white surface for glass effect
     onSurface = FluxDarkGrey,
 )
 
@@ -59,7 +60,7 @@ fun FluxLinuxTheme(
                 dynamicDarkColorScheme(context).copy(
                     primary = FluxDarkGrey,
                     onPrimary = TextWhite,
-                    secondary = BrandCream, // Enforce Light Secondary
+                    secondary = BrandCream, // Light Secondary for Dark Mode
                     onSecondary = FluxDarkGrey,
                     background = FluxDarkSurface,
                     surface = FluxDarkGrey
@@ -67,14 +68,14 @@ fun FluxLinuxTheme(
             } else {
                 // Use Dynamic Light but override Primary & Secondary
                 dynamicLightColorScheme(context).copy(
-                    primary = BrandCream,
-                    onPrimary = androidx.compose.ui.graphics.Color.Black,
-                    secondary = FluxDarkGrey, // Enforce Dark Secondary
-                    onSecondary = FluxCream,
-                    background = FluxCream,
-                    onBackground = FluxDarkGrey, // Explicitly Dark text
-                    surface = BrandCream,
-                    onSurface = FluxDarkGrey // Explicitly Dark text
+                    primary = BrandCream, // Soft Cream Primary
+                    onPrimary = FluxDarkGrey,
+                    secondary = FluxDarkGrey,
+                    onSecondary = Color.White,
+                    background = Color(0xFFFAFAFA),
+                    onBackground = FluxDarkGrey,
+                    surface = Color.White, // Clean white surface
+                    onSurface = FluxDarkGrey
                 )
             }
         }

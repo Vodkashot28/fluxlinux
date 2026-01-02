@@ -86,7 +86,7 @@ fun SettingsScreen(
 
     // State for Settings
     var autoUpdate by remember { mutableStateOf(true) }
-    var useGpu by remember { mutableStateOf(false) }
+
 
     // Entrance Animation
 
@@ -523,143 +523,39 @@ fun SettingsScreen(
                                 }
                             }
 
-                            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
-
-                            Text(
-                                "Advanced",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(top=8.dp, bottom = 12.dp)
-                            )
-                            
-                            // GPU Acceleration
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("GPU Acceleration", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Text("Experimental VirGL support", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-                                }
-                                Switch(checked = useGpu, onCheckedChange = { useGpu = it })
-                            }
-                            
-                            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
-
-                            // Audio Settings
-                            var enableAudio by remember { mutableStateOf(true) }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("PulseAudio", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Text("Enable sound support", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-                                }
-                                Switch(checked = enableAudio, onCheckedChange = { enableAudio = it })
-                            }
-
-                            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
-
-                            // Installation Mode
-                             Text(
-                                "Installation Mode",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            
-                            var installMode by remember { mutableStateOf("proot") }
-                            
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(
-                                    selected = installMode == "proot",
-                                    onClick = { installMode = "proot" },
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f))
-                                )
-                                Text("PRoot (No Root)", color = MaterialTheme.colorScheme.onSurface)
-                            }
-                            
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(
-                                    selected = installMode == "chroot",
-                                    onClick = { 
-                                        installMode = "chroot" 
-                                        onNavigateToRootCheck?.invoke()
-                                    },
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f))
-                                )
-                                Text("Chroot (Root Required)", color = MaterialTheme.colorScheme.onSurface)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Box(modifier = Modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.error, androidx.compose.foundation.shape.RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                                    Text("ROOT", color = androidx.compose.material3.MaterialTheme.colorScheme.onError, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Support Actions
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = { onNavigateToOnboarding?.invoke() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Setup Guide", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
-                                }
-                                Button(
-                                    onClick = { onNavigateToTroubleshooting?.invoke() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Troubleshoot", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondary)
-                                }
-                            }
                         }
                     }
 
                     // =====================================================================
-                    // 2. STORAGE MANAGEMENT
+                    // Support Actions (Separated)
                     // =====================================================================
                     GlassSettingCard {
-                        Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
-                             Text(
-                                "Storage Management",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-                            
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = { android.widget.Toast.makeText(context, "Cache Cleared", android.widget.Toast.LENGTH_SHORT).show() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Clear Cache", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
-                                }
-                                Button(
-                                    onClick = { android.widget.Toast.makeText(context, "App Reset", android.widget.Toast.LENGTH_SHORT).show() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Reset All", fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
-                                }
+                        Column(modifier = Modifier.padding(20.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Button(
+                                onClick = { onNavigateToOnboarding?.invoke() },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.fillMaxWidth().height(50.dp)
+                            ) {
+                                Text("Show Onboarding Screen", fontSize = 14.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = { onNavigateToTroubleshooting?.invoke() },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                modifier = Modifier.fillMaxWidth().height(50.dp)
+                            ) {
+                                Text("Troubleshoot", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSecondary, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
-                    
+
                     Divider(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), 
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp)
                     )
+
+
 
                     // =====================================================================
                     // TERMUX:X11 CONFIGURATION
@@ -689,6 +585,22 @@ fun SettingsScreen(
                             }
                             
                             Spacer(modifier = Modifier.height(16.dp))
+
+                            // Apply Settings Button
+                            Button(
+                                onClick = { 
+                                    TermuxX11Preferences.applyToTermux(context)
+                                    android.widget.Toast.makeText(context, "Applying Settings to Termux...", android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.fillMaxWidth().height(45.dp)
+                            ) {
+                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Apply Settings", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
                             
                             // Display Settings
                             Text(
