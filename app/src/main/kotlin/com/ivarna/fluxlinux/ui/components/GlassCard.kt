@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 fun DistroCard(
     distro: Distro,
     isInstalled: Boolean = false,
+    isGuiRunning: Boolean = false,
     onInstall: () -> Unit,
     onUninstall: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -95,6 +96,26 @@ fun DistroCard(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        
+                        // RUNNING badge (for installed distros with GUI running)
+                        if (isInstalled && isGuiRunning) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        Color(0xFF4CAF50),
+                                        RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "RUNNING",
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         
                         if (distro.comingSoon) {
                             Spacer(modifier = Modifier.width(8.dp))

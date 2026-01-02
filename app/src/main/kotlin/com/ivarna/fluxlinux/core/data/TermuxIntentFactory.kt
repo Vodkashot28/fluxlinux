@@ -100,27 +100,69 @@ object TermuxIntentFactory {
      * Uninstalls/Removes a specific distro.
      */
     fun buildUninstallIntent(distroId: String): Intent {
-        val command = if (distroId == "termux") {
-            "pkg uninstall -y xfce4 xfce4-terminal tigervnc && echo 'FluxLinux: Termux Native Desktop Removed.' && sleep 3"
-        } else {
-            // Try proot-distro remove, retry once if it fails, then fallback to manual removal
-            """
-            echo "Attempting to remove $distroId..."
-            if proot-distro remove $distroId 2>/dev/null; then
-                echo "FluxLinux: $distroId Uninstalled."
-            else
-                echo "First attempt failed, retrying..."
-                sleep 1
+        val command = when {
+            distroId == "termux" -> {
+                "pkg uninstall -y xfce4 xfce4-terminal tigervnc && echo 'FluxLinux: Termux Native Desktop Removed.' && sleep 3"
+            }
+            distroId == "debian13_chroot" -> {
+                // Chroot: Inline uninstall logic (unmount, remove, callback)
+                // This avoids dependency on pre-deployed script files
+                """
+                su -c '
+                DEBIANPATH="/data/local/tmp/chrootDebian13"
+                echo "Unmounting filesystems..."
+                for mnt in $(grep "${'$'}DEBIANPATH" /proc/mounts | awk "{print \${'$'}2}" | sort -r); do
+                    umount -l "${'$'}mnt" 2>/dev/null
+                done
+                echo "Removing chroot directory..."
+                rm -rf "${'$'}DEBIANPATH"
+                rm -f /data/local/tmp/start_debian13*.sh /data/local/tmp/enter_debian13.sh /data/local/tmp/run_debian13_root.sh /data/local/tmp/stop_debian13*.sh /data/local/tmp/uninstall_debian13.sh
+                echo "Chroot removed successfully!"
+                am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success&name=distro_uninstall_debian13_chroot"
+                '
+                """.trimIndent().replace("\n", " ")
+            }
+            distroId == "debian_chroot" -> {
+                // Chroot: Inline uninstall logic
+                """
+                su -c '
+                DEBIANPATH="/data/local/tmp/chrootDebian"
+                echo "Unmounting filesystems..."
+                for mnt in $(grep "${'$'}DEBIANPATH" /proc/mounts | awk "{print \${'$'}2}" | sort -r); do
+                    umount -l "${'$'}mnt" 2>/dev/null
+                done
+                echo "Removing chroot directory..."
+                rm -rf "${'$'}DEBIANPATH"
+                rm -f /data/local/tmp/start_debian*.sh /data/local/tmp/enter_debian.sh /data/local/tmp/stop_debian*.sh /data/local/tmp/uninstall_debian*.sh
+                echo "Chroot removed successfully!"
+                am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success&name=distro_uninstall_debian_chroot"
+                '
+                """.trimIndent().replace("\n", " ")
+            }
+            distroId.contains("chroot") -> {
+                // Generic chroot fallback
+                "su -c \"rm -rf /data/local/tmp/chroot*\" && echo 'Chroot removed.' && am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=distro_uninstall_$distroId\""
+            }
+            else -> {
+                // PRoot: Try proot-distro remove, retry once if it fails, then fallback to manual removal
+                """
+                echo "Attempting to remove $distroId..."
                 if proot-distro remove $distroId 2>/dev/null; then
                     echo "FluxLinux: $distroId Uninstalled."
                 else
-                    echo "proot-distro command failed, using manual removal..."
-                    rm -rf ${'$'}PREFIX/var/lib/proot-distro/installed-rootfs/$distroId
-                    echo "FluxLinux: $distroId manually removed."
+                    echo "First attempt failed, retrying..."
+                    sleep 1
+                    if proot-distro remove $distroId 2>/dev/null; then
+                        echo "FluxLinux: $distroId Uninstalled."
+                    else
+                        echo "proot-distro command failed, using manual removal..."
+                        rm -rf ${'$'}PREFIX/var/lib/proot-distro/installed-rootfs/$distroId
+                        echo "FluxLinux: $distroId manually removed."
+                    fi
                 fi
-            fi
-            sleep 3
-            """.trimIndent()
+                sleep 3
+                """.trimIndent()
+            }
         }
         return buildRunCommandIntent(command)
     }
@@ -215,6 +257,11 @@ object TermuxIntentFactory {
              fullScript += "\n# Deploy Start GUI Script\nlog_step \"Updating Launch Scripts...\"\n"
              fullScript += "echo '$guiScriptB64' | base64 -d > \$HOME/start_gui.sh\n"
              fullScript += "chmod +x \$HOME/start_gui.sh\n"
+             
+             // Deploy stop_gui.sh as well
+             val stopGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/stop_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
+             fullScript += "echo '$stopGuiScriptB64' | base64 -d > \$HOME/stop_gui.sh\n"
+             fullScript += "chmod +x \$HOME/stop_gui.sh\n"
         }
         
         // 2. Modify Base Script to defer exit/callback if present (mostly for chroot scripts that have it)
@@ -354,6 +401,29 @@ object TermuxIntentFactory {
     }
 
     /**
+     * Stops the GUI for a specific distro.
+     */
+    fun buildStopGuiIntent(distroId: String): Intent {
+        if (distroId == "debian13_chroot" || distroId == "debian_chroot") {
+            // Stop Chroot GUI using root
+            val scriptPath = if (distroId == "debian13_chroot") {
+                "/data/local/tmp/stop_debian13_gui.sh"
+            } else {
+                "/data/local/tmp/stop_debian_gui.sh"
+            }
+            return buildRunCommandIntent("su -c \"sh $scriptPath\"", runInBackground = false)
+        }
+        
+        if (distroId == "arch_chroot") {
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/stop_arch_gui.sh\"", runInBackground = false)
+        }
+        
+        // Standard Proot Stop
+        val command = "bash $TERMUX_HOME_DIR/stop_gui.sh $distroId"
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
      * Runs a specific feature script inside the distro.
      * Uses Base64 injection to avoid quoting/escape issues.
      */
@@ -368,12 +438,15 @@ object TermuxIntentFactory {
         
         if (distroId == "debian_chroot") {
             // For Chroot, we must decode the script on the HOST (Android)
+            // Write to Termux's tmp directory since that's what gets mounted into the chroot
+            val termuxTmp = "/data/data/com.termux/files/usr/tmp"
             val innerCommand = """
                 su -c '
-                echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
-                chmod +x /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
+                mkdir -p $termuxTmp;
+                echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
+                chmod +x $termuxTmp/flux_feature.sh;
                 busybox chroot /data/local/tmp/chrootDebian /bin/su - root -c "bash /tmp/flux_feature.sh";
-                rm -f /data/local/tmp/chrootDebian/tmp/flux_feature.sh;
+                rm -f $termuxTmp/flux_feature.sh;
                 ';
                 sleep 1; $callbackCmd
             """.trimIndent().replace("\n", " ")
@@ -385,18 +458,21 @@ object TermuxIntentFactory {
             // Debian 13 Chroot Feature Script
             // Debian 13 Chroot Feature Script
             // Uses generated helper for robustness, falls back to inline mounts if missing.
+            // Write to Termux's tmp directory since that's what gets mounted into the chroot
+            // This ensures the script is visible inside the chroot after /tmp is mounted
+            val termuxTmp = "/data/data/com.termux/files/usr/tmp"
             val innerCommand = """
                 su -c '
                 ROOT_RUNNER="/data/local/tmp/run_debian13_root.sh";
                 if [ -f "${'$'}ROOT_RUNNER" ]; then
-                    mkdir -p /data/local/tmp/chrootDebian13/tmp;
-                    echo "$scriptB64" | base64 -d > /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
-                    chmod +x /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                    mkdir -p $termuxTmp;
+                    echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
+                    chmod +x $termuxTmp/flux_feature.sh;
                     sh "${'$'}ROOT_RUNNER" "bash /tmp/flux_feature.sh";
-                    rm -f /data/local/tmp/chrootDebian13/tmp/flux_feature.sh;
+                    rm -f $termuxTmp/flux_feature.sh;
                 else
                     mnt=/data/local/tmp/chrootDebian13;
-                    mkdir -p ${'$'}mnt/tmp;
+                    mkdir -p $termuxTmp;
                     mount -o remount,dev,suid /data >/dev/null 2>&1;
                     mount -t proc proc ${'$'}mnt/proc >/dev/null 2>&1;
                     mount -t sysfs sysfs ${'$'}mnt/sys >/dev/null 2>&1;
@@ -404,10 +480,12 @@ object TermuxIntentFactory {
                     mount -o bind /dev/pts ${'$'}mnt/dev/pts >/dev/null 2>&1;
                     mkdir -p ${'$'}mnt/dev/shm;
                     mount -t tmpfs -o size=512M tmpfs ${'$'}mnt/dev/shm >/dev/null 2>&1;
-                    echo "$scriptB64" | base64 -d > ${'$'}mnt/tmp/flux_feature.sh;
-                    chmod +x ${'$'}mnt/tmp/flux_feature.sh;
+                    mkdir -p ${'$'}mnt/tmp;
+                    mount --bind $termuxTmp ${'$'}mnt/tmp >/dev/null 2>&1;
+                    echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
+                    chmod +x $termuxTmp/flux_feature.sh;
                     busybox chroot ${'$'}mnt /bin/su - root -c "bash /tmp/flux_feature.sh";
-                    rm -f ${'$'}mnt/tmp/flux_feature.sh;
+                    rm -f $termuxTmp/flux_feature.sh;
                 fi;
                 ';
                 sleep 1; $callbackCmd

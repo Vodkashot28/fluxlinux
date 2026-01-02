@@ -481,7 +481,8 @@ class MainActivity : ComponentActivity() {
                                               }
                                               
                                               // 3. Components (Auto-Launch)
-                                              components.forEach { comp ->
+                                              // Filter out hw_accel since it's already added explicitly above
+                                              components.filter { it.id != "hw_accel" }.forEach { comp ->
                                                   tasks.add(com.ivarna.fluxlinux.core.utils.InstallTask(
                                                       id = comp.id,
                                                       name = comp.name,
@@ -677,13 +678,14 @@ class MainActivity : ComponentActivity() {
                                  },
                                  onUninstallDistro = {
                                      // Navigate to Home first, then trigger uninstall
-                                     // This is a bit disjointed. The uninstall logic was embedded in HomeScreen.
-                                     // Using TermuxIntentFactory directly here.
+                                     // The uninstall script sends a callback to the app when complete
+                                     // which triggers handleScriptCallback to update state
                                       if (permissionState.status.isGranted) {
                                           val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildUninstallIntent(selectedDistro!!.id)
                                           try {
                                               onStartServiceStub(intent)
-                                              StateManager.setDistroInstalled(this@MainActivity, selectedDistro!!.id, false)
+                                              // DON'T update state here - let the callback handle it
+                                              // StateManager will be updated when script sends am start callback
                                               android.widget.Toast.makeText(this@MainActivity, "Uninstalling...", android.widget.Toast.LENGTH_SHORT).show()
                                               currentScreen = Screen.HOME
                                           } catch(e: Exception) {

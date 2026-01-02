@@ -36,8 +36,8 @@ apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
 echo "FluxLinux: Installing Java Development Kit..."
-if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-21-jdk; then
-    JAVA_VERSION="21"
+if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
+    JAVA_VERSION="17"
 else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
     apt-get install -y -o Dpkg::Use-Pty=0 default-jdk || handle_error "Java Installation"
@@ -524,8 +524,8 @@ if [ "$INSTALL_NEEDED" = true ]; then
     
     # Create Wrapper
     # Dynamically find JAVA_HOME
-    if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
-        JHOME="/usr/lib/jvm/java-21-openjdk-arm64"
+    if [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
+        JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
     elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
         JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
     else
@@ -570,8 +570,8 @@ if ! grep -q "ANDROID_HOME" "$BASHRC"; then
 
 # FluxLinux App Dev Config
 # Dynamic Java Home
-if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
-    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+if [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 else
     export JAVA_HOME=/usr/lib/jvm/default-java
 fi
@@ -682,7 +682,7 @@ verify_installation
 
 echo "------------------------------------------------"
 echo "Stack Installed:"
-echo " - JDK 17/21/Default"
+echo " - JDK 17/Default"
 echo " - Android SDK 34/35/36 (ARM64 Build Tools)"
 echo " - Flutter (Stable)"
 echo " - Kotlin"

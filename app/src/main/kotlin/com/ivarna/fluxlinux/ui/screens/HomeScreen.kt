@@ -58,6 +58,9 @@ fun HomeScreen(
     // State for Launch Popup
     val distroToLaunch = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
     
+    // Track which distros have GUI running (persists across dialog open/close)
+    val guiRunningMap = remember { mutableStateMapOf<String, Boolean>() }
+    
     // Refresh key to trigger recomposition
     val refreshKey = remember { mutableStateOf(0) }
 
@@ -244,6 +247,7 @@ fun HomeScreen(
                 com.ivarna.fluxlinux.ui.components.DistroCard(
                     distro = distro,
                     isInstalled = true,
+                    isGuiRunning = guiRunningMap[distro.id] ?: false,
                     onInstall = { onNavigateToInstall(distro) },
                     onUninstall = { /* Handled in Settings */ }, 
                     onNavigateToSettings = { onNavigateToSettings(distro) },
@@ -343,6 +347,8 @@ fun HomeScreen(
                     }
                     
                     // GUI Button
+                    val isGuiRunning = guiRunningMap[distro.id] ?: false
+                    
                     Button(
                         onClick = {
                             if (permissionState.status.isGranted) {
@@ -363,7 +369,7 @@ fun HomeScreen(
                                 val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                                 try {
                                     onStartService(intent)
-                                    distroToLaunch.value = null
+                                    guiRunningMap[distro.id] = true
                                 } catch (e: Exception) {
                                     android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                                 }
@@ -375,6 +381,32 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {
                          Text("Launch GUI", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                    
+                    // Stop GUI Button (appears after GUI is launched)
+                    if (isGuiRunning) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = {
+                                if (permissionState.status.isGranted) {
+                                    val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                    try {
+                                        onStartService(intent)
+                                        guiRunningMap[distro.id] = false
+                                        android.widget.Toast.makeText(context, "Stopping GUI...", android.widget.Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, "Stop failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    permissionState.launchPermissionRequest()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                        ) {
+                             Text("Stop GUI", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
