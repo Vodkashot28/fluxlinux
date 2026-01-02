@@ -120,7 +120,7 @@ object DistroRepository {
             description = "Run XFCE4 directly in Termux for max performance (No Proot).",
             color = FluxAccentCyan,
             iconRes = R.drawable.distro_termux,
-            comingSoon = false,
+            comingSoon = true,
             prootSupported = false,
             chrootSupported = false,
             configuration = SupportedDistro.TERMUX
@@ -141,16 +141,6 @@ object DistroRepository {
         ),
         
         // Coming Soon - Sorted alphabetically
-        Distro(
-            id = "termux_next",
-            name = "Termux",
-            description = "Upcoming features for the native Termux environment.",
-            color = FluxAccentCyan,
-            iconRes = R.drawable.distro_termux,
-            comingSoon = true,
-            prootSupported = false,
-            chrootSupported = false
-        ),
         Distro(
             id = "adelie",
             name = "Adélie Linux",

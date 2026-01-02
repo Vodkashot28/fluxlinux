@@ -347,7 +347,7 @@ fun DistroSettingsScreen(
                                     
                                     val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(context)
                                     if (launchIntent != null) {
-                                        StateManager.setDistroInstalled(context, distro.id, false)
+                                        // StateManager.setDistroInstalled(context, distro.id, false) // REMOVED: Wait for callback
                                         onStartActivity(launchIntent)
                                         onBack() 
                                         android.widget.Toast.makeText(context, "Command Copied!", android.widget.Toast.LENGTH_LONG).show()

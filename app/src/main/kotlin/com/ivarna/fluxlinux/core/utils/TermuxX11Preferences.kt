@@ -140,6 +140,7 @@ object TermuxX11Preferences {
             addPref("fullscreen", prefs.getBoolean(KEY_FULLSCREEN, true).toString())
             addPref("hideCutout", prefs.getBoolean(KEY_HIDE_CUTOUT, true).toString())
             addPref("keepScreenOn", prefs.getBoolean(KEY_KEEP_SCREEN_ON, true).toString())
+            addPref("displayResolutionMode", "scaled")
             
             // Input
             addPref("pointerCapture", prefs.getBoolean(KEY_CAPTURE_POINTER, true).toString())
@@ -195,7 +196,7 @@ object TermuxX11Preferences {
             val cmd = "mkdir -p \$HOME/.fluxlinux && echo \"$scriptB64\" | base64 -d > \$HOME/.fluxlinux/apply_x11_prefs.sh && chmod +x \$HOME/.fluxlinux/apply_x11_prefs.sh && \$HOME/.fluxlinux/apply_x11_prefs.sh"
             
             // Send command Intent (Background execution restored)
-            val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildRunCommandIntent(cmd, runInBackground = true)
+            val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildRunCommandIntent(cmd, runInBackground = false)
             context.startService(intent)
             
             android.util.Log.d("TermuxX11Prefs", "Applied preferences via termux-x11-preference")

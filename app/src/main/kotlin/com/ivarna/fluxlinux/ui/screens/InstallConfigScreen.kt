@@ -100,7 +100,10 @@ fun InstallConfigScreen(
     if (installState.isInstalling) {
         InstallationProgressScreen(
             state = installState,
-            hazeState = hazeState
+            hazeState = hazeState,
+            onCancel = {
+                com.ivarna.fluxlinux.core.utils.InstallationQueueManager.clear()
+            }
         )
     } else {
         GlassScaffold(
@@ -293,7 +296,8 @@ fun InstallConfigScreen(
 @Composable
 fun InstallationProgressScreen(
     state: com.ivarna.fluxlinux.core.utils.InstallationState,
-    hazeState: HazeState
+    hazeState: HazeState,
+    onCancel: () -> Unit
 ) {
     GlassScaffold(
         hazeState = hazeState,
@@ -389,6 +393,22 @@ fun InstallationProgressScreen(
                         )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Cancel Button
+            OutlinedButton(
+                onClick = onCancel,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Cancel Installation", fontWeight = FontWeight.SemiBold)
             }
         }
     }

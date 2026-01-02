@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
                          android.widget.Toast.makeText(this, "$distroId Installed! ✅", android.widget.Toast.LENGTH_LONG).show()
                      } else if (scriptName.startsWith("distro_uninstall_")) {
                          val distroId = scriptName.removePrefix("distro_uninstall_")
-                         StateManager.setDistroInstalled(this, distroId, false)
+                         StateManager.clearDistroState(this, distroId)
                          android.widget.Toast.makeText(this, "$distroId Uninstalled! 🗑️", android.widget.Toast.LENGTH_LONG).show()
                      } else {
                          // Generic Script
@@ -473,7 +473,7 @@ class MainActivity : ComponentActivity() {
                                                   tasks.add(com.ivarna.fluxlinux.core.utils.InstallTask(
                                                       id = "hw_accel",
                                                       name = "Hardware Acceleration",
-                                                      type = com.ivarna.fluxlinux.core.utils.TaskType.HW_ACCEL,
+                                                      type = com.ivarna.fluxlinux.core.utils.TaskType.COMPONENT,
                                                       scriptName = "common/setup_hw_accel_debian.sh",
                                                       distroId = selectedDistro!!.id,
                                                       extraEnv = mapOf("FLUX_GPU" to gpu)

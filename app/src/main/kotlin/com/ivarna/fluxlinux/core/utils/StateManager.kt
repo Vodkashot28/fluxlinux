@@ -138,7 +138,36 @@ object StateManager {
             .map { it.removePrefix("distro_").removeSuffix("_installed") }
             .toSet()
     }
-    
+        /**
+     * Clear all state associated with a distro
+     */
+    fun clearDistroState(context: Context, distroId: String) {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        
+        // Remove installation status
+        editor.remove("distro_${distroId}_installed")
+        
+        // Remove GUI running status
+        editor.remove("distro_${distroId}_gui_running")
+        
+        // Remove all component statuses for this distro
+        // Since we don't track a list of installed components separately, 
+        // we iterate through all keys to find those matching the pattern.
+        // Pattern: distro_${distroId}_component_${componentId}
+        val allKeys = prefs.all.keys
+        val componentPrefix = "distro_${distroId}_component_"
+        
+        for (key in allKeys) {
+            if (key.startsWith(componentPrefix)) {
+                editor.remove(key)
+            }
+        }
+        
+        editor.apply()
+        android.util.Log.d("StateManager", "Cleared all state for distro: $distroId")
+    }
+
     /**
      * Check if onboarding has been completed
      */

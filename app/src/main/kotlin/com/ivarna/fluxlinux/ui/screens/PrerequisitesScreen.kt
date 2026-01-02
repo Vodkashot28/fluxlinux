@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,7 +52,7 @@ fun PrerequisitesScreen(
     
     // Step tracking
     var currentStep by remember { mutableStateOf(1) }
-    val totalSteps = 10
+    val totalSteps = 9 // Merging logical steps 5 & 6 visually
     
     // Package states
     val termuxInstalled = remember { mutableStateOf(StateManager.isTermuxInstalled(context)) }
@@ -123,7 +124,9 @@ fun PrerequisitesScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             // Step Indicator
-            StepIndicator(currentStep = currentStep, totalSteps = totalSteps)
+            // Logical step 6 (Environment Setup) shares the visual step 5 slot
+            val visualStep = if (currentStep > 5) currentStep - 1 else currentStep
+            StepIndicator(currentStep = visualStep, totalSteps = totalSteps)
             
             Spacer(modifier = Modifier.height(32.dp))
             
@@ -437,10 +440,21 @@ fun PermissionRequestStep(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            text = "🔐",
-            fontSize = 64.sp
-        )
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f))
+                .border(2.dp, androidx.compose.material3.MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Permission Lock",
+                modifier = Modifier.size(56.dp),
+                tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+            )
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -620,25 +634,8 @@ fun OverlayPermissionStep(
 ) {
     val context = LocalContext.current
     
-    // Check overlay permission
-    var hasOverlayPermission by remember { 
-        mutableStateOf(android.provider.Settings.canDrawOverlays(context)) 
-    }
-    
-    // Manual override
+    // Manual override (User confirmation)
     var manualOverride by remember { mutableStateOf(false) }
-    
-    // Refresh permission status on resume
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -676,13 +673,14 @@ fun OverlayPermissionStep(
          
          Spacer(modifier = Modifier.height(24.dp))
          
-         if (hasOverlayPermission) {
+         if (manualOverride) {
              // Success State
              Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
+                    .clickable { manualOverride = false }
                     .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
                     .padding(16.dp)
             ) {
@@ -759,7 +757,7 @@ fun OverlayPermissionStep(
              ) {
                  Text(
                      "How to allow restricted settings on Android devices",
-                     color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                     color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                      fontSize = 13.sp,
                      textAlign = TextAlign.Center,
                      textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
@@ -798,7 +796,7 @@ fun OverlayPermissionStep(
          // Continue Button
          Button(
             onClick = onContinue,
-            enabled = hasOverlayPermission || manualOverride,
+            enabled = manualOverride,
             colors = ButtonDefaults.buttonColors(
                 containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                 disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
@@ -810,7 +808,7 @@ fun OverlayPermissionStep(
         ) {
             Text(
                 "Next",
-                color = if (hasOverlayPermission || manualOverride) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (manualOverride) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -968,7 +966,7 @@ fun PhantomProcessStep(
             ) {
                 Text(
                     text = commands,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     lineHeight = 16.sp
@@ -986,7 +984,11 @@ fun PhantomProcessStep(
                          checkingRoot = false
                      }
                  },
-                 modifier = Modifier.fillMaxWidth()
+                 modifier = Modifier.fillMaxWidth(),
+                 colors = ButtonDefaults.outlinedButtonColors(
+                     contentColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+                 ),
+                 border = androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.secondary)
              ) {
                  Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                  Spacer(modifier = Modifier.width(8.dp))
@@ -1065,10 +1067,27 @@ fun EnvironmentSetupStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 5: Environment Setup",
+            text = "Environment Setup",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Please run both scripts below to set up your environment.",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+            fontSize = 15.sp,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "1. Initialize Environment: Sets up the core Linux system.\n2. Apply Termux Tweaks: Configures the shell and visuals (Optional).",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            fontSize = 13.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 18.sp
         )
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -1111,7 +1130,7 @@ fun EnvironmentSetupStep(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "Initializing... (Takes a few mins)",
+                        "Initializing... (Wait for Termux)",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1125,7 +1144,7 @@ fun EnvironmentSetupStep(
                     )
                 } else {
                     Text(
-                        "Initialize Environment (Setup)",
+                        "1. Initialize Environment (Required)",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1173,14 +1192,14 @@ fun EnvironmentSetupStep(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            "Apply Termux Tweaks",
+                            "2. Apply Termux Tweaks (Optional)",
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onTertiary,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                         if (tweaksInitiated) {
                              Text(
-                                "(Opened in Termux)",
+                                "(Opened in Termux... Wait for completion)",
                                 color = androidx.compose.material3.MaterialTheme.colorScheme.onTertiary.copy(alpha=0.7f),
                                 fontSize = 12.sp
                             )
@@ -1195,11 +1214,12 @@ fun EnvironmentSetupStep(
         // Continue Button
         Button(
             onClick = onContinue,
-            // Logic: Only enable if both are initiated? Or just allow user to skip? 
-            // User request usually implies they want to run it. Let's allow skip but maybe warn? 
-            // For now, let's enable it always to not block if they already did it.
-            enabled = true, 
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+            // Enforce only core setup
+            enabled = setupInitiated,  
+            colors = ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -1207,7 +1227,7 @@ fun EnvironmentSetupStep(
         ) {
             Text(
                 "Next",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                color = if (setupInitiated) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1224,7 +1244,7 @@ fun FinalInstructionsStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 6: Almost Done!",
+            text = "Step 9: Almost Done!",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1305,7 +1325,7 @@ fun SystemCheckStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 7: System Check",
+            text = "Step 6: System Check",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1345,7 +1365,7 @@ fun SystemCheckStep(
                     )
                     Text(
                         text = "%.2f GB".format(memoryInfo.totalRamGB),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1435,7 +1455,7 @@ fun SystemCheckStep(
                     )
                     Text(
                         text = "%.2f GB".format(memoryInfo.totalSwapGB),
-                        color = if (memoryInfo.totalSwapGB <= 7.9f) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        color = if (memoryInfo.totalSwapGB <= 7.9f) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1542,7 +1562,7 @@ fun KeyboardInstallStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 8: Install Keyboard",
+            text = "Step 7: Install Keyboard",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1653,7 +1673,7 @@ fun OverlayKeyboardStep(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "Step 9: Floating Keyboard Button",
+            text = "Step 8: Floating Keyboard Button",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1672,7 +1692,7 @@ fun OverlayKeyboardStep(
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     "⌨️ Floating Keyboard Toggle",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )

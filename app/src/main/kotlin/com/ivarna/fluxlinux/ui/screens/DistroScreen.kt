@@ -76,7 +76,7 @@ fun DistroScreen(
         
         val availableDistros = DistroRepository.supportedDistros.filter { 
             !installedDistroIds.contains(it.id)
-        }.sortedWith(compareBy<Distro> { it.comingSoon }.thenBy { it.name })
+        }.sortedWith(compareBy<Distro> { it.comingSoon }.thenByDescending { it.id == "termux" }.thenBy { it.name })
         
         if (availableDistros.isEmpty()) {
             Box(

@@ -100,9 +100,11 @@ object TermuxIntentFactory {
      * Uninstalls/Removes a specific distro.
      */
     fun buildUninstallIntent(distroId: String): Intent {
+        val callbackUrl = "fluxlinux://callback?result=success&name=distro_uninstall_$distroId"
+        
         val command = when {
             distroId == "termux" -> {
-                "pkg uninstall -y xfce4 xfce4-terminal tigervnc && echo 'FluxLinux: Termux Native Desktop Removed.' && sleep 3"
+                "pkg uninstall -y xfce4 xfce4-terminal tigervnc && echo 'FluxLinux: Termux Native Desktop Removed.' && sleep 1 && am start -a android.intent.action.VIEW -d \"$callbackUrl\""
             }
             distroId == "debian13_chroot" -> {
                 // Chroot: Inline uninstall logic (unmount, remove, callback)
@@ -118,9 +120,9 @@ object TermuxIntentFactory {
                 rm -rf "${'$'}DEBIANPATH"
                 rm -f /data/local/tmp/start_debian13*.sh /data/local/tmp/enter_debian13.sh /data/local/tmp/run_debian13_root.sh /data/local/tmp/stop_debian13*.sh /data/local/tmp/uninstall_debian13.sh
                 echo "Chroot removed successfully!"
-                am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success&name=distro_uninstall_debian13_chroot"
+                am start -a android.intent.action.VIEW -d "$callbackUrl"
                 '
-                """.trimIndent().replace("\n", " ")
+                """.trimIndent()
             }
             distroId == "debian_chroot" -> {
                 // Chroot: Inline uninstall logic
@@ -135,13 +137,13 @@ object TermuxIntentFactory {
                 rm -rf "${'$'}DEBIANPATH"
                 rm -f /data/local/tmp/start_debian*.sh /data/local/tmp/enter_debian.sh /data/local/tmp/stop_debian*.sh /data/local/tmp/uninstall_debian*.sh
                 echo "Chroot removed successfully!"
-                am start -a android.intent.action.VIEW -d "fluxlinux://callback?result=success&name=distro_uninstall_debian_chroot"
+                am start -a android.intent.action.VIEW -d "$callbackUrl"
                 '
-                """.trimIndent().replace("\n", " ")
+                """.trimIndent()
             }
             distroId.contains("chroot") -> {
                 // Generic chroot fallback
-                "su -c \"rm -rf /data/local/tmp/chroot*\" && echo 'Chroot removed.' && am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=distro_uninstall_$distroId\""
+                "su -c \"rm -rf /data/local/tmp/chroot*\" && echo 'Chroot removed.' && am start -a android.intent.action.VIEW -d \"$callbackUrl\""
             }
             else -> {
                 // PRoot: Try proot-distro remove, retry once if it fails, then fallback to manual removal
@@ -160,7 +162,8 @@ object TermuxIntentFactory {
                         echo "FluxLinux: $distroId manually removed."
                     fi
                 fi
-                sleep 3
+                sleep 2
+                am start -a android.intent.action.VIEW -d "$callbackUrl"
                 """.trimIndent()
             }
         }
