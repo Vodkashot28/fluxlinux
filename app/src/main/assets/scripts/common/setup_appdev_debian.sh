@@ -24,7 +24,7 @@ echo "FluxLinux: Installing System Dependencies..."
 export DEBIAN_FRONTEND=noninteractive
 apt update -y
 # Core deps + Flutter Linux deps + React Native deps
-apt install -y git wget curl unzip zip xz-utils \
+apt install -y git wget curl unzip zip xz-utils file \
     libgtk-3-dev liblzma-dev libstdc++-12-dev \
     libgtk-3-dev liblzma-dev libstdc++-12-dev \
     adb fastboot aapt cmake ninja-build \
@@ -35,12 +35,16 @@ apt install -y git wget curl unzip zip xz-utils \
 apt remove -y gradle >/dev/null 2>&1 || true
 
 # 1b. Install Java (Dynamic Version)
+# Debian 13 Trixie ships with OpenJDK 21 as the default
 echo "FluxLinux: Installing Java Development Kit..."
-if apt-get install -y -o Dpkg::Use-Pty=0 openjdk-17-jdk; then
+export DEBIAN_FRONTEND=noninteractive
+if apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openjdk-21-jdk 2>/dev/null; then
+    JAVA_VERSION="21"
+elif apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openjdk-17-jdk 2>/dev/null; then
     JAVA_VERSION="17"
 else
     echo "FluxLinux: specific JDK not found, trying default-jdk..."
-    apt-get install -y -o Dpkg::Use-Pty=0 default-jdk || handle_error "Java Installation"
+    apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" default-jdk || handle_error "Java Installation"
     JAVA_VERSION="default"
 fi
 
@@ -91,7 +95,7 @@ export ANDROID_HOME="$SDK_ROOT"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 # Install Components
-echo "FluxLinux: Installing Platform Tools, SDK 34 (Android 14 - Last Compatible), & NDK..."
+echo "FluxLinux: Installing Platform Tools, SDK & NDK..."
 # NOTE: We now use ARM64 native build-tools from lzhiyong/android-sdk-tools (35.0.2)
 # This provides ARM64-compatible aapt, aapt2, aidl, zipalign for SDK 35/36 support
 
@@ -115,7 +119,9 @@ for ndk_dir in "$SDK_ROOT/ndk/"*; do
     fi
 done
 
-echo "FluxLinux: Installing Platform Tools, SDK 34/35/36, NDK 27 & 29..."
+echo "FluxLinux: Installing Platform Tools, SDK 34/35/36..."
+# NOTE: NDK is installed separately as ARM64 native versions
+# DO NOT install NDK via sdkmanager - it downloads x86 binaries
 sdkmanager "platform-tools" \
            "cmdline-tools;latest" \
            "platforms;android-34" \
@@ -123,8 +129,6 @@ sdkmanager "platform-tools" \
            "platforms;android-36" \
            "build-tools;35.0.0" \
            "build-tools;36.0.0" \
-           "ndk;27.0.12077973" \
-           "ndk;29.0.14206865" \
            "cmake;3.22.1" \
            || handle_error "Android SDK Components"
            
@@ -216,23 +220,25 @@ install_arm64_ndk() {
     
     echo "FluxLinux: Checking NDK $NDK_VER ($NDK_RELEASE)..."
     
-    # Check if NDK needs replacement
-    local NEEDS_FIX=false
+    # Check if NDK needs installation or replacement
+    local NEEDS_INSTALL=true
     if [ -d "$NDK_DIR" ]; then
-        if [ -d "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64" ]; then
-            if [ ! -L "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64" ]; then
-                NEEDS_FIX=true
+        # Check if it's already ARM64 native
+        if [ -d "$NDK_DIR/toolchains/llvm/prebuilt/linux-arm64" ]; then
+            if [ -f "$NDK_DIR/toolchains/llvm/prebuilt/linux-arm64/bin/clang" ]; then
+                echo "   [✅] ARM64 NDK $NDK_RELEASE already installed"
+                NEEDS_INSTALL=false
             fi
-        elif [ ! -d "$NDK_DIR/toolchains/llvm/prebuilt/linux-arm64" ]; then
-            NEEDS_FIX=true
+        elif [ -L "$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64" ]; then
+            # Symlink exists - likely ARM64 version with compatibility link
+            echo "   [✅] ARM64 NDK $NDK_RELEASE already configured"
+            NEEDS_INSTALL=false
         fi
-    else
-        echo "   NDK $NDK_VER not yet installed - skipping ARM64 setup"
-        return
+        # If x86_64 directory exists but is not a symlink, we need to replace
     fi
     
-    if [ "$NEEDS_FIX" = true ]; then
-        echo "   Detected x86_64 NDK - replacing with ARM64 version..."
+    if [ "$NEEDS_INSTALL" = true ]; then
+        echo "   Installing ARM64 native NDK $NDK_RELEASE..."
         
         # Download ARM64 NDK (force redownload to avoid corrupt files)
         if [ -f "$ARM64_NDK_TAR" ]; then
@@ -275,8 +281,6 @@ install_arm64_ndk() {
         else
             echo "   [⚠️] Installation verification failed"
         fi
-    else
-        echo "   [✅] ARM64 NDK already configured"
     fi
 }
 
@@ -369,10 +373,39 @@ if [ ! -f "$KOTLIN_ROOT/bin/kotlinc" ]; then
 fi
 
 # 4b. Gradle (Manual Install, System version is too old)
-GRADLE_VER="9.2"
-if ! command -v gradle >/dev/null 2>&1 || [[ $(gradle -v) != *"$GRADLE_VER"* ]]; then
+# Using Gradle 9.2.1 - latest stable version
+GRADLE_VER="9.2.1"
+
+# Check if already installed with correct version
+if [ -f "/opt/gradle/bin/gradle" ]; then
+    INSTALLED_VER=$(/opt/gradle/bin/gradle --version 2>/dev/null | grep "Gradle" | head -1 | awk '{print $2}')
+    if [ "$INSTALLED_VER" = "$GRADLE_VER" ]; then
+        echo "FluxLinux: Gradle $GRADLE_VER already installed."
+    else
+        echo "FluxLinux: Updating Gradle from $INSTALLED_VER to $GRADLE_VER..."
+        rm -rf /opt/gradle
+        rm -f /tmp/gradle.zip
+    fi
+fi
+
+if [ ! -f "/opt/gradle/bin/gradle" ] || [ "$(/opt/gradle/bin/gradle --version 2>/dev/null | grep 'Gradle' | head -1 | awk '{print $2}')" != "$GRADLE_VER" ]; then
     echo "FluxLinux: Installing Gradle $GRADLE_VER..."
-    wget -q --show-progress "https://services.gradle.org/distributions/gradle-${GRADLE_VER}-bin.zip" -O /tmp/gradle.zip || handle_error "Gradle Download"
+    
+    # Download with retry
+    GRADLE_URL="https://services.gradle.org/distributions/gradle-${GRADLE_VER}-bin.zip"
+    if [ ! -f "/tmp/gradle.zip" ]; then
+        wget -q --show-progress "$GRADLE_URL" -O /tmp/gradle.zip || \
+        wget -q --show-progress "$GRADLE_URL" -O /tmp/gradle.zip || \
+        handle_error "Gradle Download"
+    fi
+    
+    # Verify download is valid zip
+    if ! unzip -t /tmp/gradle.zip >/dev/null 2>&1; then
+        echo "FluxLinux: Downloaded file corrupt, retrying..."
+        rm -f /tmp/gradle.zip
+        wget -q --show-progress "$GRADLE_URL" -O /tmp/gradle.zip || handle_error "Gradle Download"
+    fi
+    
     unzip -q /tmp/gradle.zip -d /opt
     rm /tmp/gradle.zip
     [ -d "/opt/gradle" ] && rm -rf /opt/gradle
@@ -380,6 +413,7 @@ if ! command -v gradle >/dev/null 2>&1 || [[ $(gradle -v) != *"$GRADLE_VER"* ]];
     ln -sf /opt/gradle/bin/gradle /usr/local/bin/gradle
     # Fix for caching issues (user reported /usr/bin/gradle not found)
     ln -sf /opt/gradle/bin/gradle /usr/bin/gradle
+    echo "FluxLinux: Gradle $GRADLE_VER installed."
 fi
 
 # 4c. ARM64 Build Tools (aapt, aapt2, aidl, zipalign, dexdump)
@@ -471,10 +505,21 @@ chown -R $TARGET_USER:$TARGET_GROUP "$GRADLE_USER_HOME"
 
 # Verify ARM64 aapt2
 echo "FluxLinux: Verifying ARM64 aapt2..."
-if file /usr/local/bin/aapt2 | grep -q "aarch64"; then
-    echo " [✅] aapt2 (SDK 36) is ARM64 native"
+# Try 'file' command first, fallback to readelf
+if command -v file >/dev/null 2>&1; then
+    if file /usr/local/bin/aapt2 | grep -q "aarch64"; then
+        echo " [✅] aapt2 (SDK 36) is ARM64 native"
+    else
+        echo " [⚠️] aapt2 architecture verification failed"
+    fi
+elif command -v readelf >/dev/null 2>&1; then
+    if readelf -h /usr/local/bin/aapt2 2>/dev/null | grep -q "AArch64"; then
+        echo " [✅] aapt2 (SDK 36) is ARM64 native (verified via readelf)"
+    else
+        echo " [⚠️] aapt2 architecture could not be verified"
+    fi
 else
-    echo " [⚠️] aapt2 architecture verification failed"
+    echo " [✅] aapt2 installed (architecture verification skipped - install 'file' package to enable)"
 fi
 
 # 5. IntelliJ IDEA Community
@@ -524,8 +569,8 @@ if [ "$INSTALL_NEEDED" = true ]; then
     
     # Create Wrapper
     # Dynamically find JAVA_HOME
-    if [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
-        JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
+    if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
+        JHOME="/usr/lib/jvm/java-21-openjdk-arm64"
     elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
         JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
     else
@@ -570,7 +615,9 @@ if ! grep -q "ANDROID_HOME" "$BASHRC"; then
 
 # FluxLinux App Dev Config
 # Dynamic Java Home
-if [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
+if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 else
     export JAVA_HOME=/usr/lib/jvm/default-java
@@ -682,7 +729,7 @@ verify_installation
 
 echo "------------------------------------------------"
 echo "Stack Installed:"
-echo " - JDK 17/Default"
+echo " - JDK 21/17/Default"
 echo " - Android SDK 34/35/36 (ARM64 Build Tools)"
 echo " - Flutter (Stable)"
 echo " - Kotlin"
