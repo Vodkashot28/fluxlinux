@@ -173,6 +173,10 @@ flowchart TB
 
 FluxLinux supports hardware-accelerated graphics:
 
+<table>
+<tr>
+<td width="50%">
+
 | GPU Type | Driver | Performance |
 |----------|--------|-------------|
 | Adreno (Qualcomm) | Turnip + Zink | 🟢 Excellent |
@@ -180,12 +184,17 @@ FluxLinux supports hardware-accelerated graphics:
 | PowerVR (MediaTek) | VirGL | 🟡 Good |
 | Other | VirGL | 🟡 Good |
 
-<div align="center">
-  <img src="assets/screenshots/hardware_acceleration/1.png" width="250" />
-  <p><em>GPU driver selection</em></p>
-</div>
+📖 [Hardware Acceleration Guide](docs/hardware_acceleration.md)
 
-See [Hardware Acceleration Guide](docs/hardware_acceleration.md) for details.
+</td>
+<td width="50%" align="center">
+
+<img src="assets/screenshots/hardware_acceleration/1.png" width="300" />
+<br/><em>GPU Driver Selection</em>
+
+</td>
+</tr>
+</table>
 
 ---
 
