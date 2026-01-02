@@ -14,6 +14,7 @@ A comprehensive guide for testing FluxLinux's development stacks by building and
   - [React](#react)
   - [Node.js](#nodejs)
 - [Python Development](#python-development)
+- [Data Science & AI/ML](#data-science--aiml)
 - [Game Development](#game-development)
 - [Graphic Design](#graphic-design)
 - [Video Editing](#video-editing)
@@ -235,6 +236,106 @@ python3 -c "from flask import Flask; print('Flask working!')"
 # Test common libraries
 pip install requests numpy pandas
 python3 -c "import requests, numpy, pandas; print('All libraries working!')"
+```
+
+---
+
+## Data Science & AI/ML
+
+*Script: `setup_datascience_debian.sh`*
+
+**Prerequisites Test:**
+```bash
+# Check Python environment
+source ~/data_env/bin/activate
+python --version
+jupyter --version
+julia --version
+R --version
+```
+
+### Installed Packages
+
+| Category | Libraries |
+|----------|-----------|
+| **Core** | Jupyter, JupyterLab, Pandas, NumPy, Matplotlib, Seaborn, SciPy |
+| **ML** | scikit-learn, XGBoost |
+| **Deep Learning** | TensorFlow, PyTorch, Keras |
+| **NLP** | NLTK, Spacy, Transformers |
+| **Languages** | Python 3, Julia, R |
+| **IDEs** | PyCharm Community, Spyder |
+
+### Demo Projects
+
+#### Jupyter Notebooks
+
+| Project | Repository | Description |
+|---------|------------|-------------|
+| Python Data Science Handbook | [jakevdp/PythonDataScienceHandbook](https://github.com/jakevdp/PythonDataScienceHandbook) | Complete book in Jupyter |
+| Data Science IPython Notebooks | [donnemartin/data-science-ipython-notebooks](https://github.com/donnemartin/data-science-ipython-notebooks) | Deep learning, scikit-learn, big data |
+| ML Projects Collection | [rhiever/Data-Analysis-and-Machine-Learning-Projects](https://github.com/rhiever/Data-Analysis-and-Machine-Learning-Projects) | Practical ML examples |
+
+#### TensorFlow
+
+| Project | Repository | Description |
+|---------|------------|-------------|
+| TensorFlow Tutorials | [aymericdamien/TensorFlow-Examples](https://github.com/aymericdamien/TensorFlow-Examples) | Beginner to advanced |
+| Easy TensorFlow | [easy-tensorflow/easy-tensorflow](https://github.com/easy-tensorflow/easy-tensorflow) | Simple tutorials |
+| Official Examples | [tensorflow/examples](https://github.com/tensorflow/examples) | Official TensorFlow examples |
+
+#### PyTorch
+
+| Project | Repository | Description |
+|---------|------------|-------------|
+| Official Examples | [pytorch/examples](https://github.com/pytorch/examples) | Vision, text, RL |
+| PyTorch Tutorial | [yunjey/pytorch-tutorial](https://github.com/yunjey/pytorch-tutorial) | Deep learning researchers |
+| Learn PyTorch | [mrdbourke/pytorch-deep-learning](https://github.com/mrdbourke/pytorch-deep-learning) | Zero to Mastery course |
+| PyTorch Tutorials | [LukeDitria/pytorch_tutorials](https://github.com/LukeDitria/pytorch_tutorials) | Beginner with videos |
+
+#### scikit-learn
+
+| Project | Repository | Description |
+|---------|------------|-------------|
+| scikit-learn | [scikit-learn/scikit-learn](https://github.com/scikit-learn/scikit-learn) | Official repository |
+| auto-sklearn | [automl/auto-sklearn](https://github.com/automl/auto-sklearn) | Automated ML toolkit |
+| Examples Gallery | [scikit-learn.org/stable/auto_examples](https://scikit-learn.org/stable/auto_examples/) | Official examples |
+
+### Quick Tests
+
+```bash
+# Activate environment
+source ~/data_env/bin/activate
+
+# Test Jupyter
+jupyter-lab --version
+jupyter notebook --no-browser &
+
+# Test core libraries
+python -c "import pandas, numpy, matplotlib; print('Core libs OK')"
+
+# Test ML libraries
+python -c "import sklearn; print('scikit-learn', sklearn.__version__)"
+python -c "import tensorflow as tf; print('TensorFlow', tf.__version__)"
+python -c "import torch; print('PyTorch', torch.__version__)"
+
+# Test NLP
+python -c "import nltk, spacy; print('NLP libs OK')"
+
+# Test Julia
+julia -e 'println("Julia $(VERSION)")'
+
+# Test R
+R --version | head -1
+```
+
+### Sample Workflow
+
+```bash
+# Clone and run a notebook
+git clone https://github.com/jakevdp/PythonDataScienceHandbook
+cd PythonDataScienceHandbook/notebooks
+source ~/data_env/bin/activate
+jupyter-lab
 ```
 
 ---
@@ -531,6 +632,10 @@ box64 wine notepad.exe
 | Python | Flask | ⬜ | ⬜ | ⬜ | N/A |
 | Python | Django | ⬜ | ⬜ | ⬜ | N/A |
 | Python | FastAPI | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | Jupyter | ⬜ | N/A | ⬜ | N/A |
+| Data Sci | TensorFlow | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | PyTorch | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | Julia | ⬜ | ⬜ | ⬜ | N/A |
 | Game Dev | Godot 4 | ⬜ | ⬜ | ⬜ | ⬜ |
 | Graphics | GIMP | ⬜ | N/A | ⬜ | ⬜ |
 | Graphics | Blender | ⬜ | N/A | ⬜ | ⬜ |
@@ -564,6 +669,10 @@ box64 wine notepad.exe
 | Python | Flask | ⬜ | ⬜ | ⬜ | N/A |
 | Python | Django | ⬜ | ⬜ | ⬜ | N/A |
 | Python | FastAPI | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | Jupyter | ⬜ | N/A | ⬜ | N/A |
+| Data Sci | TensorFlow | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | PyTorch | ⬜ | ⬜ | ⬜ | N/A |
+| Data Sci | Julia | ⬜ | ⬜ | ⬜ | N/A |
 | Game Dev | Godot 4 | ⬜ | ⬜ | ⬜ | ⬜ |
 | Graphics | GIMP | ⬜ | N/A | ⬜ | ⬜ |
 | Graphics | Blender | ⬜ | N/A | ⬜ | ⬜ |
