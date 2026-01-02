@@ -167,7 +167,7 @@ fun HomeScreen(
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isFloatingKeyboardRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                            contentColor = if (isFloatingKeyboardRunning) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.secondary
+                            contentColor = if (isFloatingKeyboardRunning) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -465,6 +465,10 @@ fun HomeScreen(
                                     val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
                                     if (x11Intent != null) {
                                         context.startActivity(x11Intent)
+                                        
+                                        // Auto-apply preferences (Display Scale 100%, etc.)
+                                        // We run this AFTER starting the activity so X11 is running/starting.
+                                        com.ivarna.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
                                     }
                                     distroToLaunch.value = null
                                 } catch (e: Exception) {
