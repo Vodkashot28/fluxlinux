@@ -179,28 +179,8 @@ find /home/$TARGET_USER -name "local.properties" 2>/dev/null | while read -r pro
     fi
 done
 
-# Fix ADB/Fastboot (SDK bundles x86 binaries)
-# Strategy: SHELL WRAPPER - delegates to system native binary
-echo "FluxLinux: Patching SDK ADB/Fastboot (Wrapper Script)..."
-if [ -f "$SDK_ROOT/platform-tools/adb" ]; then
-    rm -f "$SDK_ROOT/platform-tools/adb"
-    cat <<EOF > "$SDK_ROOT/platform-tools/adb"
-#!/bin/sh
-exec /usr/bin/adb "\$@"
-EOF
-    chmod +x "$SDK_ROOT/platform-tools/adb"
-    echo " - Wrapped $SDK_ROOT/platform-tools/adb -> /usr/bin/adb"
-fi
-
-if [ -f "$SDK_ROOT/platform-tools/fastboot" ]; then
-    rm -f "$SDK_ROOT/platform-tools/fastboot"
-    cat <<EOF > "$SDK_ROOT/platform-tools/fastboot"
-#!/bin/sh
-exec /usr/bin/fastboot "\$@"
-EOF
-    chmod +x "$SDK_ROOT/platform-tools/fastboot"
-    echo " - Wrapped $SDK_ROOT/platform-tools/fastboot -> /usr/bin/fastboot"
-fi
+# ADB/Fastboot: Installed via apt (line 30) - /usr/bin/adb is ARM64 native
+# No wrappers needed - apt provides working binaries
 
 # Fix NDK (SDK bundles x86_64 binaries - need ARM64)
 # Install ARM64 NDK from HomuHomu833/android-ndk-custom (musl-based, statically linked)
@@ -255,19 +235,28 @@ install_arm64_ndk() {
         fi
         
         # Extract
-        rm -rf "$ARM64_NDK_EXTRACTED"
-        rm -rf /tmp/ndk-extract-$NDK_RELEASE
+        rm -rf "$ARM64_NDK_EXTRACTED" 2>/dev/null || true
+        rm -rf /tmp/ndk-extract-$NDK_RELEASE 2>/dev/null || true
         mkdir -p /tmp/ndk-extract-$NDK_RELEASE
         tar -xf "$ARM64_NDK_TAR" -C /tmp/ndk-extract-$NDK_RELEASE || { echo "   [⚠️] Extract failed - removing corrupt file"; rm -f "$ARM64_NDK_TAR"; return; }
-        mv /tmp/ndk-extract-$NDK_RELEASE/android-ndk-$NDK_SOURCE_DIR "$ARM64_NDK_EXTRACTED" 2>/dev/null || \
-           mv /tmp/ndk-extract-$NDK_RELEASE/* "$ARM64_NDK_EXTRACTED" 2>/dev/null
+        
+        # Find the extracted directory (could be android-ndk-r27, android-ndk-r27d, etc.)
+        EXTRACTED_DIR=$(find /tmp/ndk-extract-$NDK_RELEASE -maxdepth 1 -type d -name "android-ndk-*" | head -1)
+        if [ -z "$EXTRACTED_DIR" ]; then
+            echo "   [⚠️] Could not find extracted NDK directory"
+            ls -la /tmp/ndk-extract-$NDK_RELEASE/
+            return
+        fi
+        mv "$EXTRACTED_DIR" "$ARM64_NDK_EXTRACTED" 2>/dev/null || true
         
         # Backup old NDK and install ARM64 version
         if [ -d "$NDK_DIR" ]; then
-            rm -rf "${NDK_DIR}.x86_backup"
-            mv "$NDK_DIR" "${NDK_DIR}.x86_backup"
+            rm -rf "${NDK_DIR}.x86_backup" 2>/dev/null || true
+            mv "$NDK_DIR" "${NDK_DIR}.x86_backup" 2>/dev/null || true
         fi
         
+        # Create parent directory if needed
+        mkdir -p "$(dirname "$NDK_DIR")"
         mv "$ARM64_NDK_EXTRACTED" "$NDK_DIR"
         
         # Verify
@@ -294,8 +283,9 @@ install_arm64_ndk "29.0.14206865" "r29" "r29"
            
 # Set Permissions
 chown -R $TARGET_USER:$TARGET_GROUP "$SDK_ROOT"
-rm -f /usr/local/bin/adb /usr/local/bin/fastboot
 chmod -R 777 "$SDK_ROOT" # Wide permissions for ease of use in Chroot
+
+
 
 # 3. Flutter Setup
 FLUTTER_ROOT="/opt/flutter"
@@ -341,20 +331,57 @@ chmod -R 755 /opt/flutter/bin
 mkdir -p /home/$ACTUAL_USER/.config/flutter
 chown -R $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.config
 
-# Write settings directly to config file (bypasses root check)
+# Write settings to ~/.config/flutter/settings (legacy format)
 cat > /home/$ACTUAL_USER/.config/flutter/settings << EOF
 android-sdk=/opt/android-sdk
+android-sdk-path=/opt/android-sdk
 EOF
-
 chown $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.config/flutter/settings
+
+# Write settings to ~/.flutter (Flutter's primary config file - JSON format)
+# Use /usr/lib/android-sdk where apt installs adb
+cat > /home/$ACTUAL_USER/.flutter << EOF
+{
+  "android-sdk": "/usr/lib/android-sdk",
+  "android-studio-dir": "/usr/lib/android-sdk"
+}
+EOF
+chown $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.flutter
 
 # Add environment variables to .bashrc
 if ! grep -q "/opt/flutter/bin" /home/$ACTUAL_USER/.bashrc 2>/dev/null; then
     echo 'export PATH="/opt/flutter/bin:$PATH"' >> /home/$ACTUAL_USER/.bashrc
     echo 'export ANDROID_SDK_ROOT="/opt/android-sdk"' >> /home/$ACTUAL_USER/.bashrc
     echo 'export ANDROID_HOME="/opt/android-sdk"' >> /home/$ACTUAL_USER/.bashrc
+    echo 'export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"' >> /home/$ACTUAL_USER/.bashrc
+    echo 'export CHROME_EXECUTABLE=/usr/bin/chromium' >> /home/$ACTUAL_USER/.bashrc
     chown $ACTUAL_USER:$USER_GROUP /home/$ACTUAL_USER/.bashrc
 fi
+
+# Add environment variables to .zshrc (if zsh is installed)
+if command -v zsh >/dev/null 2>&1; then
+    ZSHRC="/home/$ACTUAL_USER/.zshrc"
+    # Create .zshrc if it doesn't exist
+    [ ! -f "$ZSHRC" ] && touch "$ZSHRC" && chown $ACTUAL_USER:$USER_GROUP "$ZSHRC"
+    
+    if ! grep -q "/opt/flutter/bin" "$ZSHRC" 2>/dev/null; then
+        echo 'export PATH="/opt/flutter/bin:$PATH"' >> "$ZSHRC"
+        echo 'export ANDROID_SDK_ROOT="/opt/android-sdk"' >> "$ZSHRC"
+        echo 'export ANDROID_HOME="/opt/android-sdk"' >> "$ZSHRC"
+        echo 'export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"' >> "$ZSHRC"
+        echo 'export CHROME_EXECUTABLE=/usr/bin/chromium' >> "$ZSHRC"
+        chown $ACTUAL_USER:$USER_GROUP "$ZSHRC"
+        echo "FluxLinux: Added Flutter/Android SDK paths to .zshrc"
+    fi
+fi
+
+# Set system-wide environment variables (for all users)
+cat > /etc/profile.d/android-sdk.sh << 'ENVEOF'
+export ANDROID_HOME=/opt/android-sdk
+export ANDROID_SDK_ROOT=/opt/android-sdk
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+ENVEOF
+chmod 644 /etc/profile.d/android-sdk.sh
 
 echo "FluxLinux: Flutter Android SDK configured."
 
@@ -426,16 +453,18 @@ echo "FluxLinux: Installing ARM64 Native Build Tools..."
 # --- SDK 35 Build Tools (from lzhiyong) ---
 ARM64_35_URL="https://github.com/lzhiyong/android-sdk-tools/releases/download/35.0.2/android-sdk-tools-static-aarch64.zip"
 ARM64_35_ZIP="/tmp/android-sdk-35-aarch64.zip"
-ARM64_35_DIR="/tmp/android-sdk-35-extracted"
+# Use unique temp directory with timestamp to avoid leftovers from previous runs
+ARM64_35_DIR="/tmp/android-sdk-35-$$"
 
 echo "FluxLinux: Installing SDK 35 ARM64 Build Tools (35.0.2)..."
 if [ ! -f "$ARM64_35_ZIP" ]; then
     wget -q --show-progress "$ARM64_35_URL" -O "$ARM64_35_ZIP" || handle_error "ARM64 SDK 35 Build Tools Download"
 fi
 
-rm -rf "$ARM64_35_DIR"
+# Use fresh directory to avoid permission issues from previous runs
+rm -rf "$ARM64_35_DIR" 2>/dev/null || true
 mkdir -p "$ARM64_35_DIR"
-unzip -q "$ARM64_35_ZIP" -d "$ARM64_35_DIR" || handle_error "ARM64 SDK 35 Build Tools Extract"
+unzip -o -q "$ARM64_35_ZIP" -d "$ARM64_35_DIR" || handle_error "ARM64 SDK 35 Build Tools Extract"
 
 BUILD_TOOLS_35="$SDK_ROOT/build-tools/35.0.0"
 mkdir -p "$BUILD_TOOLS_35"
@@ -458,14 +487,16 @@ fi
 # --- SDK 36 Build Tools (from HomuHomu833) ---
 ARM64_36_URL="https://github.com/HomuHomu833/android-sdk-custom/releases/download/36.0.0/android-sdk-aarch64-linux-musl.tar.xz"
 ARM64_36_TAR="/tmp/android-sdk-36-aarch64.tar.xz"
-ARM64_36_DIR="/tmp/android-sdk-36-extracted"
+# Use unique temp directory with PID to avoid leftovers from previous runs
+ARM64_36_DIR="/tmp/android-sdk-36-$$"
 
 echo "FluxLinux: Installing SDK 36 ARM64 Build Tools (36.1.0)..."
 if [ ! -f "$ARM64_36_TAR" ]; then
     wget -q --show-progress "$ARM64_36_URL" -O "$ARM64_36_TAR" || handle_error "ARM64 SDK 36 Build Tools Download"
 fi
 
-rm -rf "$ARM64_36_DIR"
+# Use fresh directory to avoid permission issues from previous runs
+rm -rf "$ARM64_36_DIR" 2>/dev/null || true
 mkdir -p "$ARM64_36_DIR"
 tar -xf "$ARM64_36_TAR" -C "$ARM64_36_DIR" || handle_error "ARM64 SDK 36 Build Tools Extract"
 
@@ -651,18 +682,9 @@ fi
 
 # 7. Global Symlinks for Immediate Usage
 echo "FluxLinux: Creating global symlinks..."
-# Clean bad symlinks from previous installs
-rm -f /usr/local/bin/adb /usr/local/bin/fastboot
 
 ln -sf "$FLUTTER_ROOT/bin/flutter" /usr/local/bin/flutter
 ln -sf "$FLUTTER_ROOT/bin/dart" /usr/local/bin/dart
-
-# Bridge ADB/Fastboot from /usr/bin (native) to /usr/local/bin (cached in user shell)
-# This fixes "No such file" errors if user shell has hashed the old path.
-if [ -f "/usr/bin/adb" ]; then
-    ln -sf /usr/bin/adb /usr/local/bin/adb
-    ln -sf /usr/bin/fastboot /usr/local/bin/fastboot
-fi
 
 # Kotlin
 ln -sf "$KOTLIN_ROOT/bin/kotlin" /usr/local/bin/kotlin

@@ -335,4 +335,35 @@ object StateManager {
         prefs.edit().putBoolean("distro_${distroId}_component_${componentId}", installed).apply()
         android.util.Log.d("StateManager", "Distro $distroId component $componentId status set to: $installed")
     }
+    
+    /**
+     * Check if GUI is running for a distro
+     */
+    fun isGuiRunning(context: Context, distroId: String): Boolean {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        return prefs.getBoolean("distro_${distroId}_gui_running", false)
+    }
+    
+    /**
+     * Set GUI running state for a distro
+     */
+    fun setGuiRunning(context: Context, distroId: String, running: Boolean) {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("distro_${distroId}_gui_running", running).apply()
+        android.util.Log.d("StateManager", "Distro $distroId GUI running status set to: $running")
+        // Trigger UI refresh
+        triggerRefresh()
+    }
+    
+    /**
+     * Get all distros with GUI running
+     */
+    fun getDistrosWithGuiRunning(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        return prefs.all.keys
+            .filter { it.startsWith("distro_") && it.endsWith("_gui_running") }
+            .filter { prefs.getBoolean(it, false) }
+            .map { it.removePrefix("distro_").removeSuffix("_gui_running") }
+            .toSet()
+    }
 }

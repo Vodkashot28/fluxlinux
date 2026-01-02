@@ -58,9 +58,6 @@ fun HomeScreen(
     // State for Launch Popup
     val distroToLaunch = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
     
-    // Track which distros have GUI running (persists across dialog open/close)
-    val guiRunningMap = remember { mutableStateMapOf<String, Boolean>() }
-    
     // Refresh key to trigger recomposition
     val refreshKey = remember { mutableStateOf(0) }
 
@@ -247,7 +244,7 @@ fun HomeScreen(
                 com.ivarna.fluxlinux.ui.components.DistroCard(
                     distro = distro,
                     isInstalled = true,
-                    isGuiRunning = guiRunningMap[distro.id] ?: false,
+                    isGuiRunning = StateManager.isGuiRunning(context, distro.id),
                     onInstall = { onNavigateToInstall(distro) },
                     onUninstall = { /* Handled in Settings */ }, 
                     onNavigateToSettings = { onNavigateToSettings(distro) },
@@ -347,7 +344,7 @@ fun HomeScreen(
                     }
                     
                     // GUI Button
-                    val isGuiRunning = guiRunningMap[distro.id] ?: false
+                    val isGuiRunning = StateManager.isGuiRunning(context, distro.id)
                     
                     Button(
                         onClick = {
@@ -369,7 +366,7 @@ fun HomeScreen(
                                 val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                                 try {
                                     onStartService(intent)
-                                    guiRunningMap[distro.id] = true
+                                    StateManager.setGuiRunning(context, distro.id, true)
                                 } catch (e: Exception) {
                                     android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                                 }
@@ -393,7 +390,7 @@ fun HomeScreen(
                                     val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
                                     try {
                                         onStartService(intent)
-                                        guiRunningMap[distro.id] = false
+                                        StateManager.setGuiRunning(context, distro.id, false)
                                         android.widget.Toast.makeText(context, "Stopping GUI...", android.widget.Toast.LENGTH_SHORT).show()
                                     } catch (e: Exception) {
                                         android.widget.Toast.makeText(context, "Stop failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
