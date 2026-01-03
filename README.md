@@ -85,7 +85,14 @@ Modern Android hardware is powerful enough to run desktop workloads, but the sof
 </tr>
 <tr>
 <td align="center"><img src="assets/screenshots/jupyter_tf.png" width="350" /><br/><b>Jupyter + TensorFlow</b></td>
+<td align="center"><img src="assets/screenshots/kotlin.png" width="350" /><br/><b>Kotlin/Gradle Build</b></td>
+</tr>
+<tr>
 <td align="center"><img src="assets/screenshots/gimp.png" width="350" /><br/><b>GIMP Image Editor</b></td>
+<td align="center"><img src="assets/screenshots/libre-writer.png" width="350" /><br/><b>LibreOffice Writer</b></td>
+</tr>
+<tr>
+<td align="center" colspan="2"><img src="assets/screenshots/pitivi.png" width="500" /><br/><b>Pitivi Video Editor</b></td>
 </tr>
 </table>
 </div>
