@@ -1,3 +1,8 @@
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+
+// F-Droid reproducible builds: disable baseline profiles using Groovy script
+apply(from = "fix-baseline-profiles.gradle")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,13 +26,38 @@ android {
         }
     }
 
+    androidResources {
+        // Disable PNG crunching for reproducible builds
+        @Suppress("UnstableApiUsage")
+        ignoreAssetsPattern = "!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~"
+    }
+
+    // Disable dependency metadata block for F-Droid
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     buildTypes {
+        debug {
+            isDebuggable = true
+            packaging {
+                resources.excludes.add("META-INF/**")
+            }
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Disable baseline profiles for F-Droid reproducible builds
+            packaging {
+                resources.excludes.add("META-INF/**")
+                resources.excludes.add("**.prof")
+                resources.excludes.add("assets/dexopt/baseline.prof")
+            }
         }
     }
     compileOptions {
@@ -45,6 +75,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+// Reproducible builds configuration for F-Droid
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
 }
 
 dependencies {

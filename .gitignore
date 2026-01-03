@@ -15,3 +15,6 @@ scripts/generated/
 # Large NDK packages
 packages/android-ndk-r29-aarch64-linux-musl.tar.xz
 packages/android-ndk-r27d-aarch64-linux-musl.tar.xz
+
+app/release
+.kotlin
