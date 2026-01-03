@@ -179,8 +179,33 @@ find /home/$TARGET_USER -name "local.properties" 2>/dev/null | while read -r pro
     fi
 done
 
-# ADB/Fastboot: Installed via apt (line 30) - /usr/bin/adb is ARM64 native
-# No wrappers needed - apt provides working binaries
+# ADB/Fastboot: Replace SDK x86 binaries with wrapper scripts to apt's ARM64 binaries
+echo "FluxLinux: Patching Android SDK ADB/Fastboot (Wrapper Script)..."
+
+PLATFORM_TOOLS="$SDK_ROOT/platform-tools"
+mkdir -p "$PLATFORM_TOOLS"
+
+# Create adb wrapper
+if [ -f "$PLATFORM_TOOLS/adb" ]; then
+    rm -f "$PLATFORM_TOOLS/adb"
+fi
+cat <<EOF > "$PLATFORM_TOOLS/adb"
+#!/bin/sh
+exec /usr/bin/adb "\$@"
+EOF
+chmod +x "$PLATFORM_TOOLS/adb"
+echo " - Wrapped $PLATFORM_TOOLS/adb -> /usr/bin/adb"
+
+# Create fastboot wrapper
+if [ -f "$PLATFORM_TOOLS/fastboot" ]; then
+    rm -f "$PLATFORM_TOOLS/fastboot"
+fi
+cat <<EOF > "$PLATFORM_TOOLS/fastboot"
+#!/bin/sh
+exec /usr/bin/fastboot "\$@"
+EOF
+chmod +x "$PLATFORM_TOOLS/fastboot"
+echo " - Wrapped $PLATFORM_TOOLS/fastboot -> /usr/bin/fastboot"
 
 # Fix NDK (SDK bundles x86_64 binaries - need ARM64)
 # Install ARM64 NDK from HomuHomu833/android-ndk-custom (musl-based, statically linked)
