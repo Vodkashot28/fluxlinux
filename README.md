@@ -158,13 +158,13 @@ flowchart TB
 
 | Document | Description |
 |----------|-------------|
+| [**Installation Reference**](docs/install_ref/) | Packages, paths, versions, environments |
 | [**Scripts Reference**](docs/scripts_reference.md) | All installation and setup scripts |
 | [**Hardware Acceleration**](docs/hardware_acceleration.md) | GPU setup guide (Turnip/VirGL) |
 | [**Script Execution Workflow**](docs/script_execution_workflow.md) | How scripts are executed |
 | [**Testing Reference**](docs/testing_reference.md) | Sample projects for testing |
 | [**Assets Reference**](docs/assets_reference.md) | Themes, icons, wallpapers |
 | [**Architecture**](docs/architecture.md) | System design overview |
-| [**Technical Specs**](docs/technical_specs.md) | Technical specifications |
 | [**Roadmap**](docs/roadmap.md) | Development roadmap |
 
 ---
