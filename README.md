@@ -71,8 +71,23 @@ Modern Android hardware is powerful enough to run desktop workloads, but the sof
 ## 🖼️ Desktop Experience
 
 <div align="center">
-  <img src="assets/screenshots/xfce_desktop.png" width="600" />
+  <img src="assets/screenshots/xfce_desktop.png" width="700" />
   <p><em>Full XFCE4 desktop with hardware acceleration</em></p>
+</div>
+
+### 🚀 Development in Action
+
+<div align="center">
+<table>
+<tr>
+<td align="center"><img src="assets/screenshots/flutter.png" width="350" /><br/><b>Flutter Development</b></td>
+<td align="center"><img src="assets/screenshots/react.png" width="350" /><br/><b>React Web App</b></td>
+</tr>
+<tr>
+<td align="center"><img src="assets/screenshots/jupyter_tf.png" width="350" /><br/><b>Jupyter + TensorFlow</b></td>
+<td align="center"><img src="assets/screenshots/gimp.png" width="350" /><br/><b>GIMP Image Editor</b></td>
+</tr>
+</table>
 </div>
 
 ### Included Development Stacks
