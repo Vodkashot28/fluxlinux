@@ -300,8 +300,8 @@ install_arm64_ndk() {
 
 echo "FluxLinux: Installing ARM64 NDKs (static/musl)..."
 
-# Install ARM64 NDK 27 (r27d) - Note: GitHub tag is "r27" but tarball contains "r27d"
-install_arm64_ndk "27.0.12077973" "r27" "r27d"
+# Install ARM64 NDK 27 (r27d) - GitHub tag is "r27", tarball is "r27d", version is 27.3.13750724
+install_arm64_ndk "27.3.13750724" "r27" "r27d"
 
 # Install ARM64 NDK 29 (r29)
 install_arm64_ndk "29.0.14206865" "r29" "r29"

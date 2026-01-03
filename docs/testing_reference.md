@@ -85,6 +85,21 @@ flutter build apk
 ls build/app/outputs/flutter-apk/
 ```
 
+**Tested Result:**
+
+<div align="center">
+<table>
+<tr>
+<td><img src="../assets/screenshots/flutter_doctor.png" width="500" /></td>
+<td><img src="../assets/screenshots/flutter.png" width="500" /></td>
+</tr>
+<tr>
+<td align="center"><em>Flutter Doctor</em></td>
+<td align="center"><em>Flutter App Running</em></td>
+</tr>
+</table>
+</div>
+
 ---
 
 ### Kotlin/Android
@@ -125,6 +140,13 @@ git clone https://github.com/android/nowinandroid
 cd nowinandroid
 ./gradlew assembleDebug
 ```
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/kotlin.png" width="600" />
+<p><em>Kotlin/Gradle Build</em></p>
+</div>
 
 ---
 
@@ -184,6 +206,13 @@ npm init -y
 npm install express
 node -e "require('express'); console.log('Express installed!')"
 ```
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/react.png" width="600" />
+<p><em>React App Running in Browser</em></p>
+</div>
 
 ---
 
@@ -338,6 +367,34 @@ source ~/data_env/bin/activate
 jupyter-lab
 ```
 
+**Tested Results:**
+
+<div align="center">
+<table>
+<tr>
+<td><img src="../assets/screenshots/ds_lib.png" width="500" /></td>
+<td><img src="../assets/screenshots/jupyter_tf.png" width="500" /></td>
+</tr>
+<tr>
+<td align="center"><em>Data Science Libraries</em></td>
+<td align="center"><em>Jupyter + TensorFlow</em></td>
+</tr>
+</table>
+</div>
+
+<div align="center">
+<table>
+<tr>
+<td><img src="../assets/screenshots/jupyter_tf_2.png" width="500" /></td>
+<td><img src="../assets/screenshots/jupyter_tf_3.png" width="500" /></td>
+</tr>
+<tr>
+<td align="center"><em>TensorFlow in Notebook</em></td>
+<td align="center"><em>Model Training</em></td>
+</tr>
+</table>
+</div>
+
 ---
 
 ## Game Development
@@ -375,6 +432,15 @@ godot project.godot
 gpu-launch godot project.godot
 ```
 
+> ⚠️ **Note:** Godot does NOT work properly with VirGL. Use Turnip (Adreno) for GPU acceleration.
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/gadot.png" width="600" />
+<p><em>Godot Editor (GPU issues with VirGL)</em></p>
+</div>
+
 ---
 
 ## Graphic Design
@@ -407,6 +473,13 @@ gpu-launch gimp &
 # Draw something with brush
 # Export: File → Export As → test.png
 ```
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/gimp.png" width="600" />
+<p><em>GIMP running with VirGL acceleration</em></p>
+</div>
 
 ### Inkscape
 
@@ -462,6 +535,15 @@ gpu-launch blender &
 # Press F12 to render
 ```
 
+> ⚠️ **Note:** Blender does NOT work with VirGL. Use Turnip (Adreno) for GPU acceleration.
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/blender.png" width="600" />
+<p><em>Blender UI (GPU issues with VirGL)</em></p>
+</div>
+
 ---
 
 ## Video Editing
@@ -487,6 +569,23 @@ gpu-launch kdenlive &
 # Make a cut
 # Render to MP4
 ```
+
+### Pitivi
+
+**Quick Test:**
+```bash
+pitivi &
+# Create new project
+# Import and edit video
+# Export
+```
+
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/pitivi.png" width="600" />
+<p><em>Pitivi Video Editor</em></p>
+</div>
 
 ### FFmpeg (CLI)
 
@@ -575,6 +674,13 @@ evince document.pdf
 xournalpp document.pdf
 ```
 
+**Tested Result:**
+
+<div align="center">
+<img src="../assets/screenshots/libre-writer.png" width="600" />
+<p><em>LibreOffice Writer</em></p>
+</div>
+
 ---
 
 ## Emulation & Gaming
@@ -623,34 +729,35 @@ box64 wine notepad.exe
 
 | Category | Component | Install | Build | Run | GPU (VirGL) |
 |----------|-----------|---------|-------|-----|-------------|
-| App Dev | Flutter | ⬜ | ⬜ | ⬜ | N/A |
-| App Dev | Kotlin/Gradle | ⬜ | ⬜ | ⬜ | N/A |
-| App Dev | Android NDK | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | Node.js/npm | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | React (Vite) | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | VS Code | ⬜ | N/A | ⬜ | N/A |
-| Python | Flask | ⬜ | ⬜ | ⬜ | N/A |
-| Python | Django | ⬜ | ⬜ | ⬜ | N/A |
-| Python | FastAPI | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | Jupyter | ⬜ | N/A | ⬜ | N/A |
-| Data Sci | TensorFlow | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | PyTorch | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | Julia | ⬜ | ⬜ | ⬜ | N/A |
-| Game Dev | Godot 4 | ⬜ | ⬜ | ⬜ | ⬜ |
-| Graphics | GIMP | ⬜ | N/A | ⬜ | ⬜ |
-| Graphics | Blender | ⬜ | N/A | ⬜ | ⬜ |
-| Graphics | Inkscape | ⬜ | N/A | ⬜ | N/A |
-| Video | Kdenlive | ⬜ | N/A | ⬜ | ⬜ |
-| Video | FFmpeg | ⬜ | N/A | ⬜ | N/A |
-| Security | Nmap | ⬜ | N/A | ⬜ | N/A |
-| Security | Wireshark | ⬜ | N/A | ⬜ | N/A |
-| Security | Metasploit | ⬜ | N/A | ⬜ | N/A |
-| Office | LibreOffice | ⬜ | N/A | ⬜ | N/A |
-| Office | Thunderbird | ⬜ | N/A | ⬜ | N/A |
+| App Dev | Flutter | 🟢 | 🟢 | 🟢 | N/A |
+| App Dev | Kotlin/Gradle | 🟢 | 🟢 | 🟢 | N/A |
+| App Dev | Android NDK | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | Node.js/npm | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | React (Vite) | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | VS Code | 🟢 | N/A | 🟢 | N/A |
+| Python | Flask | 🟢 | 🟢 | 🟢 | N/A |
+| Python | Django | 🟢 | 🟢 | 🟢 | N/A |
+| Python | FastAPI | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | Jupyter | 🟢 | N/A | 🟢 | N/A |
+| Data Sci | TensorFlow | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | PyTorch | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | Julia | 🟢 | 🟢 | 🟢 | N/A |
+| Game Dev | Godot 4 | 🟢 | 🟢 | 🟢 | 🔴 |
+| Graphics | GIMP | 🟢 | N/A | 🟢 | 🟢 |
+| Graphics | Blender | 🟢 | N/A | 🟢 | 🔴 |
+| Graphics | Inkscape | 🟢 | N/A | 🟢 | N/A |
+| Video | Kdenlive | 🟢 | N/A | 🟢 | 🟢 |
+| Video | Pitivi | 🟢 | N/A | 🟢 | 🟢 |
+| Video | FFmpeg | 🟢 | N/A | 🟢 | N/A |
+| Security | Nmap | 🟢 | N/A | 🟢 | N/A |
+| Security | Wireshark | 🟢 | N/A | 🟢 | N/A |
+| Security | Metasploit | 🟢 | N/A | 🟢 | N/A |
+| Office | LibreOffice | 🟢 | N/A | 🟢 | N/A |
+| Office | Thunderbird | 🟢 | N/A | 🟢 | N/A |
 | Emulation | RetroArch | ⬜ | N/A | ⬜ | ⬜ |
 | Emulation | Box64/Wine | ⬜ | N/A | ⬜ | ⬜ |
-| Desktop | XFCE4 | ⬜ | N/A | ⬜ | ⬜ |
-| Desktop | Customization | ⬜ | N/A | ⬜ | N/A |
+| Desktop | XFCE4 | 🟢 | N/A | 🟢 | 🟢 |
+| Desktop | Customization | 🟢 | N/A | 🟢 | N/A |
 
 ---
 
@@ -660,34 +767,35 @@ box64 wine notepad.exe
 
 | Category | Component | Install | Build | Run | GPU (Turnip/VirGL) |
 |----------|-----------|---------|-------|-----|---------------------|
-| App Dev | Flutter | ⬜ | ⬜ | ⬜ | N/A |
-| App Dev | Kotlin/Gradle | ⬜ | ⬜ | ⬜ | N/A |
-| App Dev | Android NDK | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | Node.js/npm | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | React (Vite) | ⬜ | ⬜ | ⬜ | N/A |
-| Web Dev | VS Code | ⬜ | N/A | ⬜ | N/A |
-| Python | Flask | ⬜ | ⬜ | ⬜ | N/A |
-| Python | Django | ⬜ | ⬜ | ⬜ | N/A |
-| Python | FastAPI | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | Jupyter | ⬜ | N/A | ⬜ | N/A |
-| Data Sci | TensorFlow | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | PyTorch | ⬜ | ⬜ | ⬜ | N/A |
-| Data Sci | Julia | ⬜ | ⬜ | ⬜ | N/A |
-| Game Dev | Godot 4 | ⬜ | ⬜ | ⬜ | ⬜ |
-| Graphics | GIMP | ⬜ | N/A | ⬜ | ⬜ |
-| Graphics | Blender | ⬜ | N/A | ⬜ | ⬜ |
-| Graphics | Inkscape | ⬜ | N/A | ⬜ | N/A |
-| Video | Kdenlive | ⬜ | N/A | ⬜ | ⬜ |
-| Video | FFmpeg | ⬜ | N/A | ⬜ | N/A |
-| Security | Nmap | ⬜ | N/A | ⬜ | N/A |
-| Security | Wireshark | ⬜ | N/A | ⬜ | N/A |
-| Security | Metasploit | ⬜ | N/A | ⬜ | N/A |
-| Office | LibreOffice | ⬜ | N/A | ⬜ | N/A |
-| Office | Thunderbird | ⬜ | N/A | ⬜ | N/A |
+| App Dev | Flutter | 🟢 | 🟢 | 🟢 | N/A |
+| App Dev | Kotlin/Gradle | 🟢 | 🟢 | 🟢 | N/A |
+| App Dev | Android NDK | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | Node.js/npm | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | React (Vite) | 🟢 | 🟢 | 🟢 | N/A |
+| Web Dev | VS Code | 🟢 | N/A | 🟢 | N/A |
+| Python | Flask | 🟢 | 🟢 | 🟢 | N/A |
+| Python | Django | 🟢 | 🟢 | 🟢 | N/A |
+| Python | FastAPI | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | Jupyter | 🟢 | N/A | 🟢 | N/A |
+| Data Sci | TensorFlow | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | PyTorch | 🟢 | 🟢 | 🟢 | N/A |
+| Data Sci | Julia | 🟢 | 🟢 | 🟢 | N/A |
+| Game Dev | Godot 4 | 🟢 | 🟢 | 🟢 | 🔴 (VirGL) |
+| Graphics | GIMP | 🟢 | N/A | 🟢 | 🟢 |
+| Graphics | Blender | 🟢 | N/A | 🟢 | 🔴 (VirGL) |
+| Graphics | Inkscape | 🟢 | N/A | 🟢 | N/A |
+| Video | Kdenlive | 🟢 | N/A | 🟢 | 🟢 |
+| Video | Pitivi | 🟢 | N/A | 🟢 | 🟢 |
+| Video | FFmpeg | 🟢 | N/A | 🟢 | N/A |
+| Security | Nmap | 🟢 | N/A | 🟢 | N/A |
+| Security | Wireshark | 🟢 | N/A | 🟢 | N/A |
+| Security | Metasploit | 🟢 | N/A | 🟢 | N/A |
+| Office | LibreOffice | 🟢 | N/A | 🟢 | N/A |
+| Office | Thunderbird | 🟢 | N/A | 🟢 | N/A |
 | Emulation | RetroArch | ⬜ | N/A | ⬜ | ⬜ |
 | Emulation | Box64/Wine | ⬜ | N/A | ⬜ | ⬜ |
-| Desktop | XFCE4 | ⬜ | N/A | ⬜ | ⬜ |
-| Desktop | Customization | ⬜ | N/A | ⬜ | N/A |
+| Desktop | XFCE4 | 🟢 | N/A | 🟢 | 🟢 |
+| Desktop | Customization | 🟢 | N/A | 🟢 | N/A |
 
 ---
 
