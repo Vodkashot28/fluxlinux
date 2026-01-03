@@ -98,9 +98,18 @@ EOF
     wget -q "https://godotengine.org/assets/press/icon_color.png" -O /usr/share/icons/hicolor/256x256/apps/godot.png
     
     echo " [✅] Godot Engine installed"
+    
+    # Add Godot to PATH in user shell configs
+    update_shell_path "/home/$TARGET_USER/.bashrc" "/opt/godot" "Godot Engine"
+    update_shell_path "/home/$TARGET_USER/.zshrc" "/opt/godot" "Godot Engine"
 else
     echo " [ℹ️] Godot Engine already installed"
 fi
+
+# Ensure Godot symlink and PATH exist even if already installed
+ln -sf "$GODOT_DIR/godot" /usr/local/bin/godot 2>/dev/null || true
+update_shell_path "/home/$TARGET_USER/.bashrc" "/opt/godot" "Godot Engine"
+update_shell_path "/home/$TARGET_USER/.zshrc" "/opt/godot" "Godot Engine"
 
 # 3. Install Ren'Py SDK
 echo "FluxLinux: Installing Ren'Py SDK..."
