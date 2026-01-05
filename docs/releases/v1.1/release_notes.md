@@ -15,75 +15,19 @@ This release focuses on **Google Play Policy Compliance** and stability improvem
 |:---:|---|
 | **Compliance** | • **Removed restricted permissions** (`REQUEST_INSTALL_PACKAGES`, `QUERY_ALL_PACKAGES`, `PACKAGE_USAGE_STATS`)<br>• Deleted automatic APK installer mechanism<br>• Dependencies (Termux) are now downloaded via browser for transparency |
 | **Privacy** | • Added comprehensive **Privacy Policy**<br>• Removed all analytics and tracking code<br>• Confirmed zero personal data collection |
-| **UI / UX** | • **Step 5 Layout Fix**: Resolved button overlap issues on smaller screens<br>• **Visual Updates**: Updated primary/secondary button colors for better readability<br>• **Version Info**: Updated settings screen with accurate version tracking |
+| **UI / UX** | • **Step 5 & 6 Layout Fixes**: Resolved button overlap issues on smaller screens (Process Killer Fix & System Check)<br>• **Visual Updates**: Updated primary/secondary button colors for better readability<br>• **Version Info**: Updated settings screen with accurate version tracking |
 | **Stability** | • Fixed syntax errors in state management<br>• Improved Termux connection troubleshooting<br>• Updated dependency links to latest stable releases |
 
----
+## 🛠️ Key Changes
+- **Target SDK**: Updated to Android 16 (API 36)
+- **Dependencies**: Bumps `androidx.core:core-ktx` and Compose BOM
+- **Removed Features**: In-app APK installer (replaced with deep links)
 
-## 📱 App Interface
-*Manage your Linux environments with a beautiful, modern Android UI.*
+## 📦 Installation
+1. Uninstall any previous version of FluxLinux (due to signature change).
+2. Download and install `app-release.apk`.
+3. Follow the expanded **Prerequisites** wizard to setup Termux.
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/home.png" width="200" /><br/><b>Home Dashboard</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/distros.png" width="200" /><br/><b>Distro Manager</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/install.png" width="200" /><br/><b>One-Tap Install</b></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/settings.png" width="200" /><br/><b>Settings</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/setup_wizard.png" width="200" /><br/><b>Setup Wizard</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/hardware_acceleration/1.png" width="200" /><br/><b>GPU Config</b></td>
-    </tr>
-  </table>
-</div>
-
----
-
-## 🖥️ Linux Desktop Environment
-*Full desktop experience with hardware acceleration on your external or device display.*
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/xfce_desktop.png" width="800" />
-  <p><em>Full XFCE4 Desktop Environment</em></p>
-</div>
-
-<br>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><b>Development</b></td>
-      <td align="center"><b>Productivity</b></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/flutter.png" width="400" /><br/>Flutter Development</td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/libre-writer.png" width="400" /><br/>LibreOffice Writer</td>
-    </tr>
-     <tr>
-      <td align="center"><b>Creativity</b></td>
-      <td align="center"><b>Data Science</b></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/blender.png" width="400" /><br/>Blender 3D</td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/jupyter_tf.png" width="400" /><br/>Jupyter Notebooks</td>
-    </tr>
-  </table>
-</div>
-
----
-
-## ⚡ Installation
-
-**Just one app to start!**
-
-1. Download and install **FluxLinux** (APK below).
-2. Open the app and follow the **Setup Wizard**.
-3. *That's it!* key components (like Termux) and your Linux environment are configured automatically within the app.
-
----
-
-### 📦 Credits & Links
-- [Documentation](https://github.com/abhay-byte/fluxlinux/tree/v1.1/docs)
-- [Report Issues](https://github.com/abhay-byte/fluxlinux/issues)
-- Made with ❤️ by [Abhay Raj](https://github.com/abhay-byte)
+## 📝 Notes
+- Ensure you have **Termux** and **Termux:X11** installed. The app will guide you to their download pages.
+- For Android 12+ users, follow the "Process Killer Fix" steps carefully.
