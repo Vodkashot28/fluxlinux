@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/logo/logo.webp" width="150" />
+  <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/logo/logo.webp" width="150" />
   <h1>FluxLinux v1.1 - Policy Compliance Update</h1>
   <p><strong>Run full Linux desktop environments on your Android device</strong></p>
 </div>
@@ -26,14 +26,14 @@ This release focuses on **Google Play Policy Compliance** and stability improvem
 <div align="center">
   <table>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/home.png" width="200" /><br/><b>Home Dashboard</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/distros.png" width="200" /><br/><b>Distro Manager</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/install.png" width="200" /><br/><b>One-Tap Install</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/home.png" width="200" /><br/><b>Home Dashboard</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/distros.png" width="200" /><br/><b>Distro Manager</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/install.png" width="200" /><br/><b>One-Tap Install</b></td>
     </tr>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/settings.png" width="200" /><br/><b>Settings</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/setup_wizard.png" width="200" /><br/><b>Setup Wizard</b></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/hardware_acceleration/1.png" width="200" /><br/><b>GPU Config</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/settings.png" width="200" /><br/><b>Settings</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/setup_wizard.png" width="200" /><br/><b>Setup Wizard</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/hardware_acceleration/1.png" width="200" /><br/><b>GPU Config</b></td>
     </tr>
   </table>
 </div>
@@ -44,7 +44,7 @@ This release focuses on **Google Play Policy Compliance** and stability improvem
 *Full desktop experience with hardware acceleration on your external or device display.*
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/xfce_desktop.png" width="800" />
+  <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/xfce_desktop.png" width="800" />
   <p><em>Full XFCE4 Desktop Environment</em></p>
 </div>
 
@@ -57,16 +57,16 @@ This release focuses on **Google Play Policy Compliance** and stability improvem
       <td align="center"><b>Productivity</b></td>
     </tr>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/flutter.png" width="400" /><br/>Flutter Development</td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/libre-writer.png" width="400" /><br/>LibreOffice Writer</td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/flutter.png" width="400" /><br/>Flutter Development</td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/libre-writer.png" width="400" /><br/>LibreOffice Writer</td>
     </tr>
      <tr>
       <td align="center"><b>Creativity</b></td>
       <td align="center"><b>Data Science</b></td>
     </tr>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/blender.png" width="400" /><br/>Blender 3D</td>
-      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/v1.1/assets/screenshots/jupyter_tf.png" width="400" /><br/>Jupyter Notebooks</td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/blender.png" width="400" /><br/>Blender 3D</td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/assets/screenshots/jupyter_tf.png" width="400" /><br/>Jupyter Notebooks</td>
     </tr>
   </table>
 </div>
