@@ -3,17 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Critical for FluxLinux -> Termux Communication -->
+    <!-- Critical for FluxLinux -> Termux Communication -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- Required for Android 11+ to query other installed packages -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
-    <!-- Required for accurate storage stats -->
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
+    
     <!-- Required for floating keyboard button -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <queries>
+        <package android:name="com.termux" />
+        <package android:name="com.termux.x11" />
+        <package android:name="juloo.keyboard2" />
+    </queries>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

@@ -44,7 +44,7 @@ import com.ivarna.fluxlinux.ui.theme.FluxLinuxTheme
 import com.ivarna.fluxlinux.ui.theme.GlassBorder
 import com.ivarna.fluxlinux.core.data.ScriptManager
 import com.ivarna.fluxlinux.core.data.TermuxIntentFactory
-import com.ivarna.fluxlinux.core.utils.ApkInstaller
+
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
@@ -295,11 +295,8 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             
-                            val installer = remember { ApkInstaller(context) }
                             val termuxInstalled = remember(refreshKey.value) { mutableStateOf(StateManager.isTermuxInstalled(context)) }
                             val x11Installed = remember(refreshKey.value) { mutableStateOf(StateManager.isTermuxX11Installed(context)) }
-                            val termuxProgress = remember { mutableStateOf(0f) }
-                            val x11Progress = remember { mutableStateOf(0f) }
 
                             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 // Termux
@@ -307,23 +304,14 @@ fun SettingsScreen(
                                     if (!termuxInstalled.value) {
                                         Button(
                                             onClick = {
-                                                android.widget.Toast.makeText(context, "Downloading Termux...", android.widget.Toast.LENGTH_SHORT).show()
-                                                coroutineScope.launch {
-                                                    val url = "https://github.com/termux/termux-app/releases/download/v0.118.3/termux-app_v0.118.3+github-debug_universal.apk"
-                                                    installer.downloadAndInstall(url, "termux.apk") { progress, status ->
-                                                        termuxProgress.value = progress
-                                                    }
-                                                    termuxProgress.value = 0f
-                                                    refreshKey.value++
-                                                }
+                                                val url = "https://github.com/termux/termux-app/releases/tag/v0.118.3"
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                                context.startActivity(intent)
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("Install Termux", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                                        }
-                                        if (termuxProgress.value > 0f) {
-                                            LinearProgressIndicator(progress = { termuxProgress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = MaterialTheme.colorScheme.secondary)
+                                            Text("Download Termux", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -342,23 +330,14 @@ fun SettingsScreen(
                                     if (!x11Installed.value) {
                                         Button(
                                             onClick = {
-                                                android.widget.Toast.makeText(context, "Downloading Termux:X11...", android.widget.Toast.LENGTH_SHORT).show()
-                                                coroutineScope.launch {
-                                                    val url = "https://github.com/termux/termux-x11/releases/download/nightly/app-arm64-v8a-debug.apk"
-                                                    installer.downloadAndInstall(url, "termux-x11.apk") { progress, status ->
-                                                        x11Progress.value = progress
-                                                    }
-                                                    x11Progress.value = 0f
-                                                    refreshKey.value++
-                                                }
+                                                val url = "https://github.com/termux/termux-x11/releases"
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                                context.startActivity(intent)
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("Install X11", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                                        }
-                                        if (x11Progress.value > 0f) {
-                                            LinearProgressIndicator(progress = { x11Progress.value }, modifier = Modifier.fillMaxWidth().height(4.dp), color = MaterialTheme.colorScheme.secondary)
+                                            Text("Download X11", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -854,7 +833,7 @@ fun SettingsScreen(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("FluxLinux", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-                            Text("v0.1 • Dec 25, 2025", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text("v1.1 • Jan 5, 2026", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Made with ❤️ in Kotlin", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
                         }

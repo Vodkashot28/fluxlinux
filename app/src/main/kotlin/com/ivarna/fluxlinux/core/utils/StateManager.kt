@@ -205,63 +205,13 @@ object StateManager {
     /**
      * Check if app has PACKAGE_USAGE_STATS permission
      */
-    fun hasUsageStatsPermission(context: Context): Boolean {
-        return try {
-            val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
-            val mode = appOps.checkOpNoThrow(
-                android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
-                android.os.Process.myUid(),
-                context.packageName
-            )
-            mode == android.app.AppOpsManager.MODE_ALLOWED
-        } catch (e: Exception) {
-            false
-        }
-    }
 
-    /**
-     * Open Settings to grant Usage Access permission
-     */
-    fun openUsageAccessSettings(context: Context) {
-        try {
-            val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            android.util.Log.e("StateManager", "Failed to open Usage Access Settings", e)
-        }
-    }
 
     /**
      * Get total package size including app, data, and cache
      */
     fun getPackageSize(context: Context, packageName: String): String {
         return try {
-            // Try StorageStatsManager if we have permission (Android 8.0+)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && hasUsageStatsPermission(context)) {
-                try {
-                    val storageStatsManager = context.getSystemService(Context.STORAGE_STATS_SERVICE) as android.app.usage.StorageStatsManager
-                    val userHandle = android.os.Process.myUserHandle()
-                    
-                    val stats = storageStatsManager.queryStatsForPackage(
-                        android.os.storage.StorageManager.UUID_DEFAULT,
-                        packageName,
-                        userHandle
-                    )
-                    
-                    val totalBytes = stats.appBytes + stats.dataBytes + stats.cacheBytes
-                    val totalGb = totalBytes / (1024.0 * 1024.0 * 1024.0)
-                    val totalMb = totalBytes / (1024.0 * 1024.0)
-                    
-                    return if (totalGb >= 1.0) {
-                        "%.2f GB".format(totalGb)
-                    } else {
-                        "%.0f MB".format(totalMb)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.d("StateManager", "StorageStatsManager failed, falling back: ${e.message}")
-                }
-            }
             
             // Fallback: Calculate via directory sizes (less accurate but works without permission)
             val appInfo = context.packageManager.getApplicationInfo(packageName, 0)

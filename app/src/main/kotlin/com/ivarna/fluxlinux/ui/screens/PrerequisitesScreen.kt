@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -24,7 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ivarna.fluxlinux.core.utils.ApkInstaller
+
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.core.utils.RootUtils
 import com.ivarna.fluxlinux.core.utils.SystemInfoUtils
@@ -58,9 +60,7 @@ fun PrerequisitesScreen(
     val termuxInstalled = remember { mutableStateOf(StateManager.isTermuxInstalled(context)) }
     val x11Installed = remember { mutableStateOf(StateManager.isTermuxX11Installed(context)) }
     
-    // Download progress
-    val termuxProgress = remember { mutableStateOf(0f) }
-    val x11Progress = remember { mutableStateOf(0f) }
+
     
     // Configuration state
     var configDone by remember { mutableStateOf(false) }
@@ -135,8 +135,6 @@ fun PrerequisitesScreen(
                 1 -> PackageInstallationStep(
                     termuxInstalled = termuxInstalled,
                     x11Installed = x11Installed,
-                    termuxProgress = termuxProgress,
-                    x11Progress = x11Progress,
                     onRefresh = checkStatus,
                     onContinue = {
                         if (termuxInstalled.value && x11Installed.value) {
@@ -197,14 +195,10 @@ fun PrerequisitesScreen(
 fun PackageInstallationStep(
     termuxInstalled: MutableState<Boolean>,
     x11Installed: MutableState<Boolean>,
-    termuxProgress: MutableState<Float>,
-    x11Progress: MutableState<Float>,
     onRefresh: () -> Unit,
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val installer = remember { ApkInstaller(context) }
     
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -238,18 +232,10 @@ fun PackageInstallationStep(
             name = "Termux",
             isInstalled = termuxInstalled.value,
             version = if (termuxInstalled.value) StateManager.getTermuxVersion(context) else null,
-            progress = termuxProgress.value,
             onInstall = {
-                android.widget.Toast.makeText(context, "Downloading Termux...", android.widget.Toast.LENGTH_SHORT).show()
-                coroutineScope.launch {
-                    val url = "https://github.com/termux/termux-app/releases/download/v0.118.3/termux-app_v0.118.3+github-debug_universal.apk"
-                    installer.downloadAndInstall(url, "termux.apk") { progress, status ->
-                        termuxProgress.value = progress
-                        android.util.Log.d("Prerequisites", status)
-                    }
-                    termuxProgress.value = 0f
-                    termuxInstalled.value = StateManager.isTermuxInstalled(context)
-                }
+                val url = "https://github.com/termux/termux-app/releases/tag/v0.118.3"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                context.startActivity(intent)
             }
         )
         
@@ -260,18 +246,10 @@ fun PackageInstallationStep(
             name = "Termux:X11",
             isInstalled = x11Installed.value,
             version = if (x11Installed.value) StateManager.getTermuxX11Version(context) else null,
-            progress = x11Progress.value,
             onInstall = {
-                android.widget.Toast.makeText(context, "Downloading Termux:X11...", android.widget.Toast.LENGTH_SHORT).show()
-                coroutineScope.launch {
-                    val url = "https://github.com/termux/termux-x11/releases/download/nightly/app-arm64-v8a-debug.apk"
-                    installer.downloadAndInstall(url, "termux-x11.apk") { progress, status ->
-                        x11Progress.value = progress
-                        android.util.Log.d("Prerequisites", status)
-                    }
-                    x11Progress.value = 0f
-                    x11Installed.value = StateManager.isTermuxX11Installed(context)
-                }
+                val url = "https://github.com/termux/termux-x11/releases"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                context.startActivity(intent)
             }
         )
         
@@ -538,7 +516,6 @@ fun PrerequisiteItem(
     name: String,
     isInstalled: Boolean,
     version: String?,
-    progress: Float,
     onInstall: () -> Unit
 ) {
     Column(
@@ -588,19 +565,9 @@ fun PrerequisiteItem(
                     colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.outline),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Install", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                    Text("Download", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
                 }
             }
-        }
-        
-        if (progress > 0f) {
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(4.dp),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                trackColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
-            )
         }
     }
 }
@@ -817,7 +784,7 @@ fun OverlayPermissionStep(
 }
 
 @Composable
-fun PhantomProcessStep(
+fun ColumnScope.PhantomProcessStep(
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
@@ -835,7 +802,17 @@ fun PhantomProcessStep(
         checkingRoot = false
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.weight(1f),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         Text(
             text = "Step 5: Process Killer Fix",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
@@ -996,7 +973,9 @@ fun PhantomProcessStep(
              }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
         
         // Continue / Skip
         Button(
@@ -1537,7 +1516,7 @@ fun KeyboardInstallStep(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val installer = remember { ApkInstaller(context) }
+
     
     // Keyboard installation state
     val keyboardInstalled = remember { mutableStateOf(StateManager.isUnexpectedKeyboardInstalled(context)) }
@@ -1591,18 +1570,11 @@ fun KeyboardInstallStep(
             name = "Unexpected Keyboard",
             isInstalled = keyboardInstalled.value,
             version = if (keyboardInstalled.value) StateManager.getUnexpectedKeyboardVersion(context) else null,
-            progress = keyboardProgress.value,
+
             onInstall = {
-                Toast.makeText(context, "Downloading Unexpected Keyboard...", Toast.LENGTH_SHORT).show()
-                coroutineScope.launch {
-                    val url = "https://github.com/Julow/Unexpected-Keyboard/releases/download/1.32.1/juloo.keyboard2.apk"
-                    installer.downloadAndInstall(url, "unexpected-keyboard.apk") { progress, status ->
-                        keyboardProgress.value = progress
-                        android.util.Log.d("KeyboardInstall", status)
-                    }
-                    keyboardProgress.value = 0f
-                    keyboardInstalled.value = StateManager.isUnexpectedKeyboardInstalled(context)
-                }
+                val url = "https://github.com/Julow/Unexpected-Keyboard/releases"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                context.startActivity(intent)
             }
         )
         
@@ -1629,7 +1601,7 @@ fun KeyboardInstallStep(
         // Next Button (always enabled - not a hard requirement)
         Button(
             onClick = onContinue,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

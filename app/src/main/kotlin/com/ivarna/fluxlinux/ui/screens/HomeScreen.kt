@@ -31,7 +31,7 @@ import com.ivarna.fluxlinux.core.data.DistroRepository
 import com.ivarna.fluxlinux.core.data.Distro
 import com.ivarna.fluxlinux.core.data.ScriptManager
 import com.ivarna.fluxlinux.core.data.TermuxIntentFactory
-import com.ivarna.fluxlinux.core.utils.ApkInstaller
+
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
