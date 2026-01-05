@@ -1293,94 +1293,161 @@ fun FinalInstructionsStep(
 }
 
 @Composable
-fun SystemCheckStep(
+fun ColumnScope.SystemCheckStep(
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
     val memoryInfo = remember { SystemInfoUtils.getMemoryInfo(context) }
     
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.weight(1f)
     ) {
-        Text(
-            text = "Step 6: System Check",
-            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "Checking your system resources",
-            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // RAM Info Card
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
-                .padding(20.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 80.dp), // Space for button
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "💾",
-                    fontSize = 32.sp,
-                    modifier = Modifier.padding(end = 16.dp)
-                )
-                Column {
-                    Text(
-                        text = "System RAM",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "%.2f GB".format(memoryInfo.totalRamGB),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            Text(
+                text = "Step 6: System Check",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
             
-            // RAM Info/Warning based on amount
-            when {
-                memoryInfo.totalRamGB >= 7f -> {
-                    // Good RAM, show recommendation
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "✓ Good RAM",
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Your RAM is sufficient. For optimal performance, 12GB RAM would be great!",
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
-                                fontSize = 12.sp
-                            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Checking your system resources",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // RAM Info Card
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
+                    .padding(20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "💾",
+                        fontSize = 32.sp,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "System RAM",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "%.2f GB".format(memoryInfo.totalRamGB),
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                // RAM Info/Warning based on amount
+                when {
+                    memoryInfo.totalRamGB >= 7f -> {
+                        // Good RAM
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "✓ Good RAM",
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Your RAM is sufficient. For optimal performance, 12GB RAM would be great!",
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                    memoryInfo.totalRamGB < 6f -> {
+                        // Critical low RAM
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(androidx.compose.material3.MaterialTheme.colorScheme.errorContainer)
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "🚨 CRITICAL: Low RAM",
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Minimum required RAM: 8GB\nYour system will experience severe performance issues and instability.",
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
-                memoryInfo.totalRamGB < 6f -> {
-                    // Critical low RAM
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // SWAP Info Card
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
+                    .padding(20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "🔄",
+                        fontSize = 32.sp,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "System SWAP",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "%.2f GB".format(memoryInfo.totalSwapGB),
+                            color = if (memoryInfo.totalSwapGB <= 7.9f) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                // SWAP Critical Warning
+                if (memoryInfo.totalSwapGB <= 7.9f) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(
                         modifier = Modifier
@@ -1391,112 +1458,49 @@ fun SystemCheckStep(
                     ) {
                         Column {
                             Text(
-                                text = "🚨 CRITICAL: Low RAM",
+                                text = "🚨 CRITICAL: Low SWAP",
                                 color = androidx.compose.material3.MaterialTheme.colorScheme.error,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Minimum required RAM: 8GB\nYour system will experience severe performance issues and instability.",
+                                text = "Minimum required SWAP: 8GB\nWithout sufficient SWAP, your Linux environment will be UNSTABLE and may crash.",
                                 color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
                                 fontSize = 12.sp
                             )
-                        }
-                    }
-                }
-                // Between 6GB and 7GB - no message shown
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // SWAP Info Card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "🔄",
-                    fontSize = 32.sp,
-                    modifier = Modifier.padding(end = 16.dp)
-                )
-                Column {
-                    Text(
-                        text = "System SWAP",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "%.2f GB".format(memoryInfo.totalSwapGB),
-                        color = if (memoryInfo.totalSwapGB <= 7.9f) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // SWAP Critical Warning if < 8GB (with tolerance for floating point precision)
-            if (memoryInfo.totalSwapGB <= 7.9f) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(androidx.compose.material3.MaterialTheme.colorScheme.errorContainer)
-                        .padding(12.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "🚨 CRITICAL: Low SWAP",
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.error,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Minimum required SWAP: 8GB\nWithout sufficient SWAP, your Linux environment will be UNSTABLE and may crash.",
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.8f),
-                            fontSize = 12.sp
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Button(
-                            onClick = {
-                                try {
-                                    val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
-                                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                                    context.startActivity(intent)
-                                    Toast.makeText(context, "Enable more SWAP in system settings", Toast.LENGTH_LONG).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.error),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Go to Settings", color = Color.White, fontSize = 14.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    try {
+                                        val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
+                                        intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                        context.startActivity(intent)
+                                        Toast.makeText(context, "Enable more SWAP in system settings", Toast.LENGTH_LONG).show()
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.error),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Go to Settings", color = Color.White, fontSize = 14.sp)
+                            }
                         }
                     }
                 }
             }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
-        
-        // Next Button (always enabled - not a hard requirement)
+        // Next Button Pinned to Bottom
         Button(
             onClick = onContinue,
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .padding(bottom = 16.dp) // Extra padding from bottom edge
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -1509,6 +1513,7 @@ fun SystemCheckStep(
         }
     }
 }
+
 
 @Composable
 fun KeyboardInstallStep(
