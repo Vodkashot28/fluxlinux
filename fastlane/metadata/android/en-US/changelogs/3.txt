@@ -1,0 +1,4 @@
+Fixed Google Play Policy issues regarding Accessibility Service.
+Added BusyBox installation step for rooted users (Chroot support).
+Updated App Store description and in-app disclosures.
+General improvements and bug fixes.

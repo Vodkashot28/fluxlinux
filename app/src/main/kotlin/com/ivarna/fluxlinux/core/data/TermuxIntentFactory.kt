@@ -185,6 +185,7 @@ object TermuxIntentFactory {
             "debian13_chroot" -> "chroot/setup_debian13_chroot.sh"
             "debian_chroot" -> "chroot/setup_debian_chroot.sh"
             "termux" -> "common/setup_termux.sh"
+            "archlinux" -> "common/setup_arch_family.sh"
             else -> "common/setup_debian_family.sh"
         }
         

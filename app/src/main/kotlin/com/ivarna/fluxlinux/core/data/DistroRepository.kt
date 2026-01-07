@@ -99,6 +99,18 @@ object DistroRepository {
         )
     )
 
+    // Shared Components for Arch-based distros
+    private val archComponents = listOf(
+        DistroComponent(
+            id = "arch_desktop",
+            name = "XFCE4 Desktop",
+            description = "Installs XFCE4 Desktop Environment and TigerVNC.",
+            scriptName = "common/setup_arch_family.sh",
+            sizeEstimate = "300 MB",
+            isMandatory = true
+        )
+    )
+
     val supportedDistros = listOf(
         // Currently Available
         Distro(
@@ -167,10 +179,11 @@ object DistroRepository {
             description = "A simple, lightweight Linux distribution.",
             color = Color(0xFF1793D1),
             iconRes = R.drawable.distro_arch,
-            comingSoon = true,
+            comingSoon = false,
             prootSupported = true,
             chrootSupported = true,
-            configuration = SupportedDistro.ARCH
+            configuration = SupportedDistro.ARCH,
+            components = archComponents
         ),
         Distro(
             id = "artix",

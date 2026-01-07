@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -56,7 +57,7 @@ fun PrerequisitesScreen(
     
     // Step tracking
     var currentStep by remember { mutableStateOf(1) }
-    val totalSteps = 9 // Merging logical steps 5 & 6 visually
+    val totalSteps = 11 // Incremented for BusyBox
     
     // Package states
     val termuxInstalled = remember { mutableStateOf(StateManager.isTermuxInstalled(context)) }
@@ -169,23 +170,27 @@ fun PrerequisitesScreen(
                     onContinue = { currentStep = 6 }
                 )
                 
-                6 -> EnvironmentSetupStep(
+                6 -> BusyBoxInstallStep(
                     onContinue = { currentStep = 7 }
                 )
-                
-                7 -> SystemCheckStep(
+
+                7 -> EnvironmentSetupStep(
                     onContinue = { currentStep = 8 }
                 )
                 
-                8 -> KeyboardInstallStep(
+                8 -> SystemCheckStep(
                     onContinue = { currentStep = 9 }
                 )
                 
-                9 -> OverlayKeyboardStep(
+                9 -> KeyboardInstallStep(
                     onContinue = { currentStep = 10 }
                 )
                 
-                10 -> FinalInstructionsStep(
+                10 -> OverlayKeyboardStep(
+                    onContinue = { currentStep = 11 }
+                )
+                
+                11 -> FinalInstructionsStep(
                     onComplete = onComplete
                 )
             }
@@ -1650,133 +1655,328 @@ fun OverlayKeyboardStep(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "Step 8: Floating Keyboard Button",
-            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            text = "Step 8: Floating Keyboard & Accessibility",
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Permission Info Card
-        androidx.compose.material3.Card(
-            colors = androidx.compose.material3.CardDefaults.cardColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
-            ),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    "⌨️ Floating Keyboard Toggle",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "A floating button will appear on your screen to quickly toggle the keyboard on/off. You can drag it to any edge and remove it by dragging to the bottom.",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp
-                )
+        // Check if Accessibility Service is enabled
+        // We use a property from the service companion object or check via system
+        val isAccessibilityEnabled = com.ivarna.fluxlinux.core.services.KeyboardAccessibilityService.isServiceEnabled
+        
+        if (!isAccessibilityEnabled) {
+            // PROMINENT DISCLOSURE CARD
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Accessibility, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Accessibility Service Permission",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Text(
+                        "FluxLinux asks for Accessibility Service permission to allow you to perform global system actions (like Back, Home, and Recents) directly from the floating menu while using the Linux desktop.",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        "🔒 Privacy Declaration:",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "This service is strictly used for navigation (simulating button presses). It does NOT collect, store, or share any of your personal data, keystrokes, or screen content.",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f),
+                        fontSize = 14.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Button(
+                        onClick = {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            context.startActivity(intent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Open Accessibility Settings", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
             }
+        } else {
+             // Permission Info Card (Granted)
+             Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+             ) {
+                 Column(modifier = Modifier.padding(20.dp)) {
+                     Text(
+                        "⌨️ Floating Keyboard Toggle",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                     )
+                     Spacer(modifier = Modifier.height(8.dp))
+                     Text(
+                        "A floating button will appear on your screen to quickly toggle the keyboard on/off. You can drag it to any edge and remove it by dragging to the bottom.",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp
+                     )
+                 }
+             }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        if (hasOverlayPermission) {
+        if (hasOverlayPermission && isAccessibilityEnabled) {
             // Success State
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Granted",
-                    tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    "Overlay Permission Granted ✓",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Enable/Disable Floating Button
-            Button(
-                onClick = {
-                    if (!isServiceRunning) {
-                        // Start floating keyboard service
-                        try {
-                            val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                context.startForegroundService(intent)
-                            } else {
-                                context.startService(intent)
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Granted",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "All Permissions Granted ✓",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Enable/Disable Floating Button
+                // ... (Existing logic for starting service)
+                Button(
+                    onClick = {
+                        if (!isServiceRunning) {
+                            try {
+                                val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.startService(intent)
+                                }
+                                isServiceRunning = true
+                                Toast.makeText(context, "Floating keyboard button enabled", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Failed to start service: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
-                            isServiceRunning = true
-                            Toast.makeText(context, "Floating keyboard button enabled", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Failed to start service: ${e.message}", Toast.LENGTH_SHORT).show()
+                        } else {
+                            try {
+                                val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
+                                context.stopService(intent)
+                                isServiceRunning = false
+                                Toast.makeText(context, "Floating keyboard button disabled", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Failed to stop service: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                    } else {
-                        // Stop service
-                        try {
-                            val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
-                            context.stopService(intent)
-                            isServiceRunning = false
-                            Toast.makeText(context, "Floating keyboard button disabled", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Failed to stop service: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isServiceRunning) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.tertiary,
-                    contentColor = if (isServiceRunning) androidx.compose.material3.MaterialTheme.colorScheme.onError else androidx.compose.material3.MaterialTheme.colorScheme.onTertiary
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    if (isServiceRunning) "Disable Floating Button" else "Enable Floating Button",
-                    fontSize = 16.sp
-                )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isServiceRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                        contentColor = if (isServiceRunning) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onTertiary
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        if (isServiceRunning) "Disable Floating Button" else "Enable Floating Button",
+                        fontSize = 16.sp
+                    )
+                }
             }
         } else {
-            // Request Permission
-            Button(
-                onClick = { 
-                    try {
-                        val intent = android.content.Intent(
-                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            android.net.Uri.parse("package:${context.packageName}")
-                        )
-                        context.startActivity(intent)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.tertiary),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Grant Overlay Permission", fontSize = 16.sp, color = androidx.compose.material3.MaterialTheme.colorScheme.onTertiary)
-            }
+             if (!hasOverlayPermission) {
+                // Request Overlay Permission
+                Button(
+                    onClick = { 
+                        try {
+                            val intent = android.content.Intent(
+                                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                android.net.Uri.parse("package:${context.packageName}")
+                            )
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Could not open settings", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Grant Overlay Permission", fontSize = 16.sp, color = MaterialTheme.colorScheme.onTertiary)
+                }
+             }
         }
         
         Spacer(modifier = Modifier.weight(1f))
         
         // Next Button
+        Button(
+            onClick = onContinue,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                "Next",
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun BusyBoxInstallStep(
+    onContinue: () -> Unit
+) {
+    val context = LocalContext.current
+    val isRooted = remember { RootUtils.isRootAvailable() }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Step 6: BusyBox Installation",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "For Rooted Users Only",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        if (isRooted) {
+             androidx.compose.material3.Card(
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+             ) {
+                 Column(modifier = Modifier.padding(20.dp)) {
+                     Row(verticalAlignment = Alignment.CenterVertically) {
+                         Text("📦", fontSize = 24.sp)
+                         Spacer(modifier = Modifier.width(16.dp))
+                         Column {
+                             Text(
+                                "BusyBox NDK",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                             )
+                             Text(
+                                "Required for Chroot",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha=0.7f),
+                                fontSize = 12.sp
+                             )
+                         }
+                     }
+                     
+                     Spacer(modifier = Modifier.height(16.dp))
+                     
+                     Text(
+                        "Please download and flash this module in Magisk, KernelSU, APatch, or KernelSU-Next.",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp
+                     )
+                     
+                     Spacer(modifier = Modifier.height(8.dp))
+                     
+                     Text(
+                        "Credit: osm0sis",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                        fontSize = 12.sp
+                     )
+                     
+                     Spacer(modifier = Modifier.height(16.dp))
+                     
+                     Button(
+                        onClick = {
+                            val url = "https://github.com/abhay-byte/FluxLinux/raw/main/assets/busybox/Busybox%20for%20Android%20NDK-1.36.1.zip"
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                     ) {
+                         Text("Download Module", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                     }
+                 }
+             }
+        } else {
+             Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer.copy(alpha=0.3f))
+                    .padding(16.dp)
+            ) {
+                 Row(verticalAlignment = Alignment.CenterVertically) {
+                     Icon(Icons.Default.CheckCircle, null, tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary)
+                     Spacer(modifier = Modifier.width(12.dp))
+                     Text(
+                        "Root access not detected. You can skip this step.",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp
+                     )
+                 }
+            }
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
         Button(
             onClick = onContinue,
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),

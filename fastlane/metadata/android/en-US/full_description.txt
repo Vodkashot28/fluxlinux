@@ -8,3 +8,5 @@ FluxLinux brings full Linux desktop environments to Android. Install Debian with
 • Works on rooted and non-rooted devices
 
 <b>Requirements:</b> Termux, Termux:X11
+
+This app uses the AccessibilityService API to help you perform system-wide actions (like Back, Home, Recents) directly from the FluxLinux interface. This service is used solely for navigation and does not collect or share any personal data.
