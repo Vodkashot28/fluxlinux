@@ -1051,7 +1051,7 @@ fun EnvironmentSetupStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Environment Setup",
+            text = "Step 7: Environment Setup",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1228,7 +1228,7 @@ fun FinalInstructionsStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 9: Almost Done!",
+            text = "Step 11: Almost Done!",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1315,7 +1315,7 @@ fun ColumnScope.SystemCheckStep(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Step 6: System Check",
+                text = "Step 8: System Check",
                 color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
@@ -1551,7 +1551,7 @@ fun KeyboardInstallStep(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 7: Install Keyboard",
+            text = "Step 9: Install Keyboard",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1655,7 +1655,7 @@ fun OverlayKeyboardStep(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "Step 8: Floating Keyboard & Accessibility",
+            text = "Step 10: Floating Keyboard & Accessibility",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
