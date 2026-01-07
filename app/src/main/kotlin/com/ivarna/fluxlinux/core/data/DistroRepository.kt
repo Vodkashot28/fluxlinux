@@ -179,7 +179,7 @@ object DistroRepository {
             description = "A simple, lightweight Linux distribution.",
             color = Color(0xFF1793D1),
             iconRes = R.drawable.distro_arch,
-            comingSoon = false,
+            comingSoon = true,
             prootSupported = true,
             chrootSupported = true,
             configuration = SupportedDistro.ARCH,
