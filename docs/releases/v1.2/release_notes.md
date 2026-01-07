@@ -16,7 +16,17 @@ This release addresses **Google Play Policy Compliance** regarding Accessibility
 | **Compliance** | • **Accessibility Disclosure**: Added prominent, compliant disclosure for Accessibility Service usage (Step 8)<br>• **Privacy**: Explicitly declared no data collection for navigation services |
 | **Root Support** | • **New BusyBox Step**: Automatically detects root and guides users to install the required BusyBox NDK module<br>• **Direct Download**: One-click download for `osm0sis` BusyBox module<br>• **Smart Skip**: Non-rooted users can safely skip this step |
 | **UI / UX** | • **Visual Refinements**: Updated permission cards to use `secondary` theme colors for better visibility<br>• **Bug Fixes**: Corrected duplicate step numbering in the setup wizard (Steps 6-11) |
-| **Visuals** | <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/docs/releases/v1.2/accessibility.png" width="400" alt="Accessibility Disclosure"> <img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/docs/releases/v1.2/busybox.png" width="400" alt="BusyBox Step"> |
+
+## 📸 Visual Updates
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/docs/releases/v1.2/accessibility.png" width="250" /><br/><b>Accessibility Disclosure</b></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/abhay-byte/fluxlinux/main/docs/releases/v1.2/busybox.png" width="250" /><br/><b>BusyBox Installation</b></td>
+    </tr>
+  </table>
+</div>
 
 ## 🛠️ Key Changes
 - **Version**: Bumped to v1.2 (Code: 3)
