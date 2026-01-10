@@ -16,7 +16,7 @@ Binaries: https://github.com/abhay-byte/fluxlinux/releases/download/v%v/app-rele
 Builds:
   - versionName: '1.3'
     versionCode: 4
-    commit: 8f643051a20cded00afddb90ec3d6c032f8cded0
+    commit: e3989458577503d595107092296847e0bb2dc619
     subdir: app
     sudo: apt-get update
 
