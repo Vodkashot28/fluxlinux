@@ -1980,7 +1980,7 @@ fun BusyBoxInstallStep(
                 
                 Button(
                     onClick = {
-                        val url = "https://github.com/abhay-byte/FluxLinux/raw/main/assets/busybox/Busybox%20for%20Android%20NDK-1.36.1.zip"
+                        val url = "https://xdaforums.com/attachments/update-busybox-installer-v1-36-1-all-signed-zip.6000117/"
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
                         context.startActivity(intent)
                     },
