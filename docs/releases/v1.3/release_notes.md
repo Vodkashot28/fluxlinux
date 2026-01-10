@@ -2,7 +2,7 @@
 
 ## 🚨 Google Play Compliance Update
 
-This release focuses on addressing Google Play Policy requirements regarding Accessibility Services.
+This release marks our debut on F-Droid and addresses Google Play Policy requirements regarding Accessibility Services. The project is now fully Open Source under the GPLv3 license.
 
 ### Key Changes
 - **New Accessibility Disclosure Flow**: We have implemented a new, policy-compliant flow for enabling the Accessibility Service (used for the Floating Keyboard Button).
@@ -11,6 +11,8 @@ This release focuses on addressing Google Play Policy requirements regarding Acc
   - This replaces the previous direct button to ensure users are fully informed.
 
 ### Other Improvements
+- **GPLv3 License**: Project re-licensed to GPLv3 for full FOSS compliance.
+- **Reproducible Builds**: Build configuration updated to support reproducible builds (F-Droid compliance).
 - Updated build configuration for better stability.
 - Minor UI refinements in the Prerequisites screen.
 
