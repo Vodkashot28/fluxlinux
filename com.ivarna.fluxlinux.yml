@@ -11,21 +11,17 @@ AutoName: FluxLinux
 
 RepoType: git
 Repo: https://github.com/abhay-byte/fluxlinux
-Binaries: https://github.com/abhay-byte/fluxlinux/releases/download/v%v/app-release.apk
+# Binaries: https://github.com/abhay-byte/fluxlinux/releases/download/v%v/app-release.apk
 
 Builds:
   - versionName: '1.3'
     versionCode: 4
     commit: 8f643051a20cded00afddb90ec3d6c032f8cded0
     subdir: app
-    sudo:
-      - apt-get update
+    sudo: apt-get update
     gradle:
-      - yes
-
-
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.3
+CurrentVersion: '1.3'
 CurrentVersionCode: 4
