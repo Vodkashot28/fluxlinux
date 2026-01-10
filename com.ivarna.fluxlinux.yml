@@ -19,6 +19,7 @@ Builds:
     commit: e3989458577503d595107092296847e0bb2dc619
     subdir: app
     sudo: apt-get update
+    gradle: yes
 
 AllowedAPKSigningKeys: 9ad04230071d8424994c6f88110633dc4b082f58bb8ff26daa293099f9f536fb
 
