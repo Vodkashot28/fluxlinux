@@ -18,8 +18,7 @@ Builds:
     versionCode: 4
     commit: e3989458577503d595107092296847e0bb2dc619
     subdir: app
-    sudo:
-      - apt-get update
+    sudo: apt-get update
     gradle:
       - yes
     scanignore:
