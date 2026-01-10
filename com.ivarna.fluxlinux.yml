@@ -22,6 +22,13 @@ Builds:
       - apt-get update
     gradle:
       - yes
+    scanignore:
+      - packages/android-sdk-tools-static-aarch64.zip
+      - assets/xfce4/icons/papirus-icon-theme-20250501.tar.gz
+      - assets/xfce4/theme/theme.zip
+      - assets/xfce4/cursor/cursor.zip
+      - assets/busybox/Busybox for Android NDK-1.36.1.zip
+      - assets/wallpaper/wallpaper.zip
 
 AllowedAPKSigningKeys: 9ad04230071d8424994c6f88110633dc4b082f58bb8ff26daa293099f9f536fb
 
