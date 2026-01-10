@@ -1,0 +1,4 @@
+Google Play Compliance Update:
+- Implemented new, compliant Accessibility Service disclosure flow.
+- Added explicit "Agree" dialog for Floating Keyboard permission.
+- Minor UI improvements and stability fixes.
