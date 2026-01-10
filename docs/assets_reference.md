@@ -287,7 +287,7 @@ flowchart TD
 
 ## License
 
-All assets are subject to the FluxLinux project license (CC BY-NC 4.0).
+All assets are subject to the FluxLinux project license (GPLv3).
 
 Third-party assets retain their original licenses:
 - **Papirus Icons:** GPLv3

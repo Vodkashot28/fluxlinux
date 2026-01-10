@@ -16,7 +16,7 @@
 [![GitHub Downloads](https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success)](https://github.com/abhay-byte/fluxlinux/releases)
 [![GitHub Stars](https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow)](https://github.com/abhay-byte/fluxlinux/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=blue)](https://github.com/abhay-byte/fluxlinux/network/members)
-[![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-blue.svg?style=for-the-badge&logo=creativecommons&logoColor=white)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg?style=for-the-badge&logo=android&logoColor=white)](https://www.android.com)
 
 </div>
@@ -234,7 +234,7 @@ Contributions are welcome! Please check the [Roadmap](docs/roadmap.md) to see ac
 
 ## 📄 License
 
-This project is licensed under **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**.
 
 See [LICENSE](LICENSE) for details.
 
