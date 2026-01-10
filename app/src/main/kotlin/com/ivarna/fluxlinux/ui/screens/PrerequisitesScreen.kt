@@ -1668,7 +1668,7 @@ fun OverlayKeyboardStep(
         val isAccessibilityEnabled = com.ivarna.fluxlinux.core.services.KeyboardAccessibilityService.isServiceEnabled
         
         if (!isAccessibilityEnabled) {
-            // PROMINENT DISCLOSURE CARD
+            // PROMINENT DISCLOSURE CARD (Summary)
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -1683,7 +1683,7 @@ fun OverlayKeyboardStep(
                         Icon(Icons.Default.Accessibility, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            "Accessibility Service Permission",
+                            "Accessibility Service",
                             color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -1693,36 +1693,61 @@ fun OverlayKeyboardStep(
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Text(
-                        "FluxLinux asks for Accessibility Service permission to allow you to perform global system actions (like Back, Home, and Recents) directly from the floating menu while using the Linux desktop.",
+                        "FluxLinux uses the Accessibility Service to provide a Floating Keyboard Toggle button that works over other apps.",
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 15.sp
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        "🔒 Privacy Declaration:",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                    Text(
-                        "This service is strictly used for navigation (simulating button presses). It does NOT collect, store, or share any of your personal data, keystrokes, or screen content.",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f),
-                        fontSize = 14.sp
-                    )
-                    
                     Spacer(modifier = Modifier.height(16.dp))
                     
+                    // Trigger Button
+                    var showDisclosure by remember { mutableStateOf(false) }
+                    
                     Button(
-                        onClick = {
-                            val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                            context.startActivity(intent)
-                        },
+                        onClick = { showDisclosure = true },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Open Accessibility Settings", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Enable Service", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+
+                    // ACTUAL PROMINENT DISCLOSURE DIALOG
+                    if (showDisclosure) {
+                        AlertDialog(
+                            onDismissRequest = { showDisclosure = false },
+                            title = {
+                                Text("Accessibility Service Permission")
+                            },
+                            text = {
+                                Column {
+                                    Text("FluxLinux needs Accessibility Service permission to display a floating button on your screen. This button allows you to toggle the keyboard visibility while using the Linux desktop.")
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        "Privacy Declaration:",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text("This service is used ONLY for the floating button functionality. It does NOT collect, store, or share any personal data, keystrokes, or screen content.")
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDisclosure = false
+                                        val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                                        context.startActivity(intent)
+                                    }
+                                ) {
+                                    Text("Agree", color = MaterialTheme.colorScheme.secondary)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = { showDisclosure = false }
+                                ) {
+                                    Text("No thanks", color = MaterialTheme.colorScheme.secondary)
+                                }
+                            }
+                        )
                     }
                 }
             }
