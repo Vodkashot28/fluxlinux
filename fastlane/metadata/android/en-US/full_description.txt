@@ -1,12 +1,12 @@
-FluxLinux brings full Linux desktop environments to Android. Install Debian with XFCE4, run dev tools, and enjoy GPU-accelerated graphics.
+FluxLinux brings full Linux desktops to Android. Install Debian with XFCE4, run dev tools, and use GPU acceleration.
 
 <b>Features:</b>
-• One-tap Debian install (PRoot/Chroot)
+• One-tap Debian install
 • GPU acceleration (Turnip/VirGL)
-• Dev stacks: Web, App, Data Science, Game Dev
-• Beautiful XFCE4 desktop with themes
-• Works on rooted and non-rooted devices
+• Web, App, and Data Science stacks
+• XFCE4 desktop with themes
+• Rooted & Non-rooted support
 
 <b>Requirements:</b> Termux, Termux:X11
 
-This app uses the AccessibilityService API to help you perform system-wide actions (like Back, Home, Recents) directly from the FluxLinux interface. This service is used solely for navigation and does not collect or share any personal data.
+<b>Note:</b> Uses AccessibilityService API for system navigation actions (Back/Home) from the UI. No data is collected.
