@@ -135,10 +135,28 @@ if [ "$MODE" = "turnip" ]; then
         echo "FluxLinux: Turnip installed successfully!"
         
         # Disable XFCE4 compositor (causes black screen with Turnip)
-        if command -v xfconf-query &> /dev/null; then
-            echo "FluxLinux: Disabling XFCE4 compositor for Turnip compatibility..."
-            xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null || true
-        fi
+        # Must modify config files directly since desktop may not be running
+        echo "FluxLinux: Disabling XFCE4 compositor for Turnip compatibility..."
+        
+        # For all users with XFCE4 config
+        for userdir in /home/* /root; do
+            if [ -d "$userdir" ]; then
+                XFCE_CONF_DIR="$userdir/.config/xfce4/xfconf/xfce-perchannel-xml"
+                mkdir -p "$XFCE_CONF_DIR" 2>/dev/null || true
+                
+                # Create or modify xfwm4.xml to disable compositor
+                cat > "$XFCE_CONF_DIR/xfwm4.xml" << 'XFCEXML'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="use_compositing" type="bool" value="false"/>
+  </property>
+</channel>
+XFCEXML
+                chown -R $(stat -c '%U:%G' "$userdir") "$userdir/.config" 2>/dev/null || true
+            fi
+        done
+        echo "FluxLinux: XFCE4 compositor disabled."
     else
         echo "Error: Failed to download Turnip drivers."
         exit 1
