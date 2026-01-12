@@ -108,7 +108,7 @@ echo "FluxLinux: Configuring for $MODE..."
 if [ "$MODE" = "turnip" ]; then
     # Install Turnip (Mesa Turnip/Zink for Adreno)
     # Reference: https://github.com/sabamdarif/termux-desktop
-    TURNIP_VERSION="25.3.2"
+    TURNIP_VERSION="25.3.3"
     DL_ARCH="aarch64"
     if [ "$ARCH" != "arm64" ]; then DL_ARCH="$ARCH"; fi
 
