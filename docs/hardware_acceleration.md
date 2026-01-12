@@ -241,6 +241,7 @@ exec "$@"
 | `MESA_LOADER_DRIVER_OVERRIDE` | `zink` | Force Zink (OpenGL→Vulkan) |
 | `VK_ICD_FILENAMES` | `/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json` | Turnip Vulkan driver |
 | `TU_DEBUG` | `noconform` | Disable conformance checks (performance) |
+| `MESA_VK_WSI_DEBUG` | `sw` | Force software WSI (required for PRoot) |
 | `MESA_GL_VERSION_OVERRIDE` | `4.6` | Report OpenGL 4.6 support |
 | `MESA_GLES_VERSION_OVERRIDE` | `3.2` | Report OpenGL ES 3.2 support |
 | `MESA_NO_ERROR` | `1` | Disable error checking (performance) |

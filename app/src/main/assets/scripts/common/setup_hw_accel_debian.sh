@@ -148,6 +148,7 @@ if [ "$MODE" = "turnip" ]; then
     export MESA_LOADER_DRIVER_OVERRIDE=zink
     export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json
     export TU_DEBUG=noconform
+    export MESA_VK_WSI_DEBUG=sw
     export MESA_GL_VERSION_OVERRIDE=4.6
     export MESA_GLES_VERSION_OVERRIDE=3.2
     export MESA_NO_ERROR=1
