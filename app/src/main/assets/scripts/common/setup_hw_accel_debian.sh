@@ -106,21 +106,32 @@ esac
 echo "FluxLinux: Configuring for $MODE..."
 
 if [ "$MODE" = "turnip" ]; then
-    # Install Turnip (Mesa Turnip/Zink for Adreno)
-    # Reference: https://github.com/sabamdarif/termux-desktop
-    TURNIP_VERSION="25.3.3"
-    DL_ARCH="aarch64"
-    if [ "$ARCH" != "arm64" ]; then DL_ARCH="$ARCH"; fi
+    # Install Turnip (Mesa Turnip for Adreno - KGSL-based, proot compatible)
+    # Reference: https://github.com/lfdevs/mesa-for-android-container
+    # This driver uses KGSL directly, no /dev/dri needed
+    TURNIP_VERSION="26.0.0-devel-20251215"
+    
+    # Detect distro for correct package
+    if [ -f /etc/debian_version ]; then
+        DISTRO="debian_trixie"
+    elif [ -f /etc/lsb-release ] && grep -q "Ubuntu" /etc/lsb-release; then
+        DISTRO="ubuntu_noble"
+    elif [ -f /etc/fedora-release ]; then
+        DISTRO="fedora_43"
+    else
+        DISTRO="debian_trixie"  # Default to Debian
+    fi
+    
+    URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/turnip-${TURNIP_VERSION}/turnip_${TURNIP_VERSION}_${DISTRO}_arm64.tar.gz"
 
-    URL="https://github.com/sabamdarif/termux-desktop/releases/download/turnip-${TURNIP_VERSION}/turnip-${TURNIP_VERSION}-${DL_ARCH}.zip"
+    echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION} for ${DISTRO}..."
+    curl -L -o /tmp/turnip.tar.gz "$URL"
 
-    echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION}..."
-    curl -L -o /tmp/turnip.zip "$URL"
-
-    if [ -f "/tmp/turnip.zip" ]; then
+    if [ -f "/tmp/turnip.tar.gz" ]; then
         echo "FluxLinux: Installing Turnip..."
-        unzip -o /tmp/turnip.zip -d /usr
-        rm /tmp/turnip.zip
+        tar -zxvf /tmp/turnip.tar.gz -C /
+        ldconfig
+        rm /tmp/turnip.tar.gz
         echo "FluxLinux: Turnip installed successfully!"
     else
         echo "Error: Failed to download Turnip drivers."
