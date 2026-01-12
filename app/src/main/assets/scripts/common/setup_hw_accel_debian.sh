@@ -133,6 +133,12 @@ if [ "$MODE" = "turnip" ]; then
         ldconfig
         rm /tmp/turnip.tar.gz
         echo "FluxLinux: Turnip installed successfully!"
+        
+        # Disable XFCE4 compositor (causes black screen with Turnip)
+        if command -v xfconf-query &> /dev/null; then
+            echo "FluxLinux: Disabling XFCE4 compositor for Turnip compatibility..."
+            xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null || true
+        fi
     else
         echo "Error: Failed to download Turnip drivers."
         exit 1
