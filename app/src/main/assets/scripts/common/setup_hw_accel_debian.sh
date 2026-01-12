@@ -157,6 +157,18 @@ XFCEXML
             fi
         done
         echo "FluxLinux: XFCE4 compositor disabled."
+        
+        # Create fake /dev/dri for apps that check it (like vkmark)
+        # Turnip uses /dev/kgsl-3d0 but some apps iterate /dev/dri
+        echo "FluxLinux: Creating /dev/dri compatibility layer..."
+        mkdir -p /dev/dri 2>/dev/null || true
+        if [ ! -e /dev/dri/card0 ]; then
+            ln -sf /dev/null /dev/dri/card0 2>/dev/null || true
+        fi
+        if [ ! -e /dev/dri/renderD128 ]; then
+            ln -sf /dev/null /dev/dri/renderD128 2>/dev/null || true
+        fi
+        chmod 755 /dev/dri 2>/dev/null || true
     else
         echo "Error: Failed to download Turnip drivers."
         exit 1
