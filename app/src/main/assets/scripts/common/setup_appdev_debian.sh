@@ -19,6 +19,17 @@ echo "FluxLinux: Setting up App Development Environment (Android + Flutter + Rea
 TARGET_USER="flux"
 TARGET_GROUP="users"
 
+# CRITICAL: Remove broken Java packages FIRST (before any apt operations)
+# If Java packages are in a broken state, apt will try to configure them during
+# any apt operation, which will fail if /proc is not mounted
+echo "FluxLinux: Checking for broken Java packages..."
+if dpkg -l | grep -q "^iU.*openjdk\|^iF.*openjdk"; then
+    echo "FluxLinux: Found broken Java packages, removing..."
+    dpkg --remove --force-all openjdk-21-jre-headless openjdk-21-jre openjdk-21-jdk-headless openjdk-21-jdk default-jre-headless default-jre default-jdk-headless default-jdk 2>/dev/null || true
+    apt autoremove -y 2>/dev/null || true
+    echo "FluxLinux: Broken packages removed"
+fi
+
 # 1. Install Dependencies
 echo "FluxLinux: Installing System Dependencies..."
 export DEBIAN_FRONTEND=noninteractive
@@ -34,29 +45,78 @@ apt install -y git wget curl unzip zip xz-utils file \
 # Remove legacy Gradle (Debian ships ancient 4.4.1)
 apt remove -y gradle >/dev/null 2>&1 || true
 
-# 1b. Install Java (Dynamic Version)
-# Debian 13 Trixie ships with OpenJDK 21 as the default
+# 1b. Install Java (Workaround for chroot /proc issue)
+# Standard OpenJDK installation requires /proc to be mounted, which may fail in chroot
+# This workaround removes the postinst scripts that check for /proc
 echo "FluxLinux: Installing Java Development Kit..."
 export DEBIAN_FRONTEND=noninteractive
+
+# Try standard installation first (works if /proc is properly mounted)
 if apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openjdk-21-jdk 2>/dev/null; then
     JAVA_VERSION="21"
-elif apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openjdk-17-jdk 2>/dev/null; then
-    JAVA_VERSION="17"
+    echo "FluxLinux: OpenJDK 21 installed successfully"
 else
-    echo "FluxLinux: specific JDK not found, trying default-jdk..."
-    apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" default-jdk || handle_error "Java Installation"
-    JAVA_VERSION="default"
+    # Fallback: Install without postinst scripts (workaround for /proc issue)
+    echo "FluxLinux: Standard installation failed, using workaround method..."
+    
+    # Download packages
+    apt-get download openjdk-21-jdk openjdk-21-jre openjdk-21-jre-headless openjdk-21-jdk-headless 2>/dev/null || handle_error "Java package download"
+    
+    # Unpack without configuring
+    dpkg --unpack openjdk-*.deb 2>/dev/null || true
+    
+    # Remove problematic postinst scripts
+    rm -f /var/lib/dpkg/info/openjdk-21-*.postinst 2>/dev/null || true
+    rm -f /var/lib/dpkg/info/default-*.postinst 2>/dev/null || true
+    
+    # Configure without postinst
+    dpkg --configure -a 2>/dev/null || true
+    
+    # Install dependencies
+    apt-get install -f -y 2>/dev/null || true
+    
+    # Clean up downloaded debs
+    rm -f openjdk-*.deb
+    
+    # Manually set up alternatives (postinst scripts were removed)
+    echo "FluxLinux: Configuring Java alternatives..."
+    JAVA_HOME="/usr/lib/jvm/java-21-openjdk-arm64"
+    
+    if [ -d "$JAVA_HOME" ]; then
+        # Create alternatives for java, javac, jar, and javadoc
+        update-alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2111 \
+            --slave /usr/bin/jexec jexec $JAVA_HOME/lib/jexec 2>/dev/null || true
+        
+        update-alternatives --install /usr/bin/javac javac $JAVA_HOME/bin/javac 2111 2>/dev/null || true
+        update-alternatives --install /usr/bin/jar jar $JAVA_HOME/bin/jar 2111 2>/dev/null || true
+        update-alternatives --install /usr/bin/javadoc javadoc $JAVA_HOME/bin/javadoc 2111 2>/dev/null || true
+        
+        echo "FluxLinux: Java alternatives configured"
+    else
+        echo "FluxLinux: Warning - Could not find Java installation at $JAVA_HOME"
+    fi
+    
+    JAVA_VERSION="21"
+    echo "FluxLinux: OpenJDK 21 installed via workaround method"
 fi
 
 # Fix libjli.so path issue (Common in fresh/broken Trixie installs)
-LIBJLI_PATH=$(find /usr/lib/jvm -name "libjli.so" | head -1)
+LIBJLI_PATH=$(find /usr/lib/jvm -name "libjli.so" 2>/dev/null | head -1)
 if [ -n "$LIBJLI_PATH" ]; then
     LIBJLI_DIR=$(dirname "$LIBJLI_PATH")
     export LD_LIBRARY_PATH="$LIBJLI_DIR:$LD_LIBRARY_PATH"
     echo "FluxLinux: Added $LIBJLI_DIR to LD_LIBRARY_PATH"
 fi
 
-echo "FluxLinux: Java Status: $(java -version 2>&1 | head -1)"
+# Verify Java installation
+if command -v java >/dev/null 2>&1 && java -version 2>&1 | grep -q "openjdk"; then
+    echo "FluxLinux: Java Status: $(java -version 2>&1 | head -1)"
+elif [ -f "/usr/lib/jvm/java-21-openjdk-arm64/bin/java" ]; then
+    echo "FluxLinux: Java binaries installed but alternatives not configured"
+    echo "FluxLinux: Run 'update-alternatives --config java' to configure"
+else
+    echo "FluxLinux: Warning - Java installation may have failed"
+fi
 
 # 2. Android SDK Setup
 SDK_ROOT="/opt/android-sdk"

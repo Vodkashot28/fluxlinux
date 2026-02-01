@@ -359,6 +359,30 @@ object TermuxIntentFactory {
     }
 
     /**
+     * Launches a specific chroot distro in CLI mode as ROOT user.
+     * Only works for chroot distros (debian13_chroot, debian_chroot, arch_chroot).
+     */
+    fun buildLaunchRootCliIntent(distroId: String): Intent {
+        if (distroId == "debian_chroot") {
+            // Launch Chroot CLI as Root
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_debian_root.sh\"", runInBackground = false)
+        }
+
+        if (distroId == "debian13_chroot") {
+            // Launch Debian 13 Chroot CLI as Root
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_debian13_root.sh\"", runInBackground = false)
+        }
+        
+        if (distroId == "arch_chroot") {
+            // Launch Arch Chroot CLI as Root
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/enter_arch_root.sh\"", runInBackground = false)
+        }
+        
+        // For non-chroot distros, fall back to regular CLI (proot doesn't support true root)
+        return buildLaunchCliIntent(distroId)
+    }
+
+    /**
      * Launches a specific distro in GUI mode (XFCE4).
      */
     fun buildLaunchGuiIntent(distroId: String): Intent {

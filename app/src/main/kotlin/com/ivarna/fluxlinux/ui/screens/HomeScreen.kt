@@ -438,6 +438,37 @@ fun HomeScreen(
                         }
                         
                         Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Root Terminal Button (Only for Chroot Distros)
+                        if (distro.id.contains("chroot")) {
+                            Button(
+                                onClick = {
+                                    if (permissionState.status.isGranted) {
+                                        val intent = TermuxIntentFactory.buildLaunchRootCliIntent(distro.id)
+                                        try {
+                                            onStartService(intent)
+                                            distroToLaunch.value = null
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        permissionState.launchPermissionRequest()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                ),
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.fillMaxWidth().height(56.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("🔓 Root Terminal", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                     
                     // GUI Button

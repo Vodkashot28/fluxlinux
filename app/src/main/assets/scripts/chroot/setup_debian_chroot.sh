@@ -101,7 +101,7 @@ configure_debian_chroot() {
     
     $BB mount --bind /dev "$DEBIANPATH/dev" || goodbye
     $BB mount --bind /sys "$DEBIANPATH/sys" || goodbye
-    $BB mount --bind /proc "$DEBIANPATH/proc" || goodbye
+    $BB mount -t proc proc "$DEBIANPATH/proc" || goodbye
     $BB mount -t devpts devpts "$DEBIANPATH/dev/pts" || goodbye
 
     # /dev/shm for Electron apps
@@ -185,7 +185,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 \$BB mount --bind /dev \$DEBIANPATH/dev
 \$BB mount --bind /sys \$DEBIANPATH/sys
-\$BB mount --bind /proc \$DEBIANPATH/proc
+\$BB mount -t proc proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
 # /dev/shm for Electron apps

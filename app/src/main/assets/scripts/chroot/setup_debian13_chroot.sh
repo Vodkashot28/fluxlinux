@@ -127,7 +127,7 @@ configure_debian_chroot() {
     
     $BB mount --bind /dev "$DEBIANPATH/dev" || goodbye
     $BB mount --bind /sys "$DEBIANPATH/sys" || goodbye
-    $BB mount --bind /proc "$DEBIANPATH/proc" || goodbye
+    $BB mount -t proc proc "$DEBIANPATH/proc" || goodbye
     $BB mount -t devpts devpts "$DEBIANPATH/dev/pts" || goodbye
 
     # /dev/shm for Electron apps
@@ -240,7 +240,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 \$BB mount --bind /dev \$DEBIANPATH/dev
 \$BB mount --bind /sys \$DEBIANPATH/sys
-\$BB mount --bind /proc \$DEBIANPATH/proc
+\$BB mount -t proc proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
 # /dev/shm for Electron apps
@@ -358,7 +358,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 \$BB mount --bind /dev \$DEBIANPATH/dev
 \$BB mount --bind /sys \$DEBIANPATH/sys
-\$BB mount --bind /proc \$DEBIANPATH/proc
+\$BB mount -t proc proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
 # /dev/shm for Electron apps
@@ -427,7 +427,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 \$BB mount --bind /dev \$DEBIANPATH/dev
 \$BB mount --bind /sys \$DEBIANPATH/sys
-\$BB mount --bind /proc \$DEBIANPATH/proc
+\$BB mount -t proc proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
 # /dev/shm for Electron apps
@@ -589,7 +589,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 \$BB mount -o remount,dev,suid /data >/dev/null 2>&1
 \$BB mount --bind /dev \$DEBIANPATH/dev >/dev/null 2>&1
 \$BB mount --bind /sys \$DEBIANPATH/sys >/dev/null 2>&1
-\$BB mount --bind /proc \$DEBIANPATH/proc >/dev/null 2>&1
+\$BB mount -t proc proc \$DEBIANPATH/proc >/dev/null 2>&1
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts >/dev/null 2>&1
 mkdir -p \$DEBIANPATH/dev/shm
 \$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm >/dev/null 2>&1
@@ -628,7 +628,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 \$BB mount --bind /dev \$DEBIANPATH/dev
 \$BB mount --bind /sys \$DEBIANPATH/sys
-\$BB mount --bind /proc \$DEBIANPATH/proc
+\$BB mount -t proc proc \$DEBIANPATH/proc
 \$BB mount -t devpts devpts \$DEBIANPATH/dev/pts
 
 # /dev/shm for Electron apps
@@ -649,6 +649,44 @@ echo "Entering Debian 13 Chroot (CLI)..."
 EOF
     chmod +x "$CLI_SCRIPT"
     success "CLI Launcher created: $CLI_SCRIPT"
+    
+    # --- GENERATE ROOT CLI LAUNCHER (Shell as Root) ---
+    ROOT_CLI_SCRIPT="/data/local/tmp/enter_debian13_root.sh"
+    progress "Creating Root CLI Launcher at $ROOT_CLI_SCRIPT..."
+    
+    cat <<EOF > "$ROOT_CLI_SCRIPT"
+#!/bin/sh
+# Root CLI Entry for Debian 13 Chroot
+
+# Path of DEBIAN rootfs
+DEBIANPATH="/data/local/tmp/chrootDebian13"
+BB="$BB"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+
+# Fix setuid issue
+\$BB mount -o remount,dev,suid /data 2>/dev/null
+
+\$BB mount --bind /dev \$DEBIANPATH/dev 2>/dev/null
+\$BB mount --bind /sys \$DEBIANPATH/sys 2>/dev/null
+\$BB mount -t proc proc \$DEBIANPATH/proc 2>/dev/null
+\$BB mount -t devpts devpts \$DEBIANPATH/dev/pts 2>/dev/null
+
+# /dev/shm for Electron apps
+mkdir -p \$DEBIANPATH/dev/shm
+\$BB mount -t tmpfs -o size=512M tmpfs \$DEBIANPATH/dev/shm 2>/dev/null
+
+# Mount Termux tmp to chroot tmp (for X11 sockets)
+mkdir -p \$DEBIANPATH/tmp
+\$BB mount --bind /data/data/com.termux/files/usr/tmp \$DEBIANPATH/tmp 2>/dev/null
+mkdir -p \$DEBIANPATH/sdcard
+\$BB mount --bind /sdcard \$DEBIANPATH/sdcard 2>/dev/null
+
+# Enter Shell as Root with proper PATH
+echo "Entering Debian 13 Chroot as ROOT..."
+\$BB chroot \$DEBIANPATH /bin/bash -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin && exec /bin/bash --login"
+EOF
+    chmod +x "$ROOT_CLI_SCRIPT"
+    success "Root CLI Launcher created: $ROOT_CLI_SCRIPT"
     
     echo "FluxLinux: Chroot Setup Complete!"
     

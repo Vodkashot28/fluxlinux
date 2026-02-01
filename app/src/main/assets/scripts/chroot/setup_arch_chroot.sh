@@ -107,7 +107,7 @@ main() {
 
     $BB mount --bind /dev "$ARCHPATH/dev" || goodbye
     $BB mount --bind /sys "$ARCHPATH/sys" || goodbye
-    $BB mount --bind /proc "$ARCHPATH/proc" || goodbye
+    $BB mount -t proc proc "$ARCHPATH/proc" || goodbye
     $BB mount -t devpts devpts "$ARCHPATH/dev/pts" || goodbye
     $BB mount -t tmpfs -o size=256M tmpfs "$ARCHPATH/dev/shm" || goodbye
     $BB mount --bind /sdcard "$ARCHPATH/media/sdcard" || goodbye
@@ -260,7 +260,7 @@ BB="$BB"
 \$BB mount -o remount,dev,suid /data
 \$BB mount --bind /dev \$ARCHPATH/dev
 \$BB mount --bind /sys \$ARCHPATH/sys
-\$BB mount --bind /proc \$ARCHPATH/proc
+\$BB mount -t proc proc \$ARCHPATH/proc
 \$BB mount -t devpts devpts \$ARCHPATH/dev/pts
 mkdir -p \$ARCHPATH/dev/shm
 \$BB mount -t tmpfs -o size=256M tmpfs \$ARCHPATH/dev/shm
