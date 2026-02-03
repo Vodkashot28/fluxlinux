@@ -388,7 +388,7 @@ object TermuxIntentFactory {
     fun buildLaunchGuiIntent(distroId: String): Intent {
         if (distroId == "debian_chroot") {
             // Launch Chroot GUI as User (Wrapper handles su for Chroot entry)
-            return buildRunCommandIntent("sh /data/local/tmp/start_debian_gui.sh", runInBackground = true)
+            return buildRunCommandIntent("sh /data/local/tmp/start_debian_gui.sh", runInBackground = false)
         }
 
         if (distroId == "debian13_chroot") {
@@ -414,12 +414,12 @@ object TermuxIntentFactory {
                 echo "FluxLinux: Launching Chroot GUI..."
                 su -c "sh /data/local/tmp/start_debian13_gui.sh"
             """.trimIndent()
-            return buildRunCommandIntent(command, runInBackground = true)
+            return buildRunCommandIntent(command, runInBackground = false)
         }
         
         if (distroId == "arch_chroot") {
             // Launch Arch Chroot GUI (Hyprland via VirGL)
-            return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_arch_gui.sh\"", runInBackground = true)
+            return buildRunCommandIntent("su -c \"sh /data/local/tmp/start_arch_gui.sh\"", runInBackground = false)
         }
         
         // Standard Proot Launch

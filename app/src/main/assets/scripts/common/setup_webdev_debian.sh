@@ -20,6 +20,16 @@ echo "FluxLinux: Setting up Web Development Environment..."
 # This prevents 'apt update' from failing immediately due to parsing errors
 rm -f /etc/apt/sources.list.d/vscode.list
 
+# PRE-FLIGHT CHECK: Clean up old NodeSource repo and keys
+# The NodeSource repository signature is invalid and causes apt update to fail
+echo "FluxLinux: Cleaning up old NodeSource repository..."
+rm -f /etc/apt/sources.list.d/nodesource.list
+rm -f /etc/apt/sources.list.d/nodesource.list.save
+rm -f /usr/share/keyrings/nodesource.gpg
+rm -f /etc/apt/keyrings/nodesource.gpg
+# Remove any nodesource entries from main sources.list
+sed -i '/nodesource/d' /etc/apt/sources.list 2>/dev/null || true
+
 # 1. Update & Install Basic Tools
 apt update -y || handle_error "System Update"
 apt install -y curl wget git build-essential gnupg || handle_error "Basic Tools Installation"
@@ -44,15 +54,64 @@ apt update -y
 apt install -y firefox chromium || handle_error "Browser Installation"
 
 
-# 3. Install Node.js (Latest v23)
-# 3. Install Node.js (Latest v23)
-# Always run setup to ensure upgrade from v20 -> v23
-echo "FluxLinux: Installing/Upgrading Node.js to 23.x..."
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_23.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-apt update -y
-apt install -y nodejs || handle_error "Node.js Installation"
+# 3. Install Node.js (v25) -- Manual Install for ARM64 & Global Path fix
+NODE_ROOT="/opt/nodejs"
+NODE_VER="v25.5.0"
+NODE_DIST="node-${NODE_VER}-linux-arm64"
+NODE_URL="https://nodejs.org/dist/${NODE_VER}/${NODE_DIST}.tar.xz"
+
+echo "FluxLinux: Installing/Checking Node.js ${NODE_VER}..."
+INSTALL_NODE=false
+
+# Check if installed
+if [ ! -f "$NODE_ROOT/bin/node" ]; then
+    INSTALL_NODE=true
+else
+    INSTALLED_VER=$("$NODE_ROOT/bin/node" -v 2>/dev/null)
+    if [ "$INSTALLED_VER" != "$NODE_VER" ]; then
+        echo " - Updating Node.js from $INSTALLED_VER to $NODE_VER..."
+        INSTALL_NODE=true
+    else
+        echo " - Node.js $NODE_VER already installed."
+    fi
+fi
+
+if [ "$INSTALL_NODE" = true ]; then
+    # Clean destination
+    rm -rf "$NODE_ROOT"
+    mkdir -p "$NODE_ROOT"
+    
+    # Download & Extract
+    echo " - Downloading Node.js..."
+    wget -q --show-progress "$NODE_URL" -O /tmp/node.tar.xz || handle_error "Node.js Download"
+    tar -xJvf /tmp/node.tar.xz -C "$NODE_ROOT" --strip-components=1 >/dev/null 2>&1 || handle_error "Node.js Extraction"
+    rm -f /tmp/node.tar.xz
+    
+    # Symlinks
+    echo " - Creating symlinks..."
+    ln -sf "$NODE_ROOT/bin/node" /usr/local/bin/node
+    ln -sf "$NODE_ROOT/bin/npm" /usr/local/bin/npm
+    ln -sf "$NODE_ROOT/bin/npx" /usr/local/bin/npx
+    ln -sf "$NODE_ROOT/bin/corepack" /usr/local/bin/corepack
+    
+    echo " [✅] Node.js ${NODE_VER} Installed"
+fi
+
+# Fix Global NPM Path (Ensure modules are found)
+echo "FluxLinux: Configuring Node.js Environment..."
+
+# Update .bashrc for current user
+BASHRC="/home/flux/.bashrc"
+if ! grep -q "/opt/nodejs/bin" "$BASHRC"; then
+    echo "" >> "$BASHRC"
+    echo "# Node.js Global Path" >> "$BASHRC"
+    echo 'export PATH=$PATH:/opt/nodejs/bin' >> "$BASHRC"
+    echo " - Added Node.js to .bashrc"
+fi
+
+# System-wide profile
+echo 'export PATH=$PATH:/opt/nodejs/bin' > /etc/profile.d/nodejs.sh
+chmod 644 /etc/profile.d/nodejs.sh
 
 # 4. Install Python
 echo "FluxLinux: Installing Python..."

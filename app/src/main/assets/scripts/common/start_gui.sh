@@ -12,7 +12,7 @@ pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth
 
 # Prepare termux-x11 session
 export XDG_RUNTIME_DIR=${TMPDIR}
-termux-x11 :1 >/dev/null &
+termux-x11 :0 >/dev/null &
 
 # Wait a bit until termux-x11 gets started.
 sleep 3
@@ -24,9 +24,9 @@ sleep 1
 # Login in PRoot Environment
 if [ "$DISTRO" == "termux" ]; then
     export PULSE_SERVER=127.0.0.1
-    env DISPLAY=:1 startxfce4
+    env DISPLAY=:0 startxfce4
 else
-    proot-distro login $DISTRO --shared-tmp -- /bin/bash -c 'export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=${TMPDIR} && su - flux -c "env DISPLAY=:1 startxfce4"'
+    proot-distro login $DISTRO --shared-tmp -- /bin/bash -c 'export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=${TMPDIR} && su - flux -c "env DISPLAY=:0 startxfce4"'
 fi
 
 exit 0
