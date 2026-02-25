@@ -26,7 +26,19 @@ if [ "$DISTRO" == "termux" ]; then
     export PULSE_SERVER=127.0.0.1
     env DISPLAY=:0 startxfce4
 else
-    proot-distro login $DISTRO --shared-tmp -- /bin/bash -c 'export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=${TMPDIR} && su - flux -c "env DISPLAY=:0 startxfce4"'
+    proot-distro login $DISTRO --shared-tmp -- /bin/bash -c '
+      export DISPLAY=:0
+      export PULSE_SERVER=tcp:127.0.0.1
+      export XDG_RUNTIME_DIR=${TMPDIR}
+      su - flux -c "
+        export DISPLAY=:0
+        export PULSE_SERVER=tcp:127.0.0.1
+        export XDG_RUNTIME_DIR=${TMPDIR}
+        # Disable compositor to fix black screen with Turnip GPU driver
+        xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
+        dbus-launch --exit-with-session startxfce4
+      "
+    '
 fi
 
 exit 0
