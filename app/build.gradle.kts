@@ -17,8 +17,8 @@ android {
         applicationId = "com.ivarna.fluxlinux"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,6 +38,15 @@ android {
         includeInBundle = false
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("/home/abhay/repos/keys/fluxlinux.jks")
+            storePassword = "fluxlinux_release_ab"
+            keyAlias = "upload"
+            keyPassword = "fluxlinux_release_ab"
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -46,6 +55,7 @@ android {
             }
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
