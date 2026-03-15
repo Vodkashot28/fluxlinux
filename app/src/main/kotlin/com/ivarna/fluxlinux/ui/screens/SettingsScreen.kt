@@ -823,7 +823,7 @@ fun SettingsScreen(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("FluxLinux", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-                            Text("v1.4p • Jan 7, 2026", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text("v1.4p • Mar 15, 2026", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Made with ❤️ in Kotlin", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
                         }

@@ -111,7 +111,7 @@ if [ "$MODE" = "turnip" ]; then
     # This driver uses KGSL directly, no /dev/dri needed
     TURNIP_VERSION="26.1.0-devel-20260307"
     
-    # Deteted distro for correct package (currently hardcoded to debian trixie per user request for this specific link, but we can keep the variable for structure)
+    # Detect distro for correct package
     if [ -f /etc/debian_version ]; then
         DISTRO="debian_trixie"
     elif [ -f /etc/lsb-release ] && grep -q "Ubuntu" /etc/lsb-release; then
@@ -122,9 +122,9 @@ if [ "$MODE" = "turnip" ]; then
         DISTRO="debian_trixie"  # Default to Debian
     fi
     
-    URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/turnip-${TURNIP_VERSION}/turnip_${TURNIP_VERSION}_debian_trixie_arm64.tar.gz"
+    URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/turnip-${TURNIP_VERSION}/turnip_${TURNIP_VERSION}_${DISTRO}_arm64.tar.gz"
 
-    echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION}..."
+    echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION} for ${DISTRO}..."
     curl -L -o /tmp/turnip.tar.gz "$URL"
 
     if [ -f "/tmp/turnip.tar.gz" ]; then
