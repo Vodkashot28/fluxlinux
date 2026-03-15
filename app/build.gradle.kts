@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.zenithblue.fluxlinux"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.zenithblue.fluxlinux"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 5
         versionName = "1.4p"
 
