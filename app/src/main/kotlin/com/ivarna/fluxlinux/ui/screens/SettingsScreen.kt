@@ -302,16 +302,11 @@ fun SettingsScreen(
                                 // Termux
                                 Column(modifier = Modifier.weight(1f)) {
                                     if (!termuxInstalled.value) {
-                                        Button(
-                                            onClick = {
-                                                val url = "https://github.com/termux/termux-app/releases/tag/v0.118.3"
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                                context.startActivity(intent)
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                            modifier = Modifier.fillMaxWidth()
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(8.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Text("Download Termux", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                            Text("Not Installed", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -328,16 +323,11 @@ fun SettingsScreen(
                                 // X11
                                 Column(modifier = Modifier.weight(1f)) {
                                     if (!x11Installed.value) {
-                                        Button(
-                                            onClick = {
-                                                val url = "https://github.com/termux/termux-x11/releases"
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                                context.startActivity(intent)
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                            modifier = Modifier.fillMaxWidth()
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(8.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Text("Download X11", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                            Text("Not Installed", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                         }
                                     } else {
                                         Row(verticalAlignment = Alignment.CenterVertically) {

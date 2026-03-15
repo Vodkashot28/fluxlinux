@@ -231,11 +231,7 @@ fun PackageInstallationStep(
             name = "Termux",
             isInstalled = termuxInstalled.value,
             version = if (termuxInstalled.value) StateManager.getTermuxVersion(context) else null,
-            onInstall = {
-                val url = "https://github.com/termux/termux-app/releases/tag/v0.118.3"
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                context.startActivity(intent)
-            }
+            onInstall = null
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -245,11 +241,7 @@ fun PackageInstallationStep(
             name = "Termux:X11",
             isInstalled = x11Installed.value,
             version = if (x11Installed.value) StateManager.getTermuxX11Version(context) else null,
-            onInstall = {
-                val url = "https://github.com/termux/termux-x11/releases"
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                context.startActivity(intent)
-            }
+            onInstall = null
         )
         
         Spacer(modifier = Modifier.weight(1f))
@@ -515,7 +507,7 @@ fun PrerequisiteItem(
     name: String,
     isInstalled: Boolean,
     version: String?,
-    onInstall: () -> Unit
+    onInstall: (() -> Unit)? // Optional install action
 ) {
     Column(
         modifier = Modifier
@@ -559,12 +551,21 @@ fun PrerequisiteItem(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                Button(
-                    onClick = onInstall,
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.outline),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Download", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                if (onInstall != null) {
+                    Button(
+                        onClick = onInstall,
+                        colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.outline),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Download", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                    }
+                } else {
+                    Text(
+                        text = "Not Installed",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
