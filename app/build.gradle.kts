@@ -11,14 +11,14 @@ plugins {
 
 android {
     namespace = "com.zenithblue.fluxlinux"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.zenithblue.fluxlinux"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 5
-        versionName = "1.4p"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.4q"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
