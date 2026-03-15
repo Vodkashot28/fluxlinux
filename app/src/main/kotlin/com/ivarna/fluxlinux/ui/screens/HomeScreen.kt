@@ -92,117 +92,7 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Floating Keyboard Toggle
-        var isFloatingKeyboardRunning by remember { mutableStateOf(false) }
-        val hasOverlayPermission = remember { android.provider.Settings.canDrawOverlays(context) }
-        
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            Text(
-                text = "Floating Keyboard",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "⌨️ Keyboard Toggle Button",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (hasOverlayPermission) "Floating button to toggle keyboard" else "Overlay permission required",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                if (hasOverlayPermission) {
-                    Button(
-                        onClick = {
-                            if (!isFloatingKeyboardRunning) {
-                                // Start service
-                                try {
-                                    val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                        context.startForegroundService(intent)
-                                    } else {
-                                        context.startService(intent)
-                                    }
-                                    isFloatingKeyboardRunning = true
-                                    android.widget.Toast.makeText(context, "Floating keyboard enabled", android.widget.Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                // Stop service
-                                try {
-                                    val intent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
-                                    context.stopService(intent)
-                                    isFloatingKeyboardRunning = false
-                                    android.widget.Toast.makeText(context, "Floating keyboard disabled", android.widget.Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isFloatingKeyboardRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                            contentColor = if (isFloatingKeyboardRunning) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            if (isFloatingKeyboardRunning) "Disable" else "Enable",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            try {
-                                val intent = android.content.Intent(
-                                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                    android.net.Uri.parse("package:${context.packageName}")
-                                )
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                android.widget.Toast.makeText(context, "Could not open settings", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Grant Permission", fontSize = 12.sp)
-                    }
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
+
         
         // Installed Distros Section
         Text(
@@ -477,17 +367,7 @@ fun HomeScreen(
                     Button(
                         onClick = {
                             if (permissionState.status.isGranted) {
-                                if (android.provider.Settings.canDrawOverlays(context)) {
-                                    try {
-                                        val keyboardIntent = android.content.Intent(context, com.ivarna.fluxlinux.core.services.FloatingKeyboardService::class.java)
-                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                            context.startForegroundService(keyboardIntent)
-                                        } else {
-                                            context.startService(keyboardIntent)
-                                        }
-                                    } catch (e: Exception) {}
-                                }
-                                
+
                                 val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                                 try {
                                     onStartService(intent)
