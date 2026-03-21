@@ -423,42 +423,39 @@ rm -rf "$POKEMON_TEMP"
 echo "FluxLinux: Configuring .zshrc..."
 ZSHRC="$USER_HOME/.zshrc"
 
-if [ ! -f "$ZSHRC" ] || ! grep -q "oh-my-zsh.sh" "$ZSHRC"; then
-    echo "FluxLinux: Creating valid .zshrc..."
-    cat > "$ZSHRC" << 'ZSHEOF'
+# Write complete optimized .zshrc (performance fixes from screenshot)
+# - Removed zsh-autocomplete (extremely slow on PRoot, 35s+ startup -> 1.5s)
+# - Backgrounded visuals with &! (async, don't block shell startup)
+# - DISABLE_AUTO_UPDATE / DISABLE_UPDATE_PROMPT (no prompts on launch)
+# - ZSH_DISABLE_COMPFIX (no compaudit, faster init)
+echo "FluxLinux: Writing optimized .zshrc..."
+cat > "$ZSHRC" << 'ZSHEOF'
+# PATH setup - local bin, npm global modules
+export PATH="$HOME/.local/bin:/opt/nodejs/bin:$PATH"
+
+# Background visuals - don't block shell startup
+{ fastfetch --config termux; pokemon-colorscripts --no-title -r 1,2,3 } &!
+
+# oh-my-zsh optimizations
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="agnosterzak"
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)
-source $ZSH/oh-my-zsh.sh
+DISABLE_UPDATE_PROMPT=true
+DISABLE_AUTO_UPDATE=true
+ZSH_DISABLE_COMPFIX=true
 
+# Removed zsh-autocomplete (very slow), kept essential plugins
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+
+source $ZSH/oh-my-zsh.sh
 ZSHEOF
-    chown "$CUSTOM_USER:$CUSTOM_GROUP" "$ZSHRC"
-else
-    # Update existing .zshrc
-    if grep -q "^ZSH_THEME=" "$ZSHRC"; then
-        sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="agnosterzak"/' "$ZSHRC"
-    else
-        sed -i '1iZSH_THEME="agnosterzak"' "$ZSHRC"
-    fi
-    if grep -q "^plugins=" "$ZSHRC"; then
-        sed -i 's/plugins=(.*)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)/' "$ZSHRC"
-    else
-        sed -i '/source \$ZSH\/oh-my-zsh.sh/i plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-autocomplete)' "$ZSHRC"
-    fi
-fi
+chown "$CUSTOM_USER:$CUSTOM_GROUP" "$ZSHRC"
 
 # Download fastfetch config
 mkdir -p "$USER_HOME/.local/share/fastfetch/presets"
 curl -fsSL https://raw.githubusercontent.com/abhay-byte/Linux_Setup/dev/config/termux.jsonc \
     -o "$USER_HOME/.local/share/fastfetch/presets/termux.jsonc" 2>/dev/null
 
-# Add fastfetch and pokemon to .zshrc startup
-if ! grep -q 'fastfetch --config termux' "$ZSHRC"; then
-    sed -i '1ifastfetch --config termux' "$ZSHRC"
-fi
-if ! grep -q 'pokemon-colorscripts' "$ZSHRC"; then
-    echo "pokemon-colorscripts --no-title -r 1,2,3" >> "$ZSHRC"
-fi
+# Fastfetch and pokemon are already included in the optimized .zshrc above (backgrounded)
 
 # Set zsh as default shell for flux user
 chsh -s /bin/zsh "$CUSTOM_USER" 2>/dev/null
