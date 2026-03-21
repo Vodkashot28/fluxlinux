@@ -218,11 +218,9 @@ EOF
 echo "FluxLinux: Writing kwinrc..."
 cat > "$KDE_CONFIG/kwinrc" << EOF
 [Compositing]
-Backend=OpenGL
+Backend=QPainter
 Enabled=true
-GLCore=true
-HiddenPreviews=5
-OpenGLIsUnsafe=false
+OpenGLIsUnsafe=true
 
 [Windows]
 BorderlessMaximizedWindows=false
