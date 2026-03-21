@@ -24,6 +24,16 @@ data class ComponentDetail(
 
 // Map Component ID to Details
 val componentDetailsMap = mapOf(
+    "xfce4_desktop" to ComponentDetail(
+        icon = Icons.Default.Brush,
+        packages = listOf(
+            "XFCE4 Desktop Environment" to "150 MB",
+            "XFCE4 Goodies" to "80 MB",
+            "TigerVNC Server" to "30 MB",
+            "dbus-x11" to "10 MB"
+        ),
+        totalSizeValues = 0.3
+    ),
     "hw_accel" to ComponentDetail(
         icon = Icons.Default.Speed,
         packages = listOf(
@@ -41,6 +51,30 @@ val componentDetailsMap = mapOf(
             "Nerd Fonts (JetBrainsMono)" to "30 MB"
         ),
         totalSizeValues = 0.2
+    ),
+    "kde_plasma" to ComponentDetail(
+        icon = Icons.Default.Palette,
+        packages = listOf(
+            "KDE Plasma Desktop" to "250 MB",
+            "Konsole Terminal" to "20 MB",
+            "Dolphin File Manager" to "30 MB",
+            "Kate Text Editor" to "25 MB",
+            "Spectacle Screenshot" to "10 MB",
+            "KDE Extras (Ark, Okular, Gwenview)" to "150 MB",
+            "KWin Window Manager" to "30 MB"
+        ),
+        totalSizeValues = 0.75
+    ),
+    "kde_customization" to ComponentDetail(
+        icon = Icons.Default.Brush,
+        packages = listOf(
+            "Flux Theme Assets" to "120 MB",
+            "Papirus Icons (KDE)" to "50 MB",
+            "Wallpapers (4K)" to "50 MB",
+            "Nerd Fonts (JetBrainsMono)" to "30 MB",
+            "Konsole Profile" to "1 MB"
+        ),
+        totalSizeValues = 0.25
     ),
     "app_dev" to ComponentDetail(
         icon = Icons.Default.Android,

@@ -345,4 +345,22 @@ object StateManager {
             .map { it.removePrefix("distro_").removeSuffix("_gui_running") }
             .toSet()
     }
+
+    /**
+     * Get which GUI type is running for a distro ("xfce4", "kde", or "")
+     */
+    fun getGuiRunningType(context: Context, distroId: String): String {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        return prefs.getString("distro_${distroId}_gui_type", "") ?: ""
+    }
+
+    /**
+     * Set which GUI type is running for a distro ("xfce4", "kde", or "")
+     */
+    fun setGuiRunningType(context: Context, distroId: String, type: String) {
+        val prefs = context.getSharedPreferences("fluxlinux_state", Context.MODE_PRIVATE)
+        prefs.edit().putString("distro_${distroId}_gui_type", type).apply()
+        android.util.Log.d("StateManager", "Distro $distroId GUI type set to: $type")
+    }
+
 }

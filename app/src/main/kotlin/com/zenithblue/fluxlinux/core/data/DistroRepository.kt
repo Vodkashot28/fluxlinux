@@ -12,6 +12,14 @@ object DistroRepository {
     // Shared Components for Debian-based distros
     private val debianComponents = listOf(
         DistroComponent(
+            id = "xfce4_desktop",
+            name = "XFCE4 Desktop",
+            description = "Base XFCE4 desktop environment — re-run to repair or update.",
+            scriptName = "common/setup_debian_family.sh",
+            sizeEstimate = "300 MB",
+            isMandatory = false
+        ),
+        DistroComponent(
             id = "hw_accel",
             name = "Hardware Acceleration",
             description = "VirGL & Zink drivers for GPU acceleration. Mandatory for GUI.",
@@ -21,10 +29,24 @@ object DistroRepository {
         ),
         DistroComponent(
             id = "customization",
-            name = "Desktop Customization",
-            description = "FluxLinux Theme, Wallpapers, Fonts, and 2x Scaling.",
+            name = "XFCE4 Customization",
+            description = "FluxLinux Theme, Wallpapers, Fonts, and 2x Scaling for XFCE4.",
             scriptName = "common/setup_customization_debian.sh",
             sizeEstimate = "200 MB"
+        ),
+        DistroComponent(
+            id = "kde_plasma",
+            name = "KDE Plasma Desktop",
+            description = "Full KDE Plasma DE with Konsole, Dolphin, Kate, Spectacle & goodies.",
+            scriptName = "common/setup_kde_debian.sh",
+            sizeEstimate = "800 MB"
+        ),
+        DistroComponent(
+            id = "kde_customization",
+            name = "KDE Desktop Customization",
+            description = "FluxLinux theme, Papirus icons, wallpapers & Zsh for KDE Plasma.",
+            scriptName = "common/setup_customization_kde_debian.sh",
+            sizeEstimate = "250 MB"
         ),
         DistroComponent(
             id = "app_dev",

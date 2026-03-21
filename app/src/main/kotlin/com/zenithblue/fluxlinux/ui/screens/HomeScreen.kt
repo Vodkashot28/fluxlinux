@@ -151,11 +151,18 @@ fun HomeScreen(
                     },
                     onStop = {
                         if (permissionState.status.isGranted) {
-                            val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                            val runningType = StateManager.getGuiRunningType(context, distro.id)
+                            val intent = if (runningType == "kde") {
+                                TermuxIntentFactory.buildStopKdeGuiIntent(distro.id)
+                            } else {
+                                TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                            }
                             try {
                                 onStartService(intent)
                                 StateManager.setGuiRunning(context, distro.id, false)
-                                android.widget.Toast.makeText(context, "Stopping GUI...", android.widget.Toast.LENGTH_SHORT).show()
+                                StateManager.setGuiRunningType(context, distro.id, "")
+                                val label = if (runningType == "kde") "KDE Plasma" else "XFCE4"
+                                android.widget.Toast.makeText(context, "Stopping $label...", android.widget.Toast.LENGTH_SHORT).show()
                             } catch (e: Exception) {
                                 android.widget.Toast.makeText(context, "Stop failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                             }
@@ -361,24 +368,21 @@ fun HomeScreen(
                         }
                     }
                     
-                    // GUI Button
-                    val isGuiRunning = StateManager.isGuiRunning(context, distro.id)
-                    
+                    // GUI Buttons — separate for XFCE4 and KDE
+                    val kdeInstalled = StateManager.isComponentInstalled(context, distro.id, "kde_plasma")
+
+                    // XFCE4
                     Button(
                         onClick = {
                             if (permissionState.status.isGranted) {
-
                                 val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
                                 try {
                                     onStartService(intent)
                                     StateManager.setGuiRunning(context, distro.id, true)
-                                    // Auto-launch X11 after short delay or immediately
+                                    StateManager.setGuiRunningType(context, distro.id, "xfce4")
                                     val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
                                     if (x11Intent != null) {
                                         context.startActivity(x11Intent)
-                                        
-                                        // Auto-apply preferences (Display Scale 100%, etc.)
-                                        // We run this AFTER starting the activity so X11 is running/starting.
                                         com.zenithblue.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
                                     }
                                     distroToLaunch.value = null
@@ -390,24 +394,71 @@ fun HomeScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            containerColor = Color(0xFF4A148C).copy(alpha = 0.85f),
+                            contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth().height(56.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Launch Desktop (GUI)", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                        }
+                        Text("🖥 Launch XFCE4", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                     }
-                    
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // KDE Plasma
+                    Button(
+                        onClick = {
+                            if (kdeInstalled && permissionState.status.isGranted) {
+                                val intent = TermuxIntentFactory.buildLaunchKdeGuiIntent(context, distro.id)
+                                try {
+                                    onStartService(intent)
+                                    StateManager.setGuiRunning(context, distro.id, true)
+                                    StateManager.setGuiRunningType(context, distro.id, "kde")
+                                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                                    if (x11Intent != null) {
+                                        context.startActivity(x11Intent)
+                                        com.zenithblue.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
+                                    }
+                                    distroToLaunch.value = null
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            } else if (!kdeInstalled) {
+                                android.widget.Toast.makeText(context, "Install KDE Plasma Desktop first from Settings.", android.widget.Toast.LENGTH_LONG).show()
+                            } else {
+                                permissionState.launchPermissionRequest()
+                            }
+                        },
+                        enabled = true, // Always tappable — shows toast if not installed
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (kdeInstalled) Color(0xFF1A237E).copy(alpha = 0.85f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            contentColor = if (kdeInstalled) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                    ) {
+                        Text(
+                            if (kdeInstalled) "🌊 Launch KDE Plasma" else "🌊 Launch KDE (Not Installed)",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp
+                        )
+                    }
+
+
+                    val isGuiRunning = StateManager.isGuiRunning(context, distro.id)
+                    val runningType = StateManager.getGuiRunningType(context, distro.id)
                     if (isGuiRunning) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                val intent = TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                val intent = if (runningType == "kde") {
+                                    TermuxIntentFactory.buildStopKdeGuiIntent(distro.id)
+                                } else {
+                                    TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                }
                                 onStartService(intent)
                                 StateManager.setGuiRunning(context, distro.id, false)
+                                StateManager.setGuiRunningType(context, distro.id, "")
                                 distroToLaunch.value = null
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -417,7 +468,10 @@ fun HomeScreen(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth().height(56.dp)
                         ) {
-                            Text("Force Stop", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                if (runningType == "kde") "⏹ Stop KDE Plasma" else "⏹ Stop XFCE4",
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                     

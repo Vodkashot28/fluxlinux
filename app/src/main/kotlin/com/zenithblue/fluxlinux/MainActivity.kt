@@ -436,7 +436,7 @@ class MainActivity : ComponentActivity() {
                                  onBack = { currentScreen = Screen.HOME }, // Or Screen.DISTROS depending on where they came from? Let's just go Home for now or maintain history.
                                  // Actually for simplicity, back goes to tab view.
                                  hazeState = hazeState,
-                                 onInstallStart = { components, theme, gpu ->
+                                 onInstallStart = { components, theme, gpu, desktopEnv ->
                                      if (permissionState.status.isGranted) {
                                          // NEW QUEUE-BASED WORKFLOW
                                          lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -456,7 +456,7 @@ class MainActivity : ComponentActivity() {
                                                   type = com.zenithblue.fluxlinux.core.utils.TaskType.BASE_INSTALL,
                                                   isManual = true,
                                                   distroId = selectedDistro!!.id,
-                                                  extraEnv = mapOf("FLUX_THEME" to theme, "FLUX_GPU" to gpu)
+                                                  extraEnv = mapOf("FLUX_THEME" to theme, "FLUX_GPU" to gpu, "FLUX_DESKTOP_ENV" to desktopEnv)
                                               ))
                                               
                                               // 2. Hardware Acceleration
@@ -480,9 +480,24 @@ class MainActivity : ComponentActivity() {
                                                   ))
                                               }
                                               
-                                              // 3. Components (Auto-Launch)
-                                              // Filter out hw_accel since it's already added explicitly above
-                                              components.filter { it.id != "hw_accel" }.forEach { comp ->
+                                              // 3. If KDE selected, inject kde_plasma component automatically
+                                              if (desktopEnv == "KDE") {
+                                                  val kdeComp = selectedDistro!!.components.find { it.id == "kde_plasma" }
+                                                  if (kdeComp != null) {
+                                                      tasks.add(com.zenithblue.fluxlinux.core.utils.InstallTask(
+                                                          id = "kde_plasma",
+                                                          name = kdeComp.name,
+                                                          type = com.zenithblue.fluxlinux.core.utils.TaskType.COMPONENT,
+                                                          scriptName = kdeComp.scriptName,
+                                                          distroId = selectedDistro!!.id,
+                                                          extraEnv = emptyMap()
+                                                      ))
+                                                  }
+                                              }
+                                              
+                                              // 4. User-selected Components (filter mandatory ones already added above)
+                                              val alreadyQueued = setOf("hw_accel", "kde_plasma")
+                                              components.filter { it.id !in alreadyQueued }.forEach { comp ->
                                                   tasks.add(com.zenithblue.fluxlinux.core.utils.InstallTask(
                                                       id = comp.id,
                                                       name = comp.name,
@@ -694,10 +709,51 @@ class MainActivity : ComponentActivity() {
                                       } else {
                                           permissionState.launchPermissionRequest()
                                       }
-                                 },
-                                 onStartActivity = onStartActivityStub,
-                                 onNavigateToStart = { /* Not used in Settings, but if needed */ }
-                             )
+                                  },
+                                  onStartActivity = onStartActivityStub,
+                                  onNavigateToStart = { /* Not used in Settings, but if needed */ },
+                                  onLaunchXfce = {
+                                      if (permissionState.status.isGranted) {
+                                          try {
+                                              val intent = com.zenithblue.fluxlinux.core.data.TermuxIntentFactory.buildLaunchGuiIntent(selectedDistro!!.id)
+                                              onStartServiceStub(intent)
+                                          } catch (e: Exception) {
+                                              android.util.Log.e("FluxLinux", "Launch XFCE4 failed", e)
+                                          }
+                                      } else {
+                                          permissionState.launchPermissionRequest()
+                                      }
+                                  },
+                                  onStopXfce = {
+                                      try {
+                                          val intent = com.zenithblue.fluxlinux.core.data.TermuxIntentFactory.buildStopGuiIntent(selectedDistro!!.id)
+                                          onStartServiceStub(intent)
+                                      } catch (e: Exception) {
+                                          android.util.Log.e("FluxLinux", "Stop XFCE4 failed", e)
+                                      }
+                                  },
+                                  onLaunchKde = {
+                                      if (permissionState.status.isGranted) {
+                                          try {
+                                              val intent = com.zenithblue.fluxlinux.core.data.TermuxIntentFactory.buildLaunchKdeGuiIntent(this@MainActivity, selectedDistro!!.id)
+                                              onStartServiceStub(intent)
+                                          } catch (e: Exception) {
+                                              android.util.Log.e("FluxLinux", "Launch KDE failed", e)
+                                          }
+                                      } else {
+                                          permissionState.launchPermissionRequest()
+                                      }
+                                  },
+                                  onStopKde = {
+                                      try {
+                                          val intent = com.zenithblue.fluxlinux.core.data.TermuxIntentFactory.buildStopKdeGuiIntent(selectedDistro!!.id)
+                                          onStartServiceStub(intent)
+                                      } catch (e: Exception) {
+                                          android.util.Log.e("FluxLinux", "Stop KDE failed", e)
+                                      }
+                                  }
+                              )
+
                          } else {
                              currentScreen = Screen.HOME
                          }
@@ -707,5 +763,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-

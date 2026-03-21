@@ -52,6 +52,11 @@ fun DistroSettingsScreen(
     onReinstallDistro: () -> Unit,
     onNavigateToStart: (() -> Unit)? = null,
     onStartActivity: (android.content.Intent) -> Unit,
+    onLaunchXfce: (() -> Unit)? = null,
+    onStopXfce: (() -> Unit)? = null,
+    onLaunchKde: (() -> Unit)? = null,
+    onStopKde: (() -> Unit)? = null,
+    onLaunchCli: (() -> Unit)? = null,
     hazeState: HazeState
 ) {
     val context = LocalContext.current
@@ -174,7 +179,8 @@ fun DistroSettingsScreen(
                     }
                 }
 
-                // Distro Components
+
+                // ─── Components Section Title ──────────────────────────────
                 item {
                     Text(
                         text = "Features & Components",
@@ -183,6 +189,8 @@ fun DistroSettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+
 
                 items(distro.components) { component ->
                     val isInstalled = remember(component.id) { 
@@ -195,14 +203,26 @@ fun DistroSettingsScreen(
                         isInstalled = isInstalled,
                         details = details,
                         onAction = { 
-                            if (component.scriptName.contains("setup_customization")) {
-                                activeComponent = component
-                                showThemeDialog = true
-                            } else if (component.scriptName.contains("setup_hw_accel")) {
-                                activeComponent = component
-                                showGpuDialog = true
-                            } else {
-                                onInstallComponent(component, emptyMap()) 
+                            when {
+                                component.id == "customization" -> {
+                                    // XFCE4 customization — show theme + GPU dialog
+                                    activeComponent = component
+                                    showThemeDialog = true
+                                }
+                                component.id == "hw_accel" -> {
+                                    // Hardware acceleration — show GPU dialog
+                                    activeComponent = component
+                                    showGpuDialog = true
+                                }
+                                component.id == "kde_customization" -> {
+                                    // KDE customization — show theme dialog (kde script handles FLUX_THEME)
+                                    activeComponent = component
+                                    showThemeDialog = true
+                                }
+                                else -> {
+                                    // Generic install (kde_plasma, app_dev, web_dev, etc.)
+                                    onInstallComponent(component, emptyMap())
+                                }
                             }
                         }
                     )

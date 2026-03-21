@@ -266,6 +266,11 @@ object TermuxIntentFactory {
              val stopGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/stop_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
              fullScript += "echo '$stopGuiScriptB64' | base64 -d > \$HOME/stop_gui.sh\n"
              fullScript += "chmod +x \$HOME/stop_gui.sh\n"
+
+             // Deploy start_gui_kde.sh (KDE Plasma launcher)
+             val kdeGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/start_gui_kde.sh").toByteArray(), android.util.Base64.NO_WRAP)
+             fullScript += "echo '$kdeGuiScriptB64' | base64 -d > \$HOME/start_gui_kde.sh\n"
+             fullScript += "chmod +x \$HOME/start_gui_kde.sh\n"
         }
         
         // 2. Modify Base Script to defer exit/callback if present (mostly for chroot scripts that have it)
@@ -579,5 +584,96 @@ object TermuxIntentFactory {
                 echo "Then paste this command again."
             fi
         """.trimIndent() + "\n"
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // KDE Plasma launch / stop
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Launches KDE Plasma for a given distro.
+     * PRoot: runs start_gui_kde.sh (startplasma-x11)
+     * Chroot (debian13_chroot): starts VirGL + PulseAudio in Termux context first,
+     *   then su into the chroot's start_debian13_kde_gui.sh.
+     */
+    fun buildLaunchKdeGuiIntent(context: android.content.Context, distroId: String): Intent {
+        if (distroId == "debian13_chroot") {
+            val command = """
+                echo "FluxLinux: Starting services in Termux context for KDE..."
+
+                # VirGL server
+                if [ -x "${'$'}PREFIX/bin/virgl_test_server_android" ]; then
+                    nohup setsid ${'$'}PREFIX/bin/virgl_test_server_android >/dev/null 2>&1 &
+                    sleep 1
+                    echo "[OK] VirGL server started"
+                fi
+
+                # PulseAudio server
+                ${'$'}PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null
+                ${'$'}PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
+                echo "[OK] PulseAudio started"
+
+                sleep 1
+                echo "FluxLinux: Launching Chroot KDE GUI..."
+                su -c "sh /data/local/tmp/start_debian13_kde_gui.sh"
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
+        if (distroId == "debian_chroot") {
+            return buildRunCommandIntent("sh /data/local/tmp/start_debian_kde_gui.sh", runInBackground = false)
+        }
+
+        // Standard PRoot launch — deploy start_gui_kde.sh inline then run it
+        val scriptManager = ScriptManager(context)
+        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptB64 = android.util.Base64.encodeToString(kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+        val command = """
+            echo '$kdeGuiScriptB64' | base64 -d > ${'$'}HOME/start_gui_kde.sh
+            chmod +x ${'$'}HOME/start_gui_kde.sh
+            bash ${'$'}HOME/start_gui_kde.sh $distroId
+        """.trimIndent()
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
+     * Stops the KDE Plasma session for a given distro.
+     * Kills plasmashell, kwin_x11, kded5 instead of xfce4 processes.
+     */
+    fun buildStopKdeGuiIntent(distroId: String): Intent {
+        if (distroId == "debian13_chroot" || distroId == "debian_chroot") {
+            val scriptPath = if (distroId == "debian13_chroot") {
+                "/data/local/tmp/stop_debian13_kde_gui.sh"
+            } else {
+                "/data/local/tmp/stop_debian_kde_gui.sh"
+            }
+            val command = """
+                su -c 'if [ -f "$scriptPath" ]; then sh "$scriptPath"; else pkill -f plasmashell; pkill -f kwin_x11; pkill -f kded6; pkill -f Xwayland; fi'
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
+        // PRoot stop — mirror XFCE4 stop_gui.sh approach:
+        // proot-distro login runs killall INSIDE proot namespace, then kill X11 from Termux.
+        // Do NOT use pkill from Termux directly — it kills the Termux session itself.
+        val command = """
+            echo "FluxLinux: Stopping KDE Plasma..."
+
+            # Step 1: Kill KDE session processes inside proot (same as XFCE4 stop approach)
+            proot-distro login ${'$'}{1:-${distroId}} -- bash -c \
+                'killall -9 plasmashell kwin_x11 kded6 plasma_session startplasma-x11 dbus-launch 2>/dev/null; sleep 1' \
+                2>/dev/null
+
+            # Step 2: Stop Termux:X11
+            am broadcast -a com.termux.x11.ACTION_STOP -p com.termux.x11 >/dev/null 2>&1
+            killall -9 Xwayland termux-x11 2>/dev/null
+            kill -9 $(pgrep -f "termux.x11") 2>/dev/null
+
+            # Step 3: Stop PulseAudio
+            pulseaudio --kill 2>/dev/null
+
+            echo "FluxLinux: KDE Plasma stopped."
+        """.trimIndent()
+        return buildRunCommandIntent(command, runInBackground = false)
     }
 }

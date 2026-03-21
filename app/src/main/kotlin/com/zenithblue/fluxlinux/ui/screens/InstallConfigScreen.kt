@@ -55,7 +55,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 fun InstallConfigScreen(
     distro: Distro,
     onBack: () -> Unit,
-    onInstallStart: (List<DistroComponent>, String, String) -> Unit,
+    onInstallStart: (List<DistroComponent>, String, String, String) -> Unit,
     hazeState: HazeState
 ) {
     var desktopEnv by remember { mutableStateOf("XFCE4") }
@@ -132,7 +132,7 @@ fun InstallConfigScreen(
                      Button(
                         onClick = {
                             val componentsToInstall = distro.components.filter { selectedComponents.contains(it.id) }
-                            onInstallStart(componentsToInstall, selectedTheme, selectedGpu)
+                            onInstallStart(componentsToInstall, selectedTheme, selectedGpu, desktopEnv)
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -186,17 +186,34 @@ fun InstallConfigScreen(
                                 }
                             }
                             
-                            // Placeholder for KDE
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            // KDE Plasma — fully enabled
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { desktopEnv = "KDE" }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 RadioButton(
-                                    selected = false,
-                                    onClick = {},
-                                    enabled = false,
-                                    colors = RadioButtonDefaults.colors(disabledUnselectedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                                    selected = desktopEnv == "KDE",
+                                    onClick = { desktopEnv = "KDE" },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colorScheme.secondary,
+                                        unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 )
                                 Column {
-                                    Text("KDE Plasma (Coming Soon)", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                                    Text("Modern and customizable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                    Text(
+                                        "KDE Plasma",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        "Modern, customizable & feature-rich. (~800 MB extra)",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
