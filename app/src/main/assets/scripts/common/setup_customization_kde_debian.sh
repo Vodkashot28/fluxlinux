@@ -219,7 +219,7 @@ echo "FluxLinux: Writing kwinrc..."
 cat > "$KDE_CONFIG/kwinrc" << EOF
 [Compositing]
 Backend=QPainter
-Enabled=true
+Enabled=false
 OpenGLIsUnsafe=true
 
 [Windows]
