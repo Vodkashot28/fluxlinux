@@ -14,7 +14,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.zenithblue.fluxlinux"
+        applicationId = "com.ivarna.fluxlinux"
         minSdk = 26
         targetSdk = 36
         versionCode = 7
