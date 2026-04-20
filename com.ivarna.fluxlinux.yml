@@ -26,9 +26,21 @@ Builds:
       - assets/xfce4/cursor/cursor.zip
       - assets/wallpaper/wallpaper.zip
 
+  - versionName: '1.6'
+    versionCode: 8
+    commit: 7879b65df9719e21a49586173acdaf26e2920269
+    subdir: app
+    gradle:
+      - yes
+    scanignore:
+      - assets/xfce4/icons/papirus-icon-theme-20250501.tar.gz
+      - assets/xfce4/theme/theme.zip
+      - assets/xfce4/cursor/cursor.zip
+      - assets/wallpaper/wallpaper.zip
+
 AllowedAPKSigningKeys: 9ad04230071d8424994c6f88110633dc4b082f58bb8ff26daa293099f9f536fb
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.3'
-CurrentVersionCode: 4
+CurrentVersion: '1.6'
+CurrentVersionCode: 8
