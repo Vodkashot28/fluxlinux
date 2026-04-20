@@ -229,7 +229,7 @@ cat <<EOF > "$XFCONF_DIR/xfwm4.xml"
     <property name="show_frame_shadow" type="bool" value="true"/>
     <property name="snap_to_border" type="bool" value="true"/>
     <property name="snap_to_windows" type="bool" value="true"/>
-    <property name="use_compositing" type="bool" value="true"/>
+    <property name="use_compositing" type="bool" value="false"/>
     <property name="tile_on_move" type="bool" value="true"/>
     <property name="wrap_windows" type="bool" value="true"/>
   </property>
