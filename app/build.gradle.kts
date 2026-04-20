@@ -38,15 +38,6 @@ android {
         includeInBundle = false
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("/home/abhay/repos/keys/fluxlinux.jks")
-            storePassword = "fluxlinux_release_ab"
-            keyAlias = "upload"
-            keyPassword = "fluxlinux_release_ab"
-        }
-    }
-
     buildTypes {
         debug {
             isDebuggable = true
@@ -55,7 +46,6 @@ android {
             }
         }
         release {
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
