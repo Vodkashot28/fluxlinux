@@ -38,7 +38,7 @@ Builds:
       - assets/xfce4/cursor/cursor.zip
       - assets/wallpaper/wallpaper.zip
 
-AllowedAPKSigningKeys: 9ad04230071d8424994c6f88110633dc4b082f58bb8ff26daa293099f9f536fb
+AllowedAPKSigningKeys: 34f011660e5bb7140de5452e169e1399fd0e6586746daa5431d29d637f6d1a3c
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
