@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    namespace = "com.zenithblue.fluxlinux"
+    namespace = "com.ivarna.fluxlinux"
     compileSdk = 36
 
     defaultConfig {
