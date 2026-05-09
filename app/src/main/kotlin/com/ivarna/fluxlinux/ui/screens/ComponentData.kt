@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -179,6 +180,30 @@ val componentDetailsMap = mapOf(
             "Xournal++" to "15 MB"
         ),
         totalSizeValues = 0.8
+    ),
+    "vulkan_llamacpp" to ComponentDetail(
+        icon = Icons.Default.SmartToy,
+        packages = listOf(
+            "llama.cpp (Vulkan backend)" to "200 MB",
+            "Build tools (cmake, g++)" to "150 MB",
+            "Vulkan headers & libs" to "50 MB",
+            "SPIRV tools" to "30 MB"
+        ),
+        totalSizeValues = 0.5
+    ),
+    "qwen35_model" to ComponentDetail(
+        icon = Icons.Default.SmartToy,
+        packages = listOf(
+            "Qwen3.5-0.8B Q4_0 GGUF" to "507 MB"
+        ),
+        totalSizeValues = 0.507
+    ),
+    "qwen25_model" to ComponentDetail(
+        icon = Icons.Default.SmartToy,
+        packages = listOf(
+            "Qwen2.5-1.5B Q4_0 GGUF" to "938 MB"
+        ),
+        totalSizeValues = 0.935
     ),
     "emulation" to ComponentDetail(
         icon = Icons.Default.Gamepad,

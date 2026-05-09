@@ -112,6 +112,27 @@ object DistroRepository {
             sizeEstimate = "1.2 GB"
         ),
         DistroComponent(
+            id = "vulkan_llamacpp",
+            name = "Vulkan Llama.cpp",
+            description = "GPU-accelerated LLM inference via Vulkan. Uses Turnip on Adreno devices.",
+            scriptName = "common/setup_vulkan_llamacpp_debian.sh",
+            sizeEstimate = "500 MB"
+        ),
+        DistroComponent(
+            id = "qwen35_model",
+            name = "Qwen3.5-0.8B Model",
+            description = "Download Qwen3.5-0.8B GGUF (Q4_0). Requires Vulkan Llama.cpp installed first.",
+            scriptName = "common/setup_qwen35_debian.sh",
+            sizeEstimate = "507 MB"
+        ),
+        DistroComponent(
+            id = "qwen25_model",
+            name = "Qwen2.5-1.5B Model",
+            description = "Qwen2.5-1.5B-Instruct GGUF (Vulkan GPU compatible). Replaces Qwen3.5 GDN.",
+            scriptName = "common/setup_qwen25_debian.sh",
+            sizeEstimate = "935 MB"
+        ),
+        DistroComponent(
             id = "emulation",
             name = "Retro Emulation",
             description = "RetroArch, various emulator cores.",

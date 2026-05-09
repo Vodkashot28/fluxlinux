@@ -388,6 +388,18 @@ object TermuxIntentFactory {
     }
 
     /**
+     * Launches a Qwen2.5-1.5B-Instruct interactive chat session via llama-vulkan inside the distro.
+     * Requires: Vulkan Llama.cpp + Qwen2.5 model installed in the distro.
+     */
+    fun buildRunLlmIntent(context: Context, distroId: String): Intent {
+        val scriptManager = ScriptManager(context)
+        val scriptContent = scriptManager.getScriptContent("common/launch_qwen25.sh")
+        val scriptB64 = android.util.Base64.encodeToString(scriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+        val command = "proot-distro login $distroId -- bash -c 'echo \"$scriptB64\" | base64 -d | bash'"
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
      * Launches a specific distro in GUI mode (XFCE4).
      */
     fun buildLaunchGuiIntent(distroId: String): Intent {

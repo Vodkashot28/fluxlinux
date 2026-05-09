@@ -368,6 +368,40 @@ fun HomeScreen(
                         }
                     }
                     
+                    // LLM Model Button (Qwen3.5 interactive chat)
+                    val llmInstalled = StateManager.isComponentInstalled(context, distro.id, "vulkan_llamacpp")
+                    val modelInstalled = StateManager.isComponentInstalled(context, distro.id, "qwen25_model")
+                    
+                    if (llmInstalled && modelInstalled) {
+                        Button(
+                            onClick = {
+                                if (permissionState.status.isGranted) {
+                                    val intent = TermuxIntentFactory.buildRunLlmIntent(context, distro.id)
+                                    try {
+                                        onStartService(intent)
+                                        distroToLaunch.value = null
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    permissionState.launchPermissionRequest()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7C4DFF).copy(alpha = 0.85f),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("🤖 Run Qwen2.5-1.5B", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    
                     // GUI Buttons — separate for XFCE4 and KDE
                     val kdeInstalled = StateManager.isComponentInstalled(context, distro.id, "kde_plasma")
 
