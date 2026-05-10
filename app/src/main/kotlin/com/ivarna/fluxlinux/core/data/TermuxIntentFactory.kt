@@ -609,8 +609,19 @@ object TermuxIntentFactory {
      *   then su into the chroot's start_debian13_kde_gui.sh.
      */
     fun buildLaunchKdeGuiIntent(context: android.content.Context, distroId: String): Intent {
+        val scriptManager = ScriptManager(context)
+
         if (distroId == "debian13_chroot") {
+            // Deploy chroot KDE launcher: write to Termux $HOME first, then su cp to /data/local/tmp/
+            val chrootKdeScriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui.sh")
+            val chrootKdeScriptB64 = android.util.Base64.encodeToString(chrootKdeScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+
             val command = """
+                echo "FluxLinux: Deploying KDE launcher..."
+                echo '$chrootKdeScriptB64' | base64 -d > ${'$'}HOME/start_debian13_kde_gui.sh
+                chmod +x ${'$'}HOME/start_debian13_kde_gui.sh
+                su -c "cp ${'$'}HOME/start_debian13_kde_gui.sh /data/local/tmp/start_debian13_kde_gui.sh && chmod +x /data/local/tmp/start_debian13_kde_gui.sh"
+
                 echo "FluxLinux: Starting services in Termux context for KDE..."
 
                 # VirGL server
@@ -637,7 +648,6 @@ object TermuxIntentFactory {
         }
 
         // Standard PRoot launch — deploy start_gui_kde.sh inline then run it
-        val scriptManager = ScriptManager(context)
         val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
         val kdeGuiScriptB64 = android.util.Base64.encodeToString(kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
         val command = """
@@ -649,18 +659,126 @@ object TermuxIntentFactory {
     }
 
     /**
+     * Launches KDE Plasma for a given distro using Turnip/Zink (Vulkan/Adreno) GPU rendering.
+     * Only supported for chroot distros — PRoot already handles Turnip via shared namespace.
+     * Mounts /dev/dri and Adreno kgsl nodes inside the chroot so Turnip can access the GPU.
+     */
+    fun buildLaunchKdeGuiTurnipIntent(context: android.content.Context, distroId: String): Intent {
+        val scriptManager = ScriptManager(context)
+
+        if (distroId == "debian13_chroot") {
+            val chrootKdeScriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui_turnip.sh")
+            val chrootKdeScriptB64 = android.util.Base64.encodeToString(
+                chrootKdeScriptContent.toByteArray(), android.util.Base64.NO_WRAP
+            )
+
+            val command = """
+                echo "FluxLinux: Deploying KDE Turnip launcher..."
+                echo '$chrootKdeScriptB64' | base64 -d > ${'$'}HOME/start_debian13_kde_gui_turnip.sh
+                chmod +x ${'$'}HOME/start_debian13_kde_gui_turnip.sh
+                su -c "cp ${'$'}HOME/start_debian13_kde_gui_turnip.sh /data/local/tmp/start_debian13_kde_gui_turnip.sh && chmod +x /data/local/tmp/start_debian13_kde_gui_turnip.sh"
+
+                echo "FluxLinux: Starting PulseAudio for KDE (Turnip)..."
+
+                # PulseAudio server (VirGL server not needed for Turnip)
+                ${'$'}PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null
+                ${'$'}PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
+                echo "[OK] PulseAudio started"
+
+                sleep 1
+                echo "FluxLinux: Launching Chroot KDE GUI (Turnip/Zink)..."
+                su -c "sh /data/local/tmp/start_debian13_kde_gui_turnip.sh"
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
+        if (distroId == "debian_chroot") {
+            return buildRunCommandIntent("sh /data/local/tmp/start_debian_kde_gui_turnip.sh", runInBackground = false)
+        }
+
+        // Standard PRoot — Turnip is accessible natively; just use GALLIUM_DRIVER=zink override
+        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptB64 = android.util.Base64.encodeToString(
+            kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP
+        )
+        val command = """
+            echo '$kdeGuiScriptB64' | base64 -d > ${'$'}HOME/start_gui_kde.sh
+            chmod +x ${'$'}HOME/start_gui_kde.sh
+            GALLIUM_DRIVER=zink MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform ZINK_NO_TIMELINES=1 bash ${'$'}HOME/start_gui_kde.sh $distroId
+        """.trimIndent()
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
+     * Launches KDE Plasma using pure CPU software rendering (LLVMpipe).
+     * No GPU, no VirGL, no Vulkan required — works on ALL devices.
+     * Slowest but most compatible option.
+     */
+    fun buildLaunchKdeGuiSoftwareIntent(context: android.content.Context, distroId: String): Intent {
+        val scriptManager = ScriptManager(context)
+
+        if (distroId == "debian13_chroot") {
+            val scriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui_software.sh")
+            val scriptB64 = android.util.Base64.encodeToString(
+                scriptContent.toByteArray(), android.util.Base64.NO_WRAP
+            )
+
+            val command = """
+                echo "FluxLinux: Deploying KDE Software launcher..."
+                echo '$scriptB64' | base64 -d > ${'$'}HOME/start_debian13_kde_gui_software.sh
+                chmod +x ${'$'}HOME/start_debian13_kde_gui_software.sh
+                su -c "cp ${'$'}HOME/start_debian13_kde_gui_software.sh /data/local/tmp/start_debian13_kde_gui_software.sh && chmod +x /data/local/tmp/start_debian13_kde_gui_software.sh"
+
+                echo "FluxLinux: Starting PulseAudio (no VirGL needed for software mode)..."
+                ${'$'}PREFIX/bin/pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null
+                ${'$'}PREFIX/bin/pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1 || true
+                echo "[OK] PulseAudio started"
+
+                sleep 1
+                echo "FluxLinux: Launching KDE (Software/LLVMpipe)..."
+                su -c "sh /data/local/tmp/start_debian13_kde_gui_software.sh"
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
+        if (distroId == "debian_chroot") {
+            return buildRunCommandIntent("sh /data/local/tmp/start_debian_kde_gui_software.sh", runInBackground = false)
+        }
+
+        // PRoot: set LIBGL_ALWAYS_SOFTWARE=1 override on the existing kde script
+        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptB64 = android.util.Base64.encodeToString(
+            kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP
+        )
+        val command = """
+            echo '$kdeGuiScriptB64' | base64 -d > ${'$'}HOME/start_gui_kde.sh
+            chmod +x ${'$'}HOME/start_gui_kde.sh
+            LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe bash ${'$'}HOME/start_gui_kde.sh $distroId
+        """.trimIndent()
+        return buildRunCommandIntent(command, runInBackground = false)
+    }
+
+    /**
      * Stops the KDE Plasma session for a given distro.
      * Kills plasmashell, kwin_x11, kded5 instead of xfce4 processes.
      */
-    fun buildStopKdeGuiIntent(distroId: String): Intent {
-        if (distroId == "debian13_chroot" || distroId == "debian_chroot") {
-            val scriptPath = if (distroId == "debian13_chroot") {
-                "/data/local/tmp/stop_debian13_kde_gui.sh"
-            } else {
-                "/data/local/tmp/stop_debian_kde_gui.sh"
-            }
+    fun buildStopKdeGuiIntent(context: android.content.Context, distroId: String): Intent {
+
+        if (distroId == "debian13_chroot") {
+            val scriptManager = ScriptManager(context)
+            val stopScriptContent = scriptManager.getScriptContent("chroot/stop_debian13_kde_gui.sh")
+            val stopScriptB64 = android.util.Base64.encodeToString(stopScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
             val command = """
-                su -c 'if [ -f "$scriptPath" ]; then sh "$scriptPath"; else pkill -f plasmashell; pkill -f kwin_x11; pkill -f kded6; pkill -f Xwayland; fi'
+                echo '$stopScriptB64' | base64 -d > ${'$'}HOME/stop_debian13_kde_gui.sh
+                chmod +x ${'$'}HOME/stop_debian13_kde_gui.sh
+                su -c "cp ${'$'}HOME/stop_debian13_kde_gui.sh /data/local/tmp/stop_debian13_kde_gui.sh && chmod +x /data/local/tmp/stop_debian13_kde_gui.sh && sh /data/local/tmp/stop_debian13_kde_gui.sh"
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
+        if (distroId == "debian_chroot") {
+            val command = """
+                su -c 'if [ -f "/data/local/tmp/stop_debian_kde_gui.sh" ]; then sh "/data/local/tmp/stop_debian_kde_gui.sh"; else pkill -f plasmashell; pkill -f kwin_x11; pkill -f kded6; pkill -f Xwayland; fi'
             """.trimIndent()
             return buildRunCommandIntent(command, runInBackground = false)
         }

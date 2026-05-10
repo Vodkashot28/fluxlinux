@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +60,8 @@ fun HomeScreen(
     
     // State for Launch Popup
     val distroToLaunch = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
+    // State for KDE GPU mode picker (sub-dialog)
+    val showKdeGpuPicker = remember { mutableStateOf<com.ivarna.fluxlinux.core.data.Distro?>(null) }
     
     // Refresh key to trigger recomposition
     val refreshKey = remember { mutableStateOf(0) }
@@ -153,7 +156,7 @@ fun HomeScreen(
                         if (permissionState.status.isGranted) {
                             val runningType = StateManager.getGuiRunningType(context, distro.id)
                             val intent = if (runningType == "kde") {
-                                TermuxIntentFactory.buildStopKdeGuiIntent(distro.id)
+                                TermuxIntentFactory.buildStopKdeGuiIntent(context, distro.id)
                             } else {
                                 TermuxIntentFactory.buildStopGuiIntent(distro.id)
                             }
@@ -439,24 +442,12 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // KDE Plasma
+                    // KDE Plasma — opens GPU picker if installed
                     Button(
                         onClick = {
                             if (kdeInstalled && permissionState.status.isGranted) {
-                                val intent = TermuxIntentFactory.buildLaunchKdeGuiIntent(context, distro.id)
-                                try {
-                                    onStartService(intent)
-                                    StateManager.setGuiRunning(context, distro.id, true)
-                                    StateManager.setGuiRunningType(context, distro.id, "kde")
-                                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
-                                    if (x11Intent != null) {
-                                        context.startActivity(x11Intent)
-                                        com.ivarna.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
-                                    }
-                                    distroToLaunch.value = null
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                                }
+                                // Show GPU mode picker sub-dialog
+                                showKdeGpuPicker.value = distro
                             } else if (!kdeInstalled) {
                                 android.widget.Toast.makeText(context, "Install KDE Plasma Desktop first from Settings.", android.widget.Toast.LENGTH_LONG).show()
                             } else {
@@ -486,7 +477,7 @@ fun HomeScreen(
                         Button(
                             onClick = {
                                 val intent = if (runningType == "kde") {
-                                    TermuxIntentFactory.buildStopKdeGuiIntent(distro.id)
+                                    TermuxIntentFactory.buildStopKdeGuiIntent(context, distro.id)
                                 } else {
                                     TermuxIntentFactory.buildStopGuiIntent(distro.id)
                                 }
@@ -526,6 +517,309 @@ fun HomeScreen(
             }
         }
     }
+
+    // ─── KDE GPU Mode Picker Sub-Dialog ───────────────────────────────────────
+    if (showKdeGpuPicker.value != null) {
+        val distro = showKdeGpuPicker.value!!
+        KdeGpuPickerDialog(
+            distro = distro,
+            onDismiss = { showKdeGpuPicker.value = null },
+            onSelectVirGL = {
+                val intent = TermuxIntentFactory.buildLaunchKdeGuiIntent(context, distro.id)
+                try {
+                    onStartService(intent)
+                    StateManager.setGuiRunning(context, distro.id, true)
+                    StateManager.setGuiRunningType(context, distro.id, "kde")
+                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                    if (x11Intent != null) {
+                        context.startActivity(x11Intent)
+                        com.ivarna.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
+                    }
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                showKdeGpuPicker.value = null
+                distroToLaunch.value = null
+            },
+            onSelectTurnip = {
+                val intent = TermuxIntentFactory.buildLaunchKdeGuiTurnipIntent(context, distro.id)
+                try {
+                    onStartService(intent)
+                    StateManager.setGuiRunning(context, distro.id, true)
+                    StateManager.setGuiRunningType(context, distro.id, "kde")
+                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                    if (x11Intent != null) {
+                        context.startActivity(x11Intent)
+                        com.ivarna.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
+                    }
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                showKdeGpuPicker.value = null
+                distroToLaunch.value = null
+            },
+            onSelectSoftware = {
+                val intent = TermuxIntentFactory.buildLaunchKdeGuiSoftwareIntent(context, distro.id)
+                try {
+                    onStartService(intent)
+                    StateManager.setGuiRunning(context, distro.id, true)
+                    StateManager.setGuiRunningType(context, distro.id, "kde")
+                    val x11Intent = context.packageManager.getLaunchIntentForPackage("com.termux.x11")
+                    if (x11Intent != null) {
+                        context.startActivity(x11Intent)
+                        com.ivarna.fluxlinux.core.utils.TermuxX11Preferences.applyToTermux(context)
+                    }
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "Launch failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                showKdeGpuPicker.value = null
+                distroToLaunch.value = null
+            }
+        )
+    }
 }
+
+// ─── KDE GPU Picker Dialog ─────────────────────────────────────────────────────
+@Composable
+private fun KdeGpuPickerDialog(
+    distro: com.ivarna.fluxlinux.core.data.Distro,
+    onDismiss: () -> Unit,
+    onSelectVirGL: () -> Unit,
+    onSelectTurnip: () -> Unit,
+    onSelectSoftware: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF1E1E1E).copy(alpha = 0.95f),
+                            Color(0xFF121212).copy(alpha = 0.98f)
+                        )
+                    )
+                )
+                .border(
+                    BorderStroke(1.dp, Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.15f),
+                            Color.Transparent
+                        )
+                    )),
+                    RoundedCornerShape(28.dp)
+                )
+        ) {
+            // Top glow
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header
+                Text(
+                    text = "🌊 KDE Plasma",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Choose GPU Renderer",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.55f)
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // GPU Option Cards — Vertical List of Horizontal Cards
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // ── Turnip Card ─────────────────────────
+                    GpuOptionCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        emoji = "🔥",
+                        title = "Turnip",
+                        subtitle = "Vulkan",
+                        description = "Hardware Vulkan via Adreno GPU. Best performance.",
+                        accentColor = Color(0xFFFF6F00),
+                        badgeText = "Adreno Only",
+                        onClick = onSelectTurnip
+                    )
+
+                    // ── Software Card ───────────────────────
+                    GpuOptionCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        emoji = "🖥️",
+                        title = "Software",
+                        subtitle = "LLVMpipe",
+                        description = "CPU-only. No GPU required. Works on all devices.",
+                        accentColor = Color(0xFF4CAF50),
+                        badgeText = "Safe Fallback",
+                        onClick = onSelectSoftware
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Info note
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "ℹ️  Turnip: Requires Adreno GPU with Vulkan • Software: Works on any device (slower)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.45f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                androidx.compose.material3.TextButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Cancel",
+                        color = Color.White.copy(alpha = 0.4f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─── Reusable GPU Option Card ──────────────────────────────────────────────────
+@Composable
+private fun GpuOptionCard(
+    modifier: Modifier = Modifier,
+    emoji: String,
+    title: String,
+    subtitle: String,
+    description: String,
+    accentColor: Color,
+    badgeText: String?,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        accentColor.copy(alpha = 0.15f),
+                        accentColor.copy(alpha = 0.05f)
+                    )
+                )
+            )
+            .border(
+                BorderStroke(1.dp, Brush.verticalGradient(
+                    listOf(
+                        accentColor.copy(alpha = 0.3f),
+                        Color.Transparent
+                    )
+                )),
+                RoundedCornerShape(24.dp)
+            )
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Emoji icon in glowing circle
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(accentColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = emoji, fontSize = 26.sp)
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Text content
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                    
+                    // Experimental/Fallback badge
+                    if (badgeText != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(accentColor.copy(alpha = 0.25f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = badgeText,
+                                fontSize = 9.sp,
+                                color = accentColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+                
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = accentColor.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = description,
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Start,
+                    lineHeight = 15.sp
+                )
+            }
+        }
+    }
+}
+
 
 

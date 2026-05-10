@@ -746,7 +746,7 @@ class MainActivity : ComponentActivity() {
                                   },
                                   onStopKde = {
                                       try {
-                                          val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildStopKdeGuiIntent(selectedDistro!!.id)
+                                           val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildStopKdeGuiIntent(this, selectedDistro!!.id)
                                           onStartServiceStub(intent)
                                       } catch (e: Exception) {
                                           android.util.Log.e("FluxLinux", "Stop KDE failed", e)

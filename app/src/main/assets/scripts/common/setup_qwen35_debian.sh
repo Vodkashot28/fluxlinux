@@ -35,14 +35,23 @@ echo " [✅] Models directory: $MODELS_DIR"
 # --- 3. Download model ---
 MODEL_URL="https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_0.gguf"
 MODEL_FILE="$MODELS_DIR/Qwen3.5-0.8B-Q4_0.gguf"
+MODEL_TMP="$MODELS_DIR/Qwen3.5-0.8B-Q4_0.gguf.tmp"
+EXPECTED_SIZE=507154688
+EXPECTED_SHA256="444406ddd926550c724ec18d5120a9d40ded44908a063b0e66e9a7e5464c652c"
 
 if [ -f "$MODEL_FILE" ]; then
     FILE_SIZE=$(stat -c%s "$MODEL_FILE" 2>/dev/null || echo "0")
-    if [ "$FILE_SIZE" -gt 1000000 ]; then
-        echo " [✅] Model already downloaded: $MODEL_FILE"
-        echo "      Size: $(du -h "$MODEL_FILE" | cut -f1)"
+    if [ "$FILE_SIZE" -eq "$EXPECTED_SIZE" ]; then
+        FILE_SHA=$(sha256sum "$MODEL_FILE" 2>/dev/null | cut -d' ' -f1)
+        if [ "$FILE_SHA" = "$EXPECTED_SHA256" ]; then
+            echo " [✅] Model already downloaded and verified: $MODEL_FILE"
+            echo "      Size: $(du -h "$MODEL_FILE" | cut -f1)"
+        else
+            echo " [⚠️] Model file SHA256 mismatch. Re-downloading..."
+            rm -f "$MODEL_FILE"
+        fi
     else
-        echo " [⚠️] Model file exists but appears incomplete ($FILE_SIZE bytes). Re-downloading..."
+        echo " [⚠️] Model file size mismatch ($FILE_SIZE vs $EXPECTED_SIZE bytes). Re-downloading..."
         rm -f "$MODEL_FILE"
     fi
 fi
@@ -51,27 +60,40 @@ if [ ! -f "$MODEL_FILE" ]; then
     echo "FluxLinux: Downloading Qwen3.5-0.8B Q4_0 (507 MB)..."
     echo "Source: huggingface.co/unsloth/Qwen3.5-0.8B-GGUF"
     echo ""
-    curl -L -o "$MODEL_FILE.tmp" \
+    curl -L -o "$MODEL_TMP" \
         --progress-bar \
         --fail \
         --retry 3 \
         "$MODEL_URL" \
-        || handle_error "Download Model"
+        || { rm -f "$MODEL_TMP"; handle_error "Download Model"; }
 
-    # Verify download
-    if [ ! -f "$MODEL_FILE.tmp" ]; then
-        handle_error "Download Model (temp file missing)"
+    # Verify file size
+    DL_SIZE=$(stat -c%s "$MODEL_TMP" 2>/dev/null || echo "0")
+    if [ "$DL_SIZE" -ne "$EXPECTED_SIZE" ]; then
+        echo " [❌] Download size mismatch: got $DL_SIZE bytes, expected $EXPECTED_SIZE"
+        rm -f "$MODEL_TMP"
+        handle_error "Download incomplete"
     fi
 
-    DL_SIZE=$(stat -c%s "$MODEL_FILE.tmp" 2>/dev/null || echo "0")
-    if [ "$DL_SIZE" -lt 1000000 ]; then
-        echo " [❌] Download failed: file too small ($DL_SIZE bytes)"
-        handle_error "Download Model (incomplete)"
+    # Verify SHA256
+    DL_SHA=$(sha256sum "$MODEL_TMP" 2>/dev/null | cut -d' ' -f1)
+    if [ "$DL_SHA" != "$EXPECTED_SHA256" ]; then
+        echo " [❌] SHA256 mismatch: got $DL_SHA"
+        rm -f "$MODEL_TMP"
+        handle_error "SHA256 verification failed"
     fi
 
-    mv "$MODEL_FILE.tmp" "$MODEL_FILE" || handle_error "Move model file"
+    # Verify GGUF magic bytes
+    MAGIC=$(xxd -l 4 -p "$MODEL_TMP" 2>/dev/null || echo "")
+    if [ "$MAGIC" != "47475546" ]; then
+        echo " [❌] File is not a valid GGUF model (magic bytes mismatch)"
+        rm -f "$MODEL_TMP"
+        handle_error "Invalid GGUF file"
+    fi
+
+    mv "$MODEL_TMP" "$MODEL_FILE" || handle_error "Move model file"
     echo ""
-    echo " [✅] Model downloaded successfully!"
+    echo " [✅] Model downloaded and verified!"
     echo "      Size: $(du -h "$MODEL_FILE" | cut -f1)"
 fi
 

@@ -38,7 +38,7 @@ proot-distro login $DISTRO --shared-tmp -- /bin/bash -c '
   export TU_DEBUG=noconform
   export ZINK_NO_TIMELINES=1
   export KWIN_OPENGL_INTERFACE=egl
-  export KWIN_COMPOSE=Q
+  export KWIN_COMPOSE=N
   su - flux -c "
     export DISPLAY=:0
     export PULSE_SERVER=tcp:127.0.0.1
@@ -48,7 +48,7 @@ proot-distro login $DISTRO --shared-tmp -- /bin/bash -c '
     export TU_DEBUG=noconform
     export ZINK_NO_TIMELINES=1
     export KWIN_OPENGL_INTERFACE=egl
-    export KWIN_COMPOSE=Q
+    export KWIN_COMPOSE=N
     export QT_QPA_PLATFORMTHEME=kde
     export QT_SCALE_FACTOR=1
     dbus-run-session -- startplasma-x11
