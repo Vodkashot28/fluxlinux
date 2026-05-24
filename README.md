@@ -9,11 +9,15 @@
 
 ---
 
-[![GitHub Downloads](https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success)](https://github.com/abhay-byte/fluxlinux/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow)](https://github.com/abhay-byte/fluxlinux/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=blue)](https://github.com/abhay-byte/fluxlinux/network/members)
-[![License](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg?style=for-the-badge&logo=android&logoColor=white)](https://www.android.com)
+<!-- Row 1 -->
+<a href="https://discord.gg/tag9kXAs2x"><img src="https://img.shields.io/badge/Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+<a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success" alt="Downloads"></a>
+<a href="https://github.com/abhay-byte/fluxlinux/stargazers"><img src="https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow" alt="Stars"></a>
+
+<!-- Row 2 -->
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-2ea44f?style=for-the-badge&logo=gnu&logoColor=white" alt="License"></a>
+<img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
+<a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/badge/Release-v1.7-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release"></a>
 
 </div>
 
@@ -241,6 +245,17 @@ See [LICENSE](LICENSE) for details.
   <p>
     <a href="https://github.com/abhay-byte/fluxlinux">GitHub</a> •
     <a href="https://github.com/abhay-byte/fluxlinux/issues">Issues</a> •
-    <a href="docs/">Documentation</a>
+    <a href="docs/">Documentation</a> •
+    <a href="https://discord.gg/tag9kXAs2x">Discord</a>
   </p>
+</div>
+
+---
+
+<div align="center">
+  <a href="https://discord.gg/tag9kXAs2x">
+    <img src="https://img.shields.io/badge/💬_Join_our_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=5865F2&height=40" height="40" alt="Join our Discord">
+  </a>
+  <br>
+  <p><strong>Get help, share setups, and discuss features</strong></p>
 </div>
