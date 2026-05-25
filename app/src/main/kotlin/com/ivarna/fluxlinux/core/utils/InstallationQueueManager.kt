@@ -26,7 +26,8 @@ data class InstallationState(
     val currentTaskName: String = "",
     val progressCurrent: Int = 0,
     val progressTotal: Int = 0,
-    val currentDistroId: String? = null
+    val currentDistroId: String? = null,
+    val cancelledByUser: Boolean = false
 )
 
 object InstallationQueueManager {
@@ -73,8 +74,20 @@ object InstallationQueueManager {
         queue.clear()
         currentTask = null
         activeDistroId = null
-        // Reset State
         _installState.value = InstallationState()
+    }
+
+    fun cancelByUser() {
+        _installState.value = _installState.value.copy(
+            isInstalling = false,
+            cancelledByUser = true,
+            currentTaskName = "",
+            progressCurrent = 0,
+            progressTotal = 0
+        )
+        queue.clear()
+        currentTask = null
+        activeDistroId = null
     }
     
     fun peek(): InstallTask? = queue.firstOrNull()

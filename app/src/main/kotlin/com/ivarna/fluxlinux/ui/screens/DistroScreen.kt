@@ -3,6 +3,7 @@ package com.ivarna.fluxlinux.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +19,7 @@ import com.ivarna.fluxlinux.core.data.DistroRepository
 import com.ivarna.fluxlinux.core.data.Distro
 import com.ivarna.fluxlinux.core.data.ScriptManager
 import com.ivarna.fluxlinux.core.data.TermuxIntentFactory
+import com.ivarna.fluxlinux.core.utils.InstallationQueueManager
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.ui.components.DistroCard
 import com.ivarna.fluxlinux.ui.theme.FluxAccentMagenta
@@ -37,6 +39,8 @@ fun DistroScreen(
     onNavigateToInstall: (com.ivarna.fluxlinux.core.data.Distro) -> Unit
 ) {
     val context = LocalContext.current
+    
+    val installState by InstallationQueueManager.installState.collectAsState()
     
     // Refresh mechanism to check install status
     val refreshKey = remember { mutableStateOf(0) }
@@ -103,8 +107,11 @@ fun DistroScreen(
                     com.ivarna.fluxlinux.ui.components.DistroCard(
                         distro = distro,
                         isInstalled = false,
+                        isGlobalInstalling = installState.isInstalling,
                         onInstall = {
-                            if (permissionState.status.isGranted) {
+                            if (installState.isInstalling) {
+                                Toast.makeText(context, "Installation already in progress — wait for current install to finish", Toast.LENGTH_LONG).show()
+                            } else if (permissionState.status.isGranted) {
                                 onNavigateToInstall(distro)
                             } else {
                                 permissionState.launchPermissionRequest()

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivarna.fluxlinux.core.data.Distro
 import com.ivarna.fluxlinux.core.data.DistroComponent
+import com.ivarna.fluxlinux.core.utils.InstallationQueueManager
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.ui.components.GlassScaffold
 import com.ivarna.fluxlinux.ui.theme.*
@@ -60,6 +61,7 @@ fun DistroSettingsScreen(
     hazeState: HazeState
 ) {
     val context = LocalContext.current
+    val installState by InstallationQueueManager.installState.collectAsState()
     var showUninstallDialog by remember { mutableStateOf(false) }
     
     // Config Dialog States
@@ -201,6 +203,7 @@ fun DistroSettingsScreen(
                     ComponentManagementGlassCard(
                         component = component,
                         isInstalled = isInstalled,
+                        isGlobalInstalling = installState.isInstalling,
                         details = details,
                         onAction = { 
                             when {
@@ -502,6 +505,7 @@ fun SettingsThemeOption(name: String, desc: String, id: String, selected: Boolea
 fun ComponentManagementGlassCard(
     component: DistroComponent,
     isInstalled: Boolean,
+    isGlobalInstalling: Boolean = false,
     details: ComponentDetail?,
     onAction: () -> Unit
 ) {
@@ -591,23 +595,28 @@ fun ComponentManagementGlassCard(
                    horizontalAlignment = Alignment.CenterHorizontally,
                    verticalArrangement = Arrangement.Center
                ) {
-                   if (!component.comingSoon) {
-                        Button(
-                            onClick = onAction,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f) else MaterialTheme.colorScheme.primary,
-                                contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(40.dp),
-                            elevation = ButtonDefaults.buttonElevation(0.dp)
-                        ) {
-                            if (isInstalled) {
-                                Text("Re-run", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            } else {
-                                Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
+                    if (!component.comingSoon) {
+                         Button(
+                             onClick = onAction,
+                             enabled = !isGlobalInstalling,
+                             colors = ButtonDefaults.buttonColors(
+                                 containerColor = if (isInstalled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f) else MaterialTheme.colorScheme.primary,
+                                 contentColor = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
+                                 disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                 disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                             ),
+                             shape = RoundedCornerShape(12.dp),
+                             modifier = Modifier.height(40.dp),
+                             elevation = ButtonDefaults.buttonElevation(0.dp)
+                         ) {
+                             if (isGlobalInstalling) {
+                                 Text("Busy...", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                             } else if (isInstalled) {
+                                 Text("Re-run", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                             } else {
+                                 Text("Install", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                             }
+                         }
                    }
                    
                    Spacer(modifier = Modifier.height(8.dp))

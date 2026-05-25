@@ -90,10 +90,13 @@ fun InstallConfigScreen(
     val installState by com.ivarna.fluxlinux.core.utils.InstallationQueueManager.installState.collectAsState()
 
     // Navigation on Completion
-    LaunchedEffect(installState.isInstalling) {
+    LaunchedEffect(installState.isInstalling, installState.cancelledByUser) {
         if (!installState.isInstalling && installState.progressTotal > 0) {
-            // Installation Finished
-            onBack() // Or navigate to Home/DistroSettings
+            if (installState.cancelledByUser) {
+                com.ivarna.fluxlinux.core.utils.InstallationQueueManager.clear()
+            } else {
+                onBack()
+            }
         }
     }
 
@@ -102,7 +105,7 @@ fun InstallConfigScreen(
             state = installState,
             hazeState = hazeState,
             onCancel = {
-                com.ivarna.fluxlinux.core.utils.InstallationQueueManager.clear()
+                com.ivarna.fluxlinux.core.utils.InstallationQueueManager.cancelByUser()
             }
         )
     } else {
@@ -134,6 +137,7 @@ fun InstallConfigScreen(
                             val componentsToInstall = distro.components.filter { selectedComponents.contains(it.id) }
                             onInstallStart(componentsToInstall, selectedTheme, selectedGpu, desktopEnv)
                         },
+                        enabled = !installState.isInstalling,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -316,6 +320,29 @@ fun InstallationProgressScreen(
     hazeState: HazeState,
     onCancel: () -> Unit
 ) {
+    var showCancelConfirm by remember { mutableStateOf(false) }
+
+    if (showCancelConfirm) {
+        AlertDialog(
+            onDismissRequest = { showCancelConfirm = false },
+            title = { Text("Cancel Installation?", fontWeight = FontWeight.Bold) },
+            text = { Text("The current step may continue in Termux, but remaining steps will be skipped.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCancelConfirm = false
+                    onCancel()
+                }) {
+                    Text("Yes, Cancel", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelConfirm = false }) {
+                    Text("Continue Waiting")
+                }
+            }
+        )
+    }
+
     GlassScaffold(
         hazeState = hazeState,
         topBar = {
@@ -416,7 +443,7 @@ fun InstallationProgressScreen(
 
             // Cancel Button
             OutlinedButton(
-                onClick = onCancel,
+                onClick = { showCancelConfirm = true },
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error,
                     containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
