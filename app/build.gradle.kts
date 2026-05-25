@@ -12,6 +12,7 @@ plugins {
 android {
     namespace = "com.ivarna.fluxlinux"
     compileSdk = 36
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "com.ivarna.fluxlinux"

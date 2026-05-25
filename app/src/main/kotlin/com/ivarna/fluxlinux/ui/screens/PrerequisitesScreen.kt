@@ -44,11 +44,26 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 
 enum class ApkStatus { NOT_INSTALLED, DOWNLOADING, DOWNLOADED, INSTALLED }
+
+private fun isVersionOlderThan(current: String, minimum: String): Boolean {
+    if (current == "Not Installed") return false
+    val c = current.split(".").mapNotNull { it.toIntOrNull() }
+    val m = minimum.split(".").mapNotNull { it.toIntOrNull() }
+    if (c.isEmpty() || m.isEmpty()) return false
+    for (i in 0 until maxOf(c.size, m.size)) {
+        val cv = c.getOrElse(i) { 0 }
+        val mv = m.getOrElse(i) { 0 }
+        if (cv < mv) return true
+        if (cv > mv) return false
+    }
+    return false
+}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -287,6 +302,10 @@ fun PackageInstallationStep(
         }
     }
 
+    val isTermuxOutdated = termuxInstalled.value && isVersionOlderThan(
+        StateManager.getTermuxVersion(context), "0.118.3"
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -318,6 +337,7 @@ fun PackageInstallationStep(
         PrerequisiteItem(
             name = "Termux",
             isInstalled = termuxInstalled.value,
+            isOutdated = isTermuxOutdated,
             version = if (termuxInstalled.value) StateManager.getTermuxVersion(context) else null,
             apkStatus = termuxApkStatus,
             progress = termuxProgress,
@@ -343,7 +363,7 @@ fun PackageInstallationStep(
         // Continue Button
         Button(
             onClick = onContinue,
-            enabled = termuxInstalled.value && x11Installed.value,
+            enabled = termuxInstalled.value && x11Installed.value && !isTermuxOutdated,
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
             modifier = Modifier
                 .fillMaxWidth()
@@ -600,6 +620,7 @@ fun PermissionRequestStep(
 fun PrerequisiteItem(
     name: String,
     isInstalled: Boolean,
+    isOutdated: Boolean = false,
     version: String?,
     apkStatus: ApkStatus = ApkStatus.INSTALLED,
     progress: Float = 0f,
@@ -614,30 +635,80 @@ fun PrerequisiteItem(
             .padding(16.dp)
     ) {
         if (isInstalled) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Installed",
-                    tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
+            if (isOutdated) {
+                // Outdated version warning (Play Store Termux)
                 Column {
-                    Text(
-                        text = "$name ✓",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (version != null) {
-                        Text(
-                            text = version,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
-                            fontSize = 12.sp
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Outdated",
+                            tint = Color(0xFFFF9800),
+                            modifier = Modifier.size(24.dp)
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "$name — Outdated Version",
+                                color = Color(0xFFFF9800),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (version != null) {
+                                Text(
+                                    text = "Installed: v$version (min required: v0.118.3)",
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                            Text(
+                                text = "You likely have the Play Store version. Uninstall it first, then install from GitHub.",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                    if (onDownload != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onDownload,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Download v0.118.3 (GitHub)", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Installed",
+                        tint = androidx.compose.material3.MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "$name ✓",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (version != null) {
+                            Text(
+                                text = version,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
