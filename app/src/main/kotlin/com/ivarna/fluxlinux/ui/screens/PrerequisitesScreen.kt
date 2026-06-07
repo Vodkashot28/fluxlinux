@@ -238,7 +238,7 @@ fun PackageInstallationStep(
     }
 
     val TERMUX_SHA = "7600078440c3c34ef050bc009b00fc3215cb87ec4a449e01a696f74cf4249db2"
-    val TERMUX_X11_SHA = "cad4b3a4cfa9c3012519139e0ac82fef437151cd19338d6e19e763255882c795"
+    val TERMUX_X11_SHA = "82d03cb7b3c5b1a75bca8b46ff2b627f82c98b8b1ea41c9af33b00b5e0d5a993"
 
     LaunchedEffect(Unit) {
         if (!termuxInstalled.value && ApkDownloader.apkExists(context, "termux.apk")) {
@@ -380,19 +380,23 @@ fun PackageInstallationStep(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        val allAppsReady = termuxInstalled.value && x11Installed.value && !isTermuxOutdated
         // Continue Button
         Button(
             onClick = onContinue,
-            enabled = termuxInstalled.value && x11Installed.value && !isTermuxOutdated,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+            enabled = allAppsReady,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                "Continue",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                if (allAppsReady) "Continue" else "Install Required Apps",
+                color = if (allAppsReady) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -504,22 +508,23 @@ fun TermuxConfigurationStep(
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        // Continue Button
-        Button(
-            onClick = onContinue,
-            enabled = configDone,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                "Continue",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+        // Continue Button - Show only when configDone (tick box) is checked
+        if (configDone) {
+            Button(
+                onClick = onContinue,
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Continue",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -616,19 +621,23 @@ fun PermissionRequestStep(
         
         Spacer(modifier = Modifier.height(32.dp))
         
+        val permissionGranted = permissionState.status.isGranted
         // Continue Button
         Button(
             onClick = onContinue,
-            enabled = permissionState.status.isGranted,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+            enabled = permissionGranted,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                "Next",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                if (permissionGranted) "Continue" else "Grant Permission to Continue",
+                color = if (permissionGranted) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1018,25 +1027,25 @@ fun OverlayPermissionStep(
                   Spacer(modifier = Modifier.height(32.dp))
           
           // Continue Button
-         Button(
-            onClick = onContinue,
-            enabled = manualOverride,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                "Next",
-                color = if (manualOverride) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+          if (manualOverride) {
+              Button(
+                 onClick = onContinue,
+                 colors = ButtonDefaults.buttonColors(
+                     containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                 ),
+                 modifier = Modifier
+                     .fillMaxWidth()
+                     .height(56.dp),
+                 shape = RoundedCornerShape(12.dp)
+             ) {
+                 Text(
+                     "Continue",
+                     color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                     fontSize = 18.sp,
+                     fontWeight = FontWeight.Bold
+                 )
+             }
+         }
     }
 }
 
@@ -1050,6 +1059,7 @@ fun PhantomProcessStep(
     var rootAvailable by remember { mutableStateOf<Boolean?>(null) }
     var fixApplied by remember { mutableStateOf(false) }
     var checkingRoot by remember { mutableStateOf(false) }
+    var adbConfirmed by remember { mutableStateOf(false) }
     
     // Check root on init
     LaunchedEffect(Unit) {
@@ -1223,27 +1233,54 @@ fun PhantomProcessStep(
                      Text("Check Root Again")
                  }
             } // Close else
-        Spacer(modifier = Modifier.height(32.dp))
         
-        // Continue / Skip
-        Button(
-            onClick = onContinue,
-            // Always enabled, user can skip if they want/have to
-            enabled = true,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (fixApplied) androidx.compose.material3.MaterialTheme.colorScheme.primary else androidx.compose.material3.MaterialTheme.colorScheme.secondary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                if (fixApplied) "Next" else "Skip (Use ADB instead)",
-                color = if (fixApplied) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSecondary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+        if (!fixApplied) {
+            Spacer(modifier = Modifier.height(16.dp))
+            // Checkbox for ADB confirmation
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { adbConfirmed = !adbConfirmed }
+                    .padding(8.dp)
+            ) {
+                Checkbox(
+                    checked = adbConfirmed,
+                    onCheckedChange = { adbConfirmed = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        uncheckedColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f)
+                    )
+                )
+                Text(
+                    "I have run the ADB commands on my PC",
+                    fontSize = 14.sp,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+        
+        val showContinueButton = fixApplied || adbConfirmed
+        if (showContinueButton) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onContinue,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Continue",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -1453,7 +1490,7 @@ fun EnvironmentSetupStep(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                "Next",
+                if (setupInitiated) "Continue" else "Initialize Environment",
                 color = if (setupInitiated) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -1466,12 +1503,14 @@ fun EnvironmentSetupStep(
 fun FinalInstructionsStep(
     onComplete: () -> Unit
 ) {
+    var acknowledgeTermuxRunning by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Step 11: Almost Done!",
+            text = "Step 9: Almost Done!",
             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -1519,23 +1558,51 @@ fun FinalInstructionsStep(
             }
         }
         
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         
-        // Complete Button
-        Button(
-            onClick = onComplete,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+        // Acknowledge Checkbox
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp)
+                .clickable { acknowledgeTermuxRunning = !acknowledgeTermuxRunning }
+                .padding(8.dp)
         ) {
-            Text(
-                "Complete Setup",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+            Checkbox(
+                checked = acknowledgeTermuxRunning,
+                onCheckedChange = { acknowledgeTermuxRunning = it },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    uncheckedColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f)
+                )
             )
+            Text(
+                "I understand I must keep Termux running in the background",
+                fontSize = 14.sp,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+        
+        if (acknowledgeTermuxRunning) {
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Complete Button
+            Button(
+                onClick = onComplete,
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Complete Setup",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -1746,7 +1813,7 @@ fun SystemCheckStep(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                "Next",
+                "Continue",
                 color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -1764,6 +1831,7 @@ fun BusyBoxInstallStep(
 ) {
     val context = LocalContext.current
     val isRooted = remember { RootUtils.isRootAvailable() }
+    var busyBoxInstalledChecked by remember { mutableStateOf(!isRooted) }
     
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1879,22 +1947,49 @@ fun BusyBoxInstallStep(
             }
         }
         
-        Spacer(modifier = Modifier.height(32.dp))
+        if (isRooted) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { busyBoxInstalledChecked = !busyBoxInstalledChecked }
+                    .padding(8.dp)
+            ) {
+                Checkbox(
+                    checked = busyBoxInstalledChecked,
+                    onCheckedChange = { busyBoxInstalledChecked = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        uncheckedColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha=0.6f)
+                    )
+                )
+                Text(
+                    "I have installed the BusyBox NDK module",
+                    fontSize = 14.sp,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
         
-        Button(
-            onClick = onContinue,
-            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                "Next",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+        if (busyBoxInstalledChecked) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onContinue,
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Continue",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
