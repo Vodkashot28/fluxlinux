@@ -64,7 +64,7 @@ Get FluxLinux from the decentralized Android software repository. You can downlo
 
 If you would like to support the ongoing development of FluxLinux, you can purchase it directly from the Google Play Store. This provides automatic background updates.
 
-[![Google Play](https://img.shields.io/badge/Google_Play-Install-blue?logo=google-play&style=for-the-badge)](https://play.google.com/store/apps/details?id=com.ivarna.fluxlinux)
+[![Google Play](https://img.shields.io/badge/Google_Play-Install-blue?logo=google-play&style=for-the-badge)](https://play.google.com/store/apps/details?id=com.zenithblue.fluxlinux)
 
 <div align="center">
   <img src="img/playstore-download.png" alt="Google Play Store Download" width="600" />
