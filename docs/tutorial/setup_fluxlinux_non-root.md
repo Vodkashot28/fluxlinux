@@ -94,6 +94,10 @@ FluxLinux will check if both components are installed on your device. Once both 
 
 FluxLinux needs to communicate with Termux to execute background processes and set up your Linux environment. You must enable external apps in Termux.
 
+<div align="center">
+  <img src="img/step-two-communication.png" alt="Configure Termux Screen" width="350" />
+</div>
+
 1. Click the **Copy & Open Termux** button in the FluxLinux app.
 2. The app will copy a command to your clipboard and open Termux.
 3. Paste the command into the Termux terminal and hit Enter:
@@ -103,8 +107,8 @@ FluxLinux needs to communicate with Termux to execute background processes and s
 4. Return to FluxLinux, check the box confirming you ran the command, and click **Continue**.
 
 <div align="center">
-  <img src="img/step-two-click-toggle-in-app-i-have-pasted.png" alt="Toggle Paste Confirmation" width="300" />
   <img src="img/step-two-termux-paste-and-enter.png" alt="Paste Command in Termux" width="300" />
+  <img src="img/step-two-click-toggle-in-app-i-have-pasted.png" alt="Toggle Paste Confirmation" width="300" />
 </div>
 
 ---
@@ -120,9 +124,8 @@ FluxLinux requires a few basic Android permissions to function properly.
 Click **Grant Permission** and accept the prompts that appear on your screen.
 
 <div align="center">
-  <img src="img/step-two-communication.png" alt="Communication Configuration" width="250" />
-  <img src="img/step-three-grant-permission.png" alt="Grant Permissions UI" width="250" />
-  <img src="img/step-three-allow-excecute command.png" alt="Allow Execute Command" width="250" />
+  <img src="img/step-three-grant-permission.png" alt="Grant Permissions UI" width="300" />
+  <img src="img/step-three-allow-excecute command.png" alt="Allow Execute Command" width="300" />
 </div>
 
 ---
@@ -164,18 +167,20 @@ Android 12 and above introduced an aggressive "Phantom Process Killer" that term
 
 If your device is not rooted, you will need a computer (Windows, Mac, or Linux) with ADB installed.
 
-1. Enable **Developer Options** and **USB Debugging** on your phone.
-2. Connect your phone to your PC via USB.
-3. Open a command prompt/terminal on your PC and run:
+1. Enable **Developer Options** by going to **Settings > About Phone** and tapping the **Build Number** 5 times.
+2. In developer options, enable **USB Debugging**.
+3. Connect your phone to your PC via USB.
+4. Open a command prompt/terminal on your PC and run the following three commands:
    ```bash
-   adb shell "/system/bin/device_config put activity_manager max_phantom_processes 2147483647"
    adb shell "/system/bin/device_config set_sync_disabled_for_tests persistent"
+   adb shell "/system/bin/device_config put activity_manager max_phantom_processes 2147483647"
+   adb shell "settings put global settings_enable_monitor_phantom_procs false"
    ```
-4. The FluxLinux app will verify if the command was successful.
+5. The FluxLinux app will verify if the command was successful.
 
 ### With Root (Automatic)
 
-If your device is rooted (Magisk/KernelSU), simply click **Apply Fix via Root** and grant Superuser permission when prompted. FluxLinux will handle it automatically.
+If your device is rooted (Magisk/KernelSU/APatch), simply click **Apply Fix via Root** and grant Superuser permission when prompted. FluxLinux will handle it automatically.
 
 <div align="center">
   <img src="img/step-five-process-killer-fix.png" alt="Process Killer Fix Screen" width="250" />
@@ -190,14 +195,15 @@ If your device is rooted (Magisk/KernelSU), simply click **Apply Fix via Root** 
 
 ---
 
-## 🧰 Step 7: Install BusyBox
+## 🧰 Step 7: Install BusyBox (Optional / Rooted Users Only)
 
-FluxLinux requires BusyBox, which provides many standard Unix utilities.
+For non-root users, BusyBox is not required on this screen, and you can skip this step or the app will pass it automatically.
 
-* Click **Install BusyBox** within the app.
-* The installation should complete quickly and automatically.
+If you are using a rooted device, you can download and install the BusyBox module directly inside your root manager (e.g. Magisk, KernelSU, or APatch):
 
-If you are using root, you can install the BusyBox module directly inside your root manager:
+1. Click **Download Module** on the BusyBox Installation screen.
+2. Your browser will open the download for the BusyBox NDK installer file.
+3. Flash the downloaded file inside your root manager's Module page.
 
 <div align="center">
   <img src="img/step-six-for-root-install-busybox.png" alt="Install BusyBox" width="250" />
