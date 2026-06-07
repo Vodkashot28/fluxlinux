@@ -1,8 +1,23 @@
 <div align="center">
   <img src="../../assets/logo/logo.webp" width="160" alt="FluxLinux Logo" />
   <h1>🚀 Setting up FluxLinux</h1>
-  <p>Welcome to the FluxLinux installation guide! This tutorial will walk you through the process of getting FluxLinux running on your Android device.</p>
+  <p>Welcome to the FluxLinux installation guide! This step-by-step tutorial will walk you through the process of getting FluxLinux up and running on your Android device.</p>
 </div>
+
+---
+
+## 📖 Table of Contents
+
+1. [📥 Step 1: Choose Your Download Method](#-step-1-choose-your-download-method)
+2. [⚙️ Step 2: Install Required Components (Termux & Termux:X11)](#️-step-2-install-required-components-termux--termuxx11)
+3. [🔧 Step 3: Configure Termux](#-step-3-configure-termux)
+4. [🔐 Step 4: Grant Required Permissions](#-step-4-grant-required-permissions)
+5. [🪟 Step 5: Overlay Permission (Draw Over Other Apps)](#-step-5-overlay-permission-draw-over-other-apps)
+6. [👻 Step 6: Disable Phantom Process Killer (Crucial)](#-step-6-disable-phantom-process-killer-crucial)
+7. [🧰 Step 7: Install BusyBox (Optional / Rooted Users Only)](#-step-7-install-busybox-optional--rooted-users-only)
+8. [📦 Step 8: Environment Setup](#-step-8-environment-setup)
+9. [💻 Step 9: System Requirements Check](#-step-9-system-requirements-check)
+10. [🎉 Step 10: Launch FluxLinux!](#-step-10-youre-ready)
 
 ---
 
@@ -22,7 +37,7 @@ FluxLinux is available through three official channels. Choose the one that best
 
 Download the latest pre-compiled stable/beta release directly from our official repository.
 
-* **Repository Page:** [GitHub Releases](https://github.com/abhay-byte/fluxlinux/releases)
+[![GitHub](https://img.shields.io/badge/GitHub-Releases-blue?logo=github&style=for-the-badge)](https://github.com/abhay-byte/fluxlinux/releases)
 
 > [!TIP]
 > Always download the file ending with `.apk` (e.g., `app-release.apk`). Avoid files labeled with `idsig` unless you specifically require signature verification.
@@ -37,7 +52,7 @@ Download the latest pre-compiled stable/beta release directly from our official 
 
 Get FluxLinux from the decentralized Android software repository. You can download the standalone APK or install it via the F-Droid client.
 
-* **F-Droid Client/Web:** [F-Droid Listing](https://f-droid.org/packages/com.ivarna.fluxlinux)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Download-green?logo=fdroid&style=for-the-badge)](https://f-droid.org/packages/com.ivarna.fluxlinux)
 
 <div align="center">
   <img src="img/fdroid-download.png" alt="F-Droid Download" width="600" />
@@ -49,7 +64,7 @@ Get FluxLinux from the decentralized Android software repository. You can downlo
 
 If you would like to support the ongoing development of FluxLinux, you can purchase it directly from the Google Play Store. This provides automatic background updates.
 
-* **Play Store:** [Google Play Store](https://play.google.com/store/apps/details?id=com.ivarna.fluxlinux)
+[![Google Play](https://img.shields.io/badge/Google_Play-Install-blue?logo=google-play&style=for-the-badge)](https://play.google.com/store/apps/details?id=com.ivarna.fluxlinux)
 
 <div align="center">
   <img src="img/playstore-download.png" alt="Google Play Store Download" width="600" />
@@ -61,7 +76,7 @@ If you would like to support the ongoing development of FluxLinux, you can purch
 > **Unknown Sources Permission:** If you are downloading from GitHub or F-Droid for the first time, your browser/client will prompt you to allow installation from "Unknown Sources". Please enable this permission in your Android system settings to proceed.
 
 <div align="center">
-  <img src="img/install-fluxlinux-popup.png" alt="Install FluxLinux Prompt" width="350" />
+  <img src="img/install-fluxlinux-popup.png" alt="Install FluxLinux Prompt" width="300" />
 </div>
 
 ---
@@ -95,7 +110,7 @@ FluxLinux will check if both components are installed on your device. Once both 
 FluxLinux needs to communicate with Termux to execute background processes and set up your Linux environment. You must enable external apps in Termux.
 
 <div align="center">
-  <img src="img/step-two-communication.png" alt="Configure Termux Screen" width="350" />
+  <img src="img/step-two-communication.png" alt="Configure Termux Screen" width="300" />
 </div>
 
 1. Click the **Copy & Open Termux** button in the FluxLinux app.
@@ -139,22 +154,25 @@ For the best experience, FluxLinux uses a floating widget/menu over the Linux de
 3. Toggle the switch to **Allow display over other apps**.
 4. Press back to return to FluxLinux.
 
-Since Android restricts overlay permissions, especially on newer Android versions, follow these steps to enable it:
-
-1. Click **Open Settings** inside the app. If you see a "Restricted setting" block, you will need to go to **App Info** for FluxLinux/Termux via system settings, click the **three dots** in the top right, and choose **Allow restricted settings**.
-2. Go to the overlay settings and find **Termux**.
-3. Toggle on **Allow display over other apps**.
+> [!NOTE]
+> **Android Restricted Settings Bypass:** 
+> If Android blocks you from enabling the overlay permission, follow the steps below:
+> 1. Open your device **Settings** and go to **Apps > All Apps**.
+> 2. Find and click on **Termux**.
+> 3. Tap the **three vertical dots** in the top right corner.
+> 4. Tap **Allow restricted settings** and authenticate.
+> 5. Return to the overlay settings page and enable the toggle for **Termux**.
 
 <div align="center">
-  <img src="img/step-four-go-to-app-info-via-apps-settings.png" alt="Go to App Info" width="250" />
-  <img src="img/step-four-allow-restricted-settings-click-on-three-dots-and-allow-it.png" alt="Allow Restricted Settings" width="250" />
-  <img src="img/step-four-display-overlay-for-termux-disabled.png" alt="Overlay Disabled" width="250" />
+  <img src="img/step-four-go-to-app-info-via-apps-settings.png" alt="Go to App Info" width="240" />
+  <img src="img/step-four-allow-restricted-settings-click-on-three-dots-and-allow-it.png" alt="Allow Restricted Settings" width="240" />
+  <img src="img/step-four-display-overlay-for-termux-disabled.png" alt="Overlay Disabled" width="240" />
 </div>
 
 <div align="center">
-  <img src="img/step-four-display-overlay.png" alt="Display Overlay List" width="250" />
-  <img src="img/step-four-then-allow-display-over-apps-for-termux-will-be-allowed-now.png" alt="Allow Display Over Apps" width="250" />
-  <img src="img/step-four-granted-permission.png" alt="Granted Overlay Permission" width="250" />
+  <img src="img/step-four-display-overlay.png" alt="Display Overlay List" width="240" />
+  <img src="img/step-four-then-allow-display-over-apps-for-termux-will-be-allowed-now.png" alt="Allow Display Over Apps" width="240" />
+  <img src="img/step-four-granted-permission.png" alt="Granted Overlay Permission" width="240" />
 </div>
 
 ---
@@ -183,9 +201,9 @@ If your device is not rooted, you will need a computer (Windows, Mac, or Linux) 
 If your device is rooted (Magisk/KernelSU/APatch), simply click **Apply Fix via Root** and grant Superuser permission when prompted. FluxLinux will handle it automatically.
 
 <div align="center">
-  <img src="img/step-five-process-killer-fix.png" alt="Process Killer Fix Screen" width="250" />
-  <img src="img/step-five-enable-developer-mode-for-adb-click-on-build-number-for-five-times.png" alt="Enable Developer Mode" width="250" />
-  <img src="img/step-five-in-developer-option-enable-usb-debugging.png" alt="Enable USB Debugging" width="250" />
+  <img src="img/step-five-process-killer-fix.png" alt="Process Killer Fix Screen" width="240" />
+  <img src="img/step-five-enable-developer-mode-for-adb-click-on-build-number-for-five-times.png" alt="Enable Developer Mode" width="240" />
+  <img src="img/step-five-in-developer-option-enable-usb-debugging.png" alt="Enable USB Debugging" width="240" />
 </div>
 
 <div align="center">
@@ -206,9 +224,9 @@ If you are using a rooted device, you can download and install the BusyBox modul
 3. Flash the downloaded file inside your root manager's Module page.
 
 <div align="center">
-  <img src="img/step-six-for-root-install-busybox.png" alt="Install BusyBox" width="250" />
-  <img src="img/step-six-download-busybox-module.png" alt="Download BusyBox Module" width="250" />
-  <img src="img/step-six-then-flash-module-in-your-root-application.png" alt="Flash Module in Root Manager" width="250" />
+  <img src="img/step-six-for-root-install-busybox.png" alt="Install BusyBox" width="240" />
+  <img src="img/step-six-download-busybox-module.png" alt="Download BusyBox Module" width="240" />
+  <img src="img/step-six-then-flash-module-in-your-root-application.png" alt="Flash Module in Root Manager" width="240" />
 </div>
 
 ---
@@ -221,9 +239,9 @@ FluxLinux will now extract and configure the core Linux file system (rootfs) on 
 * Please **do not close the app** or turn off the screen during this process.
 
 <div align="center">
-  <img src="img/step-seven-step-up-environment-click-on-initialize-environemnt-open-in.png" alt="Initialize Environment" width="250" />
-  <img src="img/step-seven-termux-will-open-and-start-the-setup.png" alt="Setup starting in Termux" width="250" />
-  <img src="img/step-seven-termux-initialized.png" alt="Setup Completed" width="250" />
+  <img src="img/step-seven-step-up-environment-click-on-initialize-environemnt-open-in.png" alt="Initialize Environment" width="240" />
+  <img src="img/step-seven-termux-will-open-and-start-the-setup.png" alt="Setup starting in Termux" width="240" />
+  <img src="img/step-seven-termux-initialized.png" alt="Setup Completed" width="240" />
 </div>
 
 ---
