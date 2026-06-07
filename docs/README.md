@@ -67,6 +67,7 @@ System design
 
 | Document | Description | Status |
 |----------|-------------|--------|
+| [**Setup & Onboarding Guide**](tutorial/setup_fluxlinux.md) | Step-by-step visual installation tutorial | ✅ Complete |
 | [Installation Reference](install_ref/) | Packages, paths, versions, environments | ✅ Complete |
 | [Scripts Reference](scripts_reference.md) | All installation and setup scripts | ✅ Complete |
 | [Hardware Acceleration](hardware_acceleration.md) | GPU setup guide (Turnip/VirGL) | ✅ Complete |
