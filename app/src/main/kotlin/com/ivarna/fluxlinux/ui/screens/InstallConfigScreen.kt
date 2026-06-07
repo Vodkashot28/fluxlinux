@@ -352,110 +352,121 @@ fun InstallationProgressScreen(
                 title = { Text("Installing...", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Animated Icon
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                 Icon(
-                     imageVector = Icons.Default.Speed,
-                     contentDescription = null,
-                     modifier = Modifier.size(64.dp),
-                     tint = MaterialTheme.colorScheme.onPrimaryContainer
-                 )
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            Text(
-                text = "Setting up your environment",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Progress Bar
-            LinearProgressIndicator(
-                progress = { 
-                    if (state.progressTotal > 0) state.progressCurrent.toFloat() / state.progressTotal.toFloat() else 0f 
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = state.currentTaskName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.secondary,
-                fontWeight = FontWeight.Medium
-            )
-            
-            Text(
-                text = "Step ${state.progressCurrent} of ${state.progressTotal}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            // Info Card
+        },
+        bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
-                    .padding(16.dp)
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text("Please Wait", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        Text(
-                            "Termux is installing packages in the background. The app will notify you when ready.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                OutlinedButton(
+                    onClick = { showCancelConfirm = true },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Cancel Installation", fontWeight = FontWeight.SemiBold)
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Cancel Button
-            OutlinedButton(
-                onClick = { showCancelConfirm = true },
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+        }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 100.dp) // Space for bottomBar overlay
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Cancel Installation", fontWeight = FontWeight.SemiBold)
+                // Animated Icon
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                     Icon(
+                         imageVector = Icons.Default.Speed,
+                         contentDescription = null,
+                         modifier = Modifier.size(64.dp),
+                         tint = MaterialTheme.colorScheme.onPrimaryContainer
+                     )
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Text(
+                    text = "Setting up your environment",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Progress Bar
+                LinearProgressIndicator(
+                    progress = { 
+                        if (state.progressTotal > 0) state.progressCurrent.toFloat() / state.progressTotal.toFloat() else 0f 
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = state.currentTaskName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                
+                Text(
+                    text = "Step ${state.progressCurrent} of ${state.progressTotal}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(48.dp))
+                
+                // Info Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
+                        .padding(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Please Wait", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                "Termux is installing packages in the background. The app will notify you when ready.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }
