@@ -42,9 +42,9 @@ Download the latest pre-compiled stable/beta release directly from our official 
 > [!TIP]
 > Always download the file ending with `.apk` (e.g., `app-release.apk`). Avoid files labeled with `idsig` unless you specifically require signature verification.
 
-<div align="center">
-  <img src="img/release-download.png" alt="GitHub Release Download" width="600" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **GitHub Release Download** | <img src="img/release-download.png" width="500" /> | Select the latest stable `.apk` package file from the Assets section of the GitHub Release page to download it. |
 
 ---
 
@@ -54,9 +54,9 @@ Get FluxLinux from the decentralized Android software repository. You can downlo
 
 [![F-Droid](https://img.shields.io/badge/F--Droid-Download-green?logo=fdroid&style=for-the-badge)](https://f-droid.org/packages/com.ivarna.fluxlinux)
 
-<div align="center">
-  <img src="img/fdroid-download.png" alt="F-Droid Download" width="600" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **F-Droid Download Page** | <img src="img/fdroid-download.png" width="500" /> | On the F-Droid app or website, find the FluxLinux repository listing and click the version download or install button. |
 
 ---
 
@@ -66,18 +66,18 @@ If you would like to support the ongoing development of FluxLinux, you can purch
 
 [![Google Play](https://img.shields.io/badge/Google_Play-Install-blue?logo=google-play&style=for-the-badge)](https://play.google.com/store/apps/details?id=com.zenithblue.fluxlinux)
 
-<div align="center">
-  <img src="img/playstore-download.png" alt="Google Play Store Download" width="600" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Google Play Install** | <img src="img/playstore-download.png" width="500" /> | Open the listing on Google Play and click **Install** to download and configure FluxLinux with automatic updates. |
 
 ---
 
 > [!IMPORTANT]
 > **Unknown Sources Permission:** If you are downloading from GitHub or F-Droid for the first time, your browser/client will prompt you to allow installation from "Unknown Sources". Please enable this permission in your Android system settings to proceed.
 
-<div align="center">
-  <img src="img/install-fluxlinux-popup.png" alt="Install FluxLinux Prompt" width="400" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Install FluxLinux Popup** | <img src="img/install-fluxlinux-popup.png" width="500" /> | Tap **Install** on the browser prompt. If prompted, grant the system permission to install apps from unknown sources. |
 
 ---
 
