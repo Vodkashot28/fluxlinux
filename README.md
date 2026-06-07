@@ -38,6 +38,15 @@
       <td align="center"><img src="assets/screenshots/terminal.png" width="200" /><br/><b>Terminal</b></td>
     </tr>
   </table>
+
+  <br/>
+
+  <table>
+    <tr>
+      <td align="center" width="60">📖</td>
+      <td><strong>New to FluxLinux?</strong> Check out our comprehensive <a href="docs/tutorial/setup_fluxlinux.md"><strong>Step-by-Step Installation & Onboarding Guide</strong></a> for a detailed visual walkthrough covering both rooted and non-rooted devices.</td>
+    </tr>
+  </table>
 </div>
 
 ---
@@ -158,6 +167,7 @@ flowchart TB
 
 | Document | Description |
 |----------|-------------|
+| [**Setup & Onboarding Guide**](docs/tutorial/setup_fluxlinux.md) | Step-by-step visual installation tutorial |
 | [**Installation Reference**](docs/install_ref/) | Packages, paths, versions, environments |
 | [**Scripts Reference**](docs/scripts_reference.md) | All installation and setup scripts |
 | [**Hardware Acceleration**](docs/hardware_acceleration.md) | GPU setup guide (Turnip/VirGL) |
