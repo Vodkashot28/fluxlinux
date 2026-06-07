@@ -49,6 +49,10 @@
       <td align="center" width="60">📖</td>
       <td><strong>New to FluxLinux?</strong> Check out our comprehensive <a href="docs/tutorial/setup_fluxlinux.md"><strong>Step-by-Step Installation & Onboarding Guide</strong></a> for a detailed visual walkthrough covering both rooted and non-rooted devices.</td>
     </tr>
+    <tr>
+      <td align="center" width="60">🐧</td>
+      <td><strong>Debian Setup Guide:</strong> Follow our <a href="docs/tutorial/setup_debian_proot.md"><strong>Debian PRoot Configuration Guide</strong></a> for a detailed visual walkthrough of setting up your first Debian container.</td>
+    </tr>
   </table>
 </div>
 
