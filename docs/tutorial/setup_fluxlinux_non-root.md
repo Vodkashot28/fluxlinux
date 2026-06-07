@@ -98,20 +98,16 @@ Due to Play Store policy restrictions, the app cannot automatically download ext
 ### 🔍 Verification Check
 FluxLinux will check if both components are installed on your device. Once both dependencies are detected, you can click **Proceed** to continue with the setup.
 
-<div align="center">
-  <img src="img/step-one-termux.png" alt="Termux and Termux:X11 Setup" width="300" />
-  <img src="img/termux-download-page-flux.png" alt="Termux and Termux:X11 Download Page" width="300" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Download Required Components** | <img src="img/termux-download-page-flux.png" width="200" /> | **Download Prompts:** If Termux or Termux:X11 is not yet installed on your system, the app will provide download prompts. You must install both packages to continue. |
+| **Verification Check Done** | <img src="img/step-one-termux.png" width="200" /> | **Verification Check:** Once both components are successfully installed and active on your system, the app displays checkmarks for both. Tap **Continue** to proceed. |
 
 ---
 
 ## 🔧 Step 3: Configure Termux
 
 FluxLinux needs to communicate with Termux to execute background processes and set up your Linux environment. You must enable external apps in Termux.
-
-<div align="center">
-  <img src="img/step-two-communication.png" alt="Configure Termux Screen" width="300" />
-</div>
 
 1. Click the **Copy & Open Termux** button in the FluxLinux app.
 2. The app will copy a command to your clipboard and open Termux.
@@ -121,10 +117,11 @@ FluxLinux needs to communicate with Termux to execute background processes and s
    ```
 4. Return to FluxLinux, check the box confirming you ran the command, and click **Continue**.
 
-<div align="center">
-  <img src="img/step-two-termux-paste-and-enter.png" alt="Paste Command in Termux" width="300" />
-  <img src="img/step-two-click-toggle-in-app-i-have-pasted.png" alt="Toggle Paste Confirmation" width="300" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Configure Termux Screen** | <img src="img/step-two-communication.png" width="200" /> | The initial step in the app prompts you to configure Termux communication. Use the **Copy & Open Termux** button to copy the setup script. |
+| **Paste Command in Termux** | <img src="img/step-two-termux-paste-and-enter.png" width="200" /> | Paste the clipboard command in the Termux terminal and press enter to create files and reload Termux settings. |
+| **Check Box & Continue** | <img src="img/step-two-click-toggle-in-app-i-have-pasted.png" width="200" /> | Check the confirmation box **"I've pasted and run the command in Termux"** and click **Continue**. |
 
 ---
 
@@ -138,10 +135,10 @@ FluxLinux requires a few basic Android permissions to function properly.
 
 Click **Grant Permission** and accept the prompts that appear on your screen.
 
-<div align="center">
-  <img src="img/step-three-grant-permission.png" alt="Grant Permissions UI" width="300" />
-  <img src="img/step-three-allow-excecute command.png" alt="Allow Execute Command" width="300" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Grant Permission Screen** | <img src="img/step-three-grant-permission.png" width="200" /> | The app will display a padlock icon requesting permission to communicate securely with Termux. Click **Grant Permission**. |
+| **Android Authorization Dialog** | <img src="img/step-three-allow-excecute command.png" width="200" /> | Allow the command execution permission in the Android system pop-up to permit FluxLinux to interact with the Termux shell. |
 
 ---
 
@@ -163,17 +160,14 @@ For the best experience, FluxLinux uses a floating widget/menu over the Linux de
 > 4. Tap **Allow restricted settings** and authenticate.
 > 5. Return to the overlay settings page and enable the toggle for **Termux**.
 
-<div align="center">
-  <img src="img/step-four-go-to-app-info-via-apps-settings.png" alt="Go to App Info" width="240" />
-  <img src="img/step-four-allow-restricted-settings-click-on-three-dots-and-allow-it.png" alt="Allow Restricted Settings" width="240" />
-  <img src="img/step-four-display-overlay-for-termux-disabled.png" alt="Overlay Disabled" width="240" />
-</div>
-
-<div align="center">
-  <img src="img/step-four-display-overlay.png" alt="Display Overlay List" width="240" />
-  <img src="img/step-four-then-allow-display-over-apps-for-termux-will-be-allowed-now.png" alt="Allow Display Over Apps" width="240" />
-  <img src="img/step-four-granted-permission.png" alt="Granted Overlay Permission" width="240" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Overlay Settings Page** | <img src="img/step-four-display-overlay.png" width="200" /> | The app will display a critical permission screen. Click **Enable Overlay** to open the system settings. |
+| **Restricted Settings Bypass (Step 1)** | <img src="img/step-four-go-to-app-info-via-apps-settings.png" width="200" /> | If the overlay permission is blocked (greyed out), open the system **Settings > Apps > Termux** App Info page. |
+| **Restricted Settings Bypass (Step 2)** | <img src="img/step-four-allow-restricted-settings-click-on-three-dots-and-allow-it.png" width="200" /> | Tap the three dots menu at the top right of the App Info screen and select **Allow restricted settings**. |
+| **Blocked Overlay Toggle** | <img src="img/step-four-display-overlay-for-termux-disabled.png" width="200" /> | If the toggle is greyed out, this is the visual indicator that restricted settings are active. Enable permission via the 3-dots menu as shown above. |
+| **Enabling Termux Overlay** | <img src="img/step-four-then-allow-display-over-apps-for-termux-will-be-allowed-now.png" width="200" /> | Go back to the **Display over other apps** list, choose **Termux**, and toggle the switch on. |
+| **Permission Granted** | <img src="img/step-four-granted-permission.png" width="200" /> | Return to FluxLinux, where you will see the **Permission Granted ✔** status. Click **Next** to proceed. |
 
 ---
 
@@ -200,16 +194,13 @@ If your device is not rooted, you will need a computer (Windows, Mac, or Linux) 
 
 If your device is rooted (Magisk/KernelSU/APatch), simply click **Apply Fix via Root** and grant Superuser permission when prompted. FluxLinux will handle it automatically.
 
-<div align="center">
-  <img src="img/step-five-process-killer-fix.png" alt="Process Killer Fix Screen" width="240" />
-  <img src="img/step-five-enable-developer-mode-for-adb-click-on-build-number-for-five-times.png" alt="Enable Developer Mode" width="240" />
-  <img src="img/step-five-in-developer-option-enable-usb-debugging.png" alt="Enable USB Debugging" width="240" />
-</div>
-
-<div align="center">
-  <img src="img/step-five-run-these-commands-through-adb-from-ur-pc.png" alt="ADB Command Instructions" width="350" />
-  <img src="img/step-five-then-copy-and-paste-commands-on-pc-terminal-with-phone-connected-with-usb-debugging-enabled.png" alt="Run ADB on PC" width="350" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Process Killer Fix Screen** | <img src="img/step-five-process-killer-fix.png" width="200" /> | If root access is not detected, you will see a warning screen with an option to run the fix manually via ADB on your PC. |
+| **Enable Developer Mode** | <img src="img/step-five-enable-developer-mode-for-adb-click-on-build-number-for-five-times.png" width="200" /> | On your phone, go to **Settings > About Phone** and click on the **Build number** 5 times to enable Developer Options. |
+| **Enable USB Debugging** | <img src="img/step-five-in-developer-option-enable-usb-debugging.png" width="200" /> | Go to **Settings > System > Developer Options** and enable the toggle for **USB debugging**. |
+| **Copy ADB Command** | <img src="img/step-five-run-these-commands-through-adb-from-ur-pc.png" width="200" /> | Copy the three configuration commands shown in the app to paste them on your computer. |
+| **Run ADB on PC Terminal** | <img src="img/step-five-then-copy-and-paste-commands-on-pc-terminal-with-phone-connected-with-usb-debugging-enabled.png" width="200" /> | Connect your phone to your PC, open a command terminal, and execute all three commands to disable the phantom process killer. |
 
 ---
 
@@ -223,11 +214,11 @@ If you are using a rooted device, you can download and install the BusyBox modul
 2. Your browser will open the download for the BusyBox NDK installer file.
 3. Flash the downloaded file inside your root manager's Module page.
 
-<div align="center">
-  <img src="img/step-six-for-root-install-busybox.png" alt="Install BusyBox" width="240" />
-  <img src="img/step-six-download-busybox-module.png" alt="Download BusyBox Module" width="240" />
-  <img src="img/step-six-then-flash-module-in-your-root-application.png" alt="Flash Module in Root Manager" width="240" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **BusyBox Installation Screen** | <img src="img/step-six-for-root-install-busybox.png" width="200" /> | For rooted devices, this page prompts you to install BusyBox NDK. Non-root users can skip this. Click **Download Module**. |
+| **Download Module** | <img src="img/step-six-download-busybox-module.png" width="200" /> | Your browser will download the BusyBox module package (`UPDATE-Busybox.Installer.zip`) to your phone's storage. |
+| **Flash in Root Manager** | <img src="img/step-six-then-flash-module-in-your-root-application.png" width="200" /> | Open your root manager application (e.g. APatch, KernelSU, or Magisk), go to the Modules tab, select the downloaded file, and flash it. |
 
 ---
 
@@ -238,11 +229,11 @@ FluxLinux will now extract and configure the core Linux file system (rootfs) on 
 * This process may take a few minutes depending on your device's storage speed.
 * Please **do not close the app** or turn off the screen during this process.
 
-<div align="center">
-  <img src="img/step-seven-step-up-environment-click-on-initialize-environemnt-open-in.png" alt="Initialize Environment" width="240" />
-  <img src="img/step-seven-termux-will-open-and-start-the-setup.png" alt="Setup starting in Termux" width="240" />
-  <img src="img/step-seven-termux-initialized.png" alt="Setup Completed" width="240" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Environment Setup Screen** | <img src="img/step-seven-step-up-environment-click-on-initialize-environemnt-open-in.png" width="200" /> | Tap **1. Initialize Environment (Required)** to trigger the extraction of the Linux rootfs. |
+| **Termux Script Execution** | <img src="img/step-seven-termux-will-open-and-start-the-setup.png" width="200" /> | The app will launch Termux to run the automated setup script. Wait for all packages to install. |
+| **Environment Initialized** | <img src="img/step-seven-termux-initialized.png" width="200" /> | When Termux setup completes, return to FluxLinux. You will see **Environment Initialized ✔**. Click **Next**. |
 
 ---
 
@@ -255,9 +246,9 @@ Before launching the environment, FluxLinux will run a quick hardware check to e
 
 Click **Continue to Final Step** once you have reviewed your system status.
 
-<div align="center">
-  <img src="img/step-eight-enable-good-amount-of-swap.png" alt="Enable Swap File" width="350" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **System Check Results** | <img src="img/step-eight-enable-good-amount-of-swap.png" width="200" /> | The app checks system memory. If you have less than 8GB of RAM, we recommend configuring a SWAP file to avoid out-of-memory crashes. |
 
 ---
 
@@ -272,6 +263,6 @@ Enjoy your new portable workstation!
 > [!IMPORTANT]
 > Always make sure that Termux remains running in the background or in a split-screen layout when using FluxLinux to prevent Android from killing the environment processes.
 
-<div align="center">
-  <img src="img/step-last-always-have-termux-in-background-or-in-split.png" alt="Termux running in Background/Split" width="350" />
-</div>
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **Background Execution Note** | <img src="img/step-last-always-have-termux-in-background-or-in-split.png" width="200" /> | An important notice reminding you that Termux must be kept running in the background. Tap **Complete Setup** to launch your desktop! |
