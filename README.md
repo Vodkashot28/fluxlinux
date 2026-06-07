@@ -171,6 +171,7 @@ flowchart TB
 | Document | Description |
 |----------|-------------|
 | [**Setup & Onboarding Guide**](docs/tutorial/setup_fluxlinux.md) | Step-by-step visual installation tutorial |
+| [**Debian PRoot Setup Guide**](docs/tutorial/setup_debian_proot.md) | Step-by-step Debian PRoot configuration tutorial |
 | [**Installation Reference**](docs/install_ref/) | Packages, paths, versions, environments |
 | [**Scripts Reference**](docs/scripts_reference.md) | All installation and setup scripts |
 | [**Hardware Acceleration**](docs/hardware_acceleration.md) | GPU setup guide (Turnip/VirGL) |

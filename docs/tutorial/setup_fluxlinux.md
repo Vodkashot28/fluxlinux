@@ -266,3 +266,12 @@ Enjoy your new portable workstation!
 | Action / State | Screenshot | Description |
 | :--- | :---: | :--- |
 | **Background Execution Note** | <img src="img/step-last-always-have-termux-in-background-or-in-split.png" width="500" /> | An important notice reminding you that Termux must be kept running in the background. Tap **Complete Setup** to launch your desktop! |
+
+---
+
+## ⏭️ Next Steps
+
+Now that you have configured the core FluxLinux application environment, proceed to our step-by-step guide to install your first Linux distribution:
+
+👉 [**Debian PRoot Setup & Configuration Guide**](setup_debian_proot.md)
+
