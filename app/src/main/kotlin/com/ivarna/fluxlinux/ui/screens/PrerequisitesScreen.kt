@@ -49,7 +49,7 @@ import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 
-enum class ApkStatus { NOT_INSTALLED, DOWNLOADING, DOWNLOADED, INSTALLED }
+enum class ApkStatus { NOT_INSTALLED, DOWNLOADING, DOWNLOADED, INSTALLED, CORRUPTED }
 
 private fun isVersionOlderThan(current: String, minimum: String): Boolean {
     if (current == "Not Installed") return false
@@ -237,12 +237,23 @@ fun PackageInstallationStep(
         }
     }
 
+    val TERMUX_SHA = "7600078440c3c34ef050bc009b00fc3215cb87ec4a449e01a696f74cf4249db2"
+    val TERMUX_X11_SHA = "cad4b3a4cfa9c3012519139e0ac82fef437151cd19338d6e19e763255882c795"
+
     LaunchedEffect(Unit) {
         if (!termuxInstalled.value && ApkDownloader.apkExists(context, "termux.apk")) {
-            termuxApkStatus = ApkStatus.DOWNLOADED
+            if (ApkDownloader.verifySha256(context, "termux.apk", TERMUX_SHA)) {
+                termuxApkStatus = ApkStatus.DOWNLOADED
+            } else {
+                termuxApkStatus = ApkStatus.CORRUPTED
+            }
         }
         if (!x11Installed.value && ApkDownloader.apkExists(context, "termux_x11.apk")) {
-            x11ApkStatus = ApkStatus.DOWNLOADED
+            if (ApkDownloader.verifySha256(context, "termux_x11.apk", TERMUX_X11_SHA)) {
+                x11ApkStatus = ApkStatus.DOWNLOADED
+            } else {
+                x11ApkStatus = ApkStatus.CORRUPTED
+            }
         }
     }
 
@@ -258,7 +269,11 @@ fun PackageInstallationStep(
                 if (state.error != null) {
                     termuxApkStatus = ApkStatus.NOT_INSTALLED
                 } else if (state.isDone) {
-                    termuxApkStatus = ApkStatus.DOWNLOADED
+                    if (ApkDownloader.verifySha256(context, "termux.apk", TERMUX_SHA)) {
+                        termuxApkStatus = ApkStatus.DOWNLOADED
+                    } else {
+                        termuxApkStatus = ApkStatus.CORRUPTED
+                    }
                     termuxProgress = 1f
                 } else {
                     termuxProgress = state.progress
@@ -279,7 +294,11 @@ fun PackageInstallationStep(
                 if (state.error != null) {
                     x11ApkStatus = ApkStatus.NOT_INSTALLED
                 } else if (state.isDone) {
-                    x11ApkStatus = ApkStatus.DOWNLOADED
+                    if (ApkDownloader.verifySha256(context, "termux_x11.apk", TERMUX_X11_SHA)) {
+                        x11ApkStatus = ApkStatus.DOWNLOADED
+                    } else {
+                        x11ApkStatus = ApkStatus.CORRUPTED
+                    }
                     x11Progress = 1f
                 } else {
                     x11Progress = state.progress
@@ -359,7 +378,7 @@ fun PackageInstallationStep(
             onInstallApk = { installApk("termux_x11.apk") }
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Continue Button
         Button(
@@ -483,7 +502,7 @@ fun TermuxConfigurationStep(
             )
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Continue Button
         Button(
@@ -595,7 +614,7 @@ fun PermissionRequestStep(
             }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Continue Button
         Button(
@@ -785,6 +804,25 @@ fun PrerequisiteItem(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                    ApkStatus.CORRUPTED -> {
+                        Text(
+                            text = "Download Corrupted",
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (onDownload != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onDownload,
+                                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.error),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Redownload", color = androidx.compose.material3.MaterialTheme.colorScheme.onError, fontSize = 14.sp)
+                            }
+                        }
                     }
                 }
             }
@@ -977,10 +1015,9 @@ fun OverlayPermissionStep(
                  )
              }
          }
-         
-         Spacer(modifier = Modifier.weight(1f))
-         
-         // Continue Button
+                  Spacer(modifier = Modifier.height(32.dp))
+          
+          // Continue Button
          Button(
             onClick = onContinue,
             enabled = manualOverride,
@@ -1004,7 +1041,7 @@ fun OverlayPermissionStep(
 }
 
 @Composable
-fun ColumnScope.PhantomProcessStep(
+fun PhantomProcessStep(
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1022,16 +1059,11 @@ fun ColumnScope.PhantomProcessStep(
         checkingRoot = false
     }
 
-    Box(
-        modifier = Modifier.weight(1f)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp), // Space for button
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
             Text(
                 text = "Step 5: Process Killer Fix",
                 color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
@@ -1191,7 +1223,7 @@ fun ColumnScope.PhantomProcessStep(
                      Text("Check Root Again")
                  }
             } // Close else
-        } // Close inner Column
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Continue / Skip
         Button(
@@ -1202,9 +1234,7 @@ fun ColumnScope.PhantomProcessStep(
                 containerColor = if (fixApplied) androidx.compose.material3.MaterialTheme.colorScheme.primary else androidx.compose.material3.MaterialTheme.colorScheme.secondary
             ),
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -1215,7 +1245,7 @@ fun ColumnScope.PhantomProcessStep(
                 fontWeight = FontWeight.Bold
             )
         }
-    } // Close Box
+    }
 }
 
 @Composable
@@ -1406,7 +1436,7 @@ fun EnvironmentSetupStep(
             }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Continue Button
         Button(
@@ -1489,7 +1519,7 @@ fun FinalInstructionsStep(
             }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Complete Button
         Button(
@@ -1511,22 +1541,17 @@ fun FinalInstructionsStep(
 }
 
 @Composable
-fun ColumnScope.SystemCheckStep(
+fun SystemCheckStep(
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
     val memoryInfo = remember { SystemInfoUtils.getMemoryInfo(context) }
     
-    Box(
-        modifier = Modifier.weight(1f)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 80.dp), // Space for button
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
             Text(
                 text = "Step 8: System Check",
                 color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
@@ -1709,16 +1734,14 @@ fun ColumnScope.SystemCheckStep(
                     }
                 }
             }
-        }
+        Spacer(modifier = Modifier.height(32.dp))
         
-        // Next Button Pinned to Bottom
+        // Next Button
         Button(
             onClick = onContinue,
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp) // Extra padding from bottom edge
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -1856,7 +1879,7 @@ fun BusyBoxInstallStep(
             }
         }
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         Button(
             onClick = onContinue,

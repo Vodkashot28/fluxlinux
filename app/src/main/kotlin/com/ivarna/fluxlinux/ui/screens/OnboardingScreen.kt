@@ -69,34 +69,39 @@ fun OnboardingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
-            
-            // Title
-            Text(
-                text = "FluxLinux",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Subtitle
-            Text(
-                text = "Run Full Linux Distributions on Android",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
-            
-            Spacer(modifier = Modifier.height(40.dp))
-            
-            // Feature Cards
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(60.dp))
+                
+                // Title
+                Text(
+                    text = "FluxLinux",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Subtitle
+                Text(
+                    text = "Run Full Linux Distributions on Android",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                // Feature Cards
                 FeatureCard(
                     hazeState = hazeState,
                     icon = "🐧",
@@ -121,25 +126,27 @@ fun OnboardingScreen(
                     title = "No Root Required",
                     description = "PRoot mode works on any device"
                 )
-
-                Spacer(modifier = Modifier.height(32.dp))
                 
-                // Get Started Button
-                Button(
-                    onClick = onGetStarted,
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        "Get Started",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Get Started Button
+            Button(
+                onClick = onGetStarted,
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Get Started",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

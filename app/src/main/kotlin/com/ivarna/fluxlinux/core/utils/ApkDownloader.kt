@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
 
 object ApkDownloader {
 
@@ -94,5 +95,26 @@ object ApkDownloader {
 
     fun apkExists(context: Context, fileName: String): Boolean {
         return File(context.cacheDir, fileName).exists()
+    }
+
+    fun verifySha256(context: Context, fileName: String, expectedSha256: String): Boolean {
+        val file = File(context.cacheDir, fileName)
+        if (!file.exists()) return false
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            file.inputStream().use { fis ->
+                val buffer = ByteArray(8192)
+                var bytes = fis.read(buffer)
+                while (bytes > 0) {
+                    digest.update(buffer, 0, bytes)
+                    bytes = fis.read(buffer)
+                }
+            }
+            val hashBytes = digest.digest()
+            val hashString = hashBytes.joinToString("") { "%02x".format(it) }
+            hashString.equals(expectedSha256, ignoreCase = true)
+        } catch (e: Exception) {
+            false
+        }
     }
 }
