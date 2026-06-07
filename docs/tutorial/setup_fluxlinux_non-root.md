@@ -60,6 +60,10 @@ If you would like to support the ongoing development of FluxLinux, you can purch
 > [!IMPORTANT]
 > **Unknown Sources Permission:** If you are downloading from GitHub or F-Droid for the first time, your browser/client will prompt you to allow installation from "Unknown Sources". Please enable this permission in your Android system settings to proceed.
 
+<div align="center">
+  <img src="img/install-fluxlinux-popup.png" alt="Install FluxLinux Prompt" width="350" />
+</div>
+
 ---
 
 ## ⚙️ Step 2: Install Required Components (Termux & Termux:X11)
