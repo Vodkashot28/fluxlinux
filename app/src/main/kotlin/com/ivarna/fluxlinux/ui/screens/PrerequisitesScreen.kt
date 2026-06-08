@@ -3,6 +3,10 @@ package com.ivarna.fluxlinux.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import com.ivarna.fluxlinux.R
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -202,6 +206,10 @@ fun PrerequisitesScreen(
                 )
                 
                 9 -> FinalInstructionsStep(
+                    onContinue = { currentStep = 10 }
+                )
+                
+                10 -> HelpAndSupportStep(
                     onComplete = onComplete
                 )
             }
@@ -1501,7 +1509,7 @@ fun EnvironmentSetupStep(
 
 @Composable
 fun FinalInstructionsStep(
-    onComplete: () -> Unit
+    onContinue: () -> Unit
 ) {
     var acknowledgeTermuxRunning by remember { mutableStateOf(false) }
 
@@ -1589,7 +1597,7 @@ fun FinalInstructionsStep(
             
             // Complete Button
             Button(
-                onClick = onComplete,
+                onClick = onContinue,
                 colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1990,6 +1998,90 @@ fun BusyBoxInstallStep(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun HelpAndSupportStep(
+    onComplete: () -> Unit
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Step 10: Help & Support",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Check out our documentation or join the community",
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Docs Link
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/abhay-byte/fluxlinux#readme"))
+                context.startActivity(intent)
+            }
+        ) {
+            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("📖", fontSize = 32.sp)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("Read Documentation", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Setup guides and full tutorials", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Discord Link
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = Color(0xFF5865F2)
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/tag9kXAs2x"))
+                context.startActivity(intent)
+            }
+        ) {
+            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painter = painterResource(id = R.drawable.ic_discord), contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("Join our Discord", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Get help and share setups", color = Color.White.copy(alpha=0.8f), fontSize = 14.sp)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Button(
+            onClick = onComplete,
+            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Complete Setup", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
