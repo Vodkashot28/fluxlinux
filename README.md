@@ -41,20 +41,24 @@
       <td align="center"><img src="assets/screenshots/terminal.png" width="200" /><br/><b>Terminal</b></td>
     </tr>
   </table>
+</div>
 
-  <br/>
+---
 
+## 📖 Instructions
+
+<div align="center">
   <table>
     <tr>
-      <td align="center" width="140">📖<br/><b><a href="docs/tutorial/setup_fluxlinux.md">FluxLinux Setup</a></b></td>
+      <td align="center" width="140"><img src="assets/logo/logo.webp" width="48"/><br/><b><a href="docs/tutorial/setup_fluxlinux.md">FluxLinux Setup</a></b></td>
       <td><strong>New to FluxLinux?</strong> Check out our comprehensive Step-by-Step Installation & Onboarding Guide for a detailed visual walkthrough covering both rooted and non-rooted devices.</td>
     </tr>
     <tr>
-      <td align="center" width="140">🐧<br/><b><a href="docs/tutorial/setup_debian_proot.md">Debian Trixie PRoot</a></b></td>
+      <td align="center" width="140"><img src="app/src/main/res/drawable/distro_debian.webp" width="48"/><br/><b><a href="docs/tutorial/setup_debian_proot.md">Debian Trixie PRoot</a></b></td>
       <td><strong>Debian Setup Guide (Rootless):</strong> Follow our Debian PRoot Configuration Guide for a detailed visual walkthrough of setting up your first Debian container without root access.</td>
     </tr>
     <tr>
-      <td align="center" width="140">⚡<br/><b><a href="docs/tutorial/setup_debian_chroot.md">Debian Trixie Chroot</a></b></td>
+      <td align="center" width="140"><img src="app/src/main/res/drawable/distro_debian.webp" width="48"/><br/><b><a href="docs/tutorial/setup_debian_chroot.md">Debian Trixie Chroot</a></b></td>
       <td><strong>Debian Setup Guide (Rooted):</strong> Follow our Debian Chroot Configuration Guide for setting up a native, high-performance Debian container using root access.</td>
     </tr>
   </table>
