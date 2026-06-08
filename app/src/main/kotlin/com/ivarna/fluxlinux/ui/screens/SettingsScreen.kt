@@ -410,90 +410,7 @@ fun SettingsScreen(
                         }
                     }
 
-                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 20.dp))
-                    GlassSettingCard {
-                        Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
-                            Text(
-                                "General Settings",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                            
-                            // Auto Update
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("Auto-Check Updates", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Text("Notify when new distros are available", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-                                }
-                                Switch(checked = autoUpdate, onCheckedChange = { autoUpdate = it })
-                            }
 
-                            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
-                            
-                            // Theme Setting
-                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("Theme", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-                                    Text(
-                                        when(currentTheme) {
-                                            ThemeMode.LIGHT -> "Light Mode"
-                                            ThemeMode.DARK -> "Dark Mode"
-                                            ThemeMode.SYSTEM -> "System Default"
-                                            else -> "Custom"
-                                        }, 
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), 
-                                        fontSize = 12.sp
-                                    )
-                                }
-                                
-                                Box {
-                                    TextButton(onClick = { themeExpanded = true }) {
-                                        Text(currentTheme.name, color = MaterialTheme.colorScheme.secondary)
-                                        Icon(Icons.Default.ArrowDropDown, null, tint = MaterialTheme.colorScheme.secondary)
-                                    }
-                                    
-                                    DropdownMenu(
-                                        expanded = themeExpanded,
-                                        onDismissRequest = { themeExpanded = false },
-                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("System Default", color = MaterialTheme.colorScheme.onSurface) },
-                                            onClick = { 
-                                                onThemeChanged?.invoke(ThemeMode.SYSTEM)
-                                                themeExpanded = false
-                                            }
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text("Dark Mode", color = MaterialTheme.colorScheme.onSurface) },
-                                            onClick = { 
-                                                onThemeChanged?.invoke(ThemeMode.DARK)
-                                                themeExpanded = false
-                                            }
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text("Light Mode", color = MaterialTheme.colorScheme.onSurface) },
-                                            onClick = { 
-                                                onThemeChanged?.invoke(ThemeMode.LIGHT)
-                                                themeExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-
-                        }
-                    }
 
                     // =====================================================================
                     // Support Actions (Separated)
@@ -826,6 +743,47 @@ fun SettingsScreen(
                             Text("v1.7 • May 9, 2026", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Made with ❤️ in Kotlin", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
+                        }
+                    }
+
+                    // =====================================================================
+                    // 2.5. JOIN DISCORD
+                    // =====================================================================
+                    GlassSettingCard(
+                        onClick = { openUrl(context, "https://discord.gg/tag9kXAs2x") }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF5865F2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_discord),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    "Join our Discord",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                Text(
+                                    "Get help, share setups, and discuss features",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
                         }
                     }
 

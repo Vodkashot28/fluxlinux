@@ -200,13 +200,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Watch Theme Preference
-            val context = LocalContext.current
-            val themePrefs = remember { ThemePreferences(context) }
+            // Force Permanent Dark Mode
+            val currentThemeMode = ThemeMode.DARK
             
-            // Lift state up
-            var currentThemeMode by remember { mutableStateOf(themePrefs.getThemeMode()) }
-
             FluxLinuxTheme(themeMode = currentThemeMode) {
                 val onboardingComplete = StateManager.isOnboardingComplete(this@MainActivity)
                 
