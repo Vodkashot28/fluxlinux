@@ -9,13 +9,14 @@
 ## 📖 Table of Contents
 
 0. [🔑 Step 0: Grant Root Access to Termux](#-step-0-grant-root-access-to-termux)
-1. [🐧 Step 1: Select Debian (Rooted) Distribution](#-step-1-select-debian-rooted-distribution)
-2. [⚙️ Step 2: Configure Debian Settings](#️-step-2-configure-debian-settings)
-3. [📋 Step 3: Generate and Copy the Setup Command](#-step-3-generate-and-copy-the-setup-command)
-4. [⚡ Step 4: Execute the Command in Termux](#-step-4-execute-the-command-in-termux)
-5. [🎉 Step 5: Verify Installation in Home Screen](#-step-5-verify-installation-in-home-screen)
-6. [🛑 Step 6: Controlling the Session](#-step-6-controlling-the-session)
-7. [💡 Important Tips & Troubleshooting](#-important-tips--troubleshooting)
+1. [🧰 Step 1: Install BusyBox NDK](#-step-1-install-busybox-ndk)
+2. [🐧 Step 2: Select Debian (Rooted) Distribution](#-step-2-select-debian-rooted-distribution)
+3. [⚙️ Step 3: Configure Debian Settings](#️-step-3-configure-debian-settings)
+4. [📋 Step 4: Generate and Copy the Setup Command](#-step-4-generate-and-copy-the-setup-command)
+5. [⚡ Step 5: Execute the Command in Termux](#-step-5-execute-the-command-in-termux)
+6. [🎉 Step 6: Verify Installation in Home Screen](#-step-6-verify-installation-in-home-screen)
+7. [🛑 Step 7: Controlling the Session](#-step-7-controlling-the-session)
+8. [💡 Important Tips & Troubleshooting](#-important-tips--troubleshooting)
 
 ---
 
@@ -33,7 +34,23 @@ Before starting the installation, you must ensure that Termux has root access pe
 
 ---
 
-## 🐧 Step 1: Select Debian (Rooted) Distribution
+## 🧰 Step 1: Install BusyBox NDK
+
+Because Chroot relies on low-level Linux utilities, you must install the BusyBox NDK module. You can download and install the BusyBox module directly inside your root manager (e.g. Magisk, KernelSU, or APatch).
+
+1. Click **Download Module** on the BusyBox Installation screen.
+2. Your browser will open the download for the BusyBox NDK installer file.
+3. Flash the downloaded file inside your root manager's Module page.
+
+| Action / State | Screenshot | Description |
+| :--- | :---: | :--- |
+| **BusyBox Installation Screen** | <img src="img/step-six-for-root-install-busybox.png" width="500" /> | FluxLinux will prompt you to install BusyBox NDK if it isn't detected. Click **Download Module**. |
+| **Download Module** | <img src="img/step-six-download-busybox-module.png" width="500" /> | Your browser will download the BusyBox module package (`UPDATE-Busybox.Installer.zip`) to your phone's storage. |
+| **Flash in Root Manager** | <img src="img/step-six-then-flash-module-in-your-root-application.png" width="500" /> | Open your root manager application (e.g. APatch, KernelSU, or Magisk), go to the Modules tab, select the downloaded file, and flash it. |
+
+---
+
+## 🐧 Step 2: Select Debian (Rooted) Distribution
 
 Launch the FluxLinux app and navigate to the **Distributions** tab. Here you will see a list of available Linux distributions.
 
@@ -46,7 +63,7 @@ Launch the FluxLinux app and navigate to the **Distributions** tab. Here you wil
 
 ---
 
-## ⚙️ Step 2: Configure Debian Settings
+## ⚙️ Step 3: Configure Debian Settings
 
 Before generating the installation commands, configure your container profile.
 
@@ -66,7 +83,7 @@ Before generating the installation commands, configure your container profile.
 
 ---
 
-## 📋 Step 3: Generate and Copy the Setup Command
+## 📋 Step 4: Generate and Copy the Setup Command
 
 Once you finish setting up your preferences, FluxLinux will compile a customized bootstrap script.
 
@@ -80,7 +97,7 @@ Once you finish setting up your preferences, FluxLinux will compile a customized
 
 ---
 
-## ⚡ Step 4: Execute the Command in Termux
+## ⚡ Step 5: Execute the Command in Termux
 
 Once Termux opens, run the bootstrap command to compile the Debian container.
 
@@ -94,7 +111,7 @@ Once Termux opens, run the bootstrap command to compile the Debian container.
 
 ---
 
-## 🎉 Step 5: Verify Installation in Home Screen
+## 🎉 Step 6: Verify Installation in Home Screen
 
 Once the installation finishes, return to the FluxLinux app. The home screen will now list your newly installed Debian (Rooted) Chroot environment.
 
@@ -104,7 +121,7 @@ Once the installation finishes, return to the FluxLinux app. The home screen wil
 
 ---
 
-## 🛑 Step 6: Controlling the Session
+## 🛑 Step 7: Controlling the Session
 
 You can launch and manage your Debian Chroot session directly from the Home screen.
 
