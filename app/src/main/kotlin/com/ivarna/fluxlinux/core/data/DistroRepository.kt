@@ -15,7 +15,7 @@ object DistroRepository {
             id = "xfce4_desktop",
             name = "XFCE4 Desktop",
             description = "Base XFCE4 desktop environment — re-run to repair or update.",
-            scriptName = "common/setup_debian_family.sh",
+            scriptName = "debian/common/setup/setup_debian_family.sh",
             sizeEstimate = "300 MB",
             isMandatory = false
         ),
@@ -23,7 +23,7 @@ object DistroRepository {
             id = "hw_accel",
             name = "Hardware Acceleration",
             description = "VirGL & Zink drivers for GPU acceleration. Mandatory for GUI.",
-            scriptName = "common/setup_hw_accel_debian.sh",
+            scriptName = "debian/common/setup/setup_hw_accel_debian.sh",
             sizeEstimate = "50 MB",
             isMandatory = true
         ),
@@ -31,112 +31,112 @@ object DistroRepository {
             id = "customization",
             name = "XFCE4 Customization",
             description = "FluxLinux Theme, Wallpapers, Fonts, and 2x Scaling for XFCE4.",
-            scriptName = "common/setup_customization_debian.sh",
+            scriptName = "debian/common/setup/setup_customization_debian.sh",
             sizeEstimate = "200 MB"
         ),
         DistroComponent(
             id = "kde_plasma",
             name = "KDE Plasma Desktop",
             description = "Full KDE Plasma DE with Konsole, Dolphin, Kate, Spectacle & goodies.",
-            scriptName = "common/setup_kde_debian.sh",
+            scriptName = "debian/common/setup/setup_kde_debian.sh",
             sizeEstimate = "800 MB"
         ),
         DistroComponent(
             id = "kde_customization",
             name = "KDE Desktop Customization",
             description = "FluxLinux theme, Papirus icons, wallpapers & Zsh for KDE Plasma.",
-            scriptName = "common/setup_customization_kde_debian.sh",
+            scriptName = "debian/common/setup/setup_customization_kde_debian.sh",
             sizeEstimate = "250 MB"
         ),
         DistroComponent(
             id = "app_dev",
             name = "App Development",
             description = "Android SDK, Flutter, IntelliJ IDEA, OpenJDK.",
-            scriptName = "common/setup_appdev_debian.sh",
+            scriptName = "debian/common/setup/setup_appdev_debian.sh",
             sizeEstimate = "2.5 GB"
         ),
         DistroComponent(
             id = "web_dev",
             name = "Web Development",
             description = "Node.js, VS Code, Nginx, Python, Git.",
-            scriptName = "common/setup_webdev_debian.sh",
+            scriptName = "debian/common/setup/setup_webdev_debian.sh",
             sizeEstimate = "800 MB"
         ),
         DistroComponent(
             id = "gen_dev",
             name = "General Coding",
             description = "C++, Rust, Go, LunarVim, Neovim, Build Essentials.",
-            scriptName = "common/setup_gengdev_debian.sh",
+            scriptName = "debian/common/setup/setup_gengdev_debian.sh",
             sizeEstimate = "800 MB"
         ),
         DistroComponent(
             id = "cybersec",
             name = "Cyber Security",
             description = "Kali Tools, Metasploit, Nmap, Wireshark, Aircrack-ng.",
-            scriptName = "common/setup_cybersec_debian.sh",
+            scriptName = "debian/common/setup/setup_cybersec_debian.sh",
             sizeEstimate = "2 GB"
         ),
         DistroComponent(
             id = "data_science",
             name = "Data Science",
             description = "Jupyter, Python Data Stack (Pandas, NumPy), R.",
-            scriptName = "common/setup_datascience_debian.sh",
+            scriptName = "debian/common/setup/setup_datascience_debian.sh",
             sizeEstimate = "1 GB"
         ),
         DistroComponent(
             id = "gamedev",
             name = "Game Development",
             description = "Godot Engine, Blender, Raylib.",
-            scriptName = "common/setup_gamedev_debian.sh",
+            scriptName = "debian/common/setup/setup_gamedev_debian.sh",
             sizeEstimate = "1 GB"
         ),
          DistroComponent(
             id = "video_editing",
             name = "Video Editing",
             description = "Kdenlive, Shotcut, OpenShot, Flowblade.",
-            scriptName = "common/setup_video_editing_debian.sh",
+            scriptName = "debian/common/setup/setup_video_editing_debian.sh",
             sizeEstimate = "1 GB"
         ),
         DistroComponent(
             id = "office",
             name = "Office Suite",
             description = "LibreOffice, PDF Viewer, Email Client.",
-            scriptName = "common/setup_office_debian.sh",
+            scriptName = "debian/common/setup/setup_office_debian.sh",
             sizeEstimate = "500 MB"
         ),
         DistroComponent(
             id = "graphic_design",
             name = "Graphic Design",
             description = "GIMP, Inkscape, Krita, and Blender for creative work.",
-            scriptName = "common/setup_graphic_design_debian.sh",
+            scriptName = "debian/common/setup/setup_graphic_design_debian.sh",
             sizeEstimate = "1.2 GB"
         ),
         DistroComponent(
             id = "vulkan_llamacpp",
             name = "Vulkan Llama.cpp",
             description = "GPU-accelerated LLM inference via Vulkan. Uses Turnip on Adreno devices.",
-            scriptName = "common/setup_vulkan_llamacpp_debian.sh",
+            scriptName = "debian/common/setup/setup_vulkan_llamacpp_debian.sh",
             sizeEstimate = "500 MB"
         ),
         DistroComponent(
             id = "qwen35_model",
             name = "Qwen3.5-0.8B Model",
             description = "Download Qwen3.5-0.8B GGUF (Q4_0). Requires Vulkan Llama.cpp installed first.",
-            scriptName = "common/setup_qwen35_debian.sh",
+            scriptName = "debian/common/setup/setup_qwen35_debian.sh",
             sizeEstimate = "507 MB"
         ),
         DistroComponent(
             id = "qwen25_model",
             name = "Qwen2.5-1.5B Model",
             description = "Qwen2.5-1.5B-Instruct GGUF (Vulkan GPU compatible). Replaces Qwen3.5 GDN.",
-            scriptName = "common/setup_qwen25_debian.sh",
+            scriptName = "debian/common/setup/setup_qwen25_debian.sh",
             sizeEstimate = "935 MB"
         ),
         DistroComponent(
             id = "emulation",
             name = "Retro Emulation",
             description = "RetroArch, various emulator cores.",
-            scriptName = "common/setup_emulation_debian.sh",
+            scriptName = "debian/common/setup/setup_emulation_debian.sh",
             sizeEstimate = "1 GB",
             comingSoon = true
         )
@@ -148,7 +148,7 @@ object DistroRepository {
             id = "arch_desktop",
             name = "XFCE4 Desktop",
             description = "Installs XFCE4 Desktop Environment and TigerVNC.",
-            scriptName = "common/setup_arch_family.sh",
+            scriptName = "arch/common/setup/setup_arch_family.sh",
             sizeEstimate = "300 MB",
             isMandatory = true
         )

@@ -465,7 +465,7 @@ class MainActivity : ComponentActivity() {
                                                       id = "hw_accel",
                                                       name = "Hardware Acceleration",
                                                       type = com.ivarna.fluxlinux.core.utils.TaskType.COMPONENT,
-                                                      scriptName = "common/setup_hw_accel_debian.sh",
+                                                      scriptName = "debian/common/setup/setup_hw_accel_debian.sh",
                                                       distroId = selectedDistro!!.id,
                                                       extraEnv = mapOf("FLUX_GPU" to gpu)
                                                   ))

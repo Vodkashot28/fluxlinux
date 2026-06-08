@@ -1367,7 +1367,7 @@ fun EnvironmentSetupStep(
         // Setup Button (Background)
         Button(
             onClick = {
-                val script = scriptManager.getScriptContent("common/setup_termux.sh")
+                val script = scriptManager.getScriptContent("termux/setup_termux.sh")
                 // Reset status first
                 StateManager.setScriptStatus(context, "setup_termux", false)
                 
@@ -1429,7 +1429,7 @@ fun EnvironmentSetupStep(
         // Tweaks Button (Foreground)
         Button(
             onClick = {
-                val script = scriptManager.getScriptContent("common/termux_tweaks.sh")
+                val script = scriptManager.getScriptContent("termux/termux_tweaks.sh")
                 val intent = TermuxIntentFactory.buildRunCommandIntent(script, runInBackground = false)
                 try {
                     context.startService(intent)

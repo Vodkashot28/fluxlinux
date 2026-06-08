@@ -182,11 +182,11 @@ object TermuxIntentFactory {
         
         // 1. Select Base Script
         val baseScriptName = when (distro.id) {
-            "debian13_chroot" -> "chroot/setup_debian13_chroot.sh"
-            "debian_chroot" -> "chroot/setup_debian_chroot.sh"
-            "termux" -> "common/setup_termux.sh"
-            "archlinux" -> "common/setup_arch_family.sh"
-            else -> "common/setup_debian_family.sh"
+            "debian13_chroot" -> "debian/chroot/setup/setup_debian13_chroot.sh"
+            "debian_chroot" -> "debian/chroot/setup/setup_debian_chroot.sh"
+            "termux" -> "termux/setup_termux.sh"
+            "archlinux" -> "arch/common/setup/setup_arch_family.sh"
+            else -> "debian/common/setup/setup_debian_family.sh"
         }
         
         var fullScript = ""
@@ -202,7 +202,7 @@ object TermuxIntentFactory {
         
         // 0. Prepend Termux Setup (Dependency Check) if not running it directly AND not Chroot
         if (distro.id != "termux" && !distro.id.contains("chroot")) {
-             val termuxSetup = scriptManager.getScriptContent("common/setup_termux.sh")
+             val termuxSetup = scriptManager.getScriptContent("termux/setup_termux.sh")
              // Strip the shebang and exit/callback from setup_termux
              var cleanSetup = termuxSetup.replace("#!/bin/bash", "")
              cleanSetup = cleanSetup.replace("exit 0", "# exit 0 deferred from setup_termux")
@@ -228,7 +228,7 @@ object TermuxIntentFactory {
              // We might just echo success or run a specific termux desktop setup found in setup_debian_family?
              // Actually setup_debian_family is for Debian. Termux needs its own.
              // Currently setup_termux does most work. We can just append baseScriptName if it's not setup_termux (which it is).
-             if (baseScriptName != "common/setup_termux.sh") {
+             if (baseScriptName != "termux/setup_termux.sh") {
                  fullScript += scriptManager.getScriptContent(baseScriptName)
              } else {
                  fullScript += "echo 'Termux Environment Ready.'\n"
@@ -257,18 +257,18 @@ object TermuxIntentFactory {
              fullScript += "rm -f \$HOME/flux_base_setup.sh\n"
               
              // Deploy start_gui.sh separately using echo
-             val guiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/start_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
+             val guiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("debian/proot/start/start_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
              fullScript += "\n# Deploy Start GUI Script\nlog_step \"Updating Launch Scripts...\"\n"
              fullScript += "echo '$guiScriptB64' | base64 -d > \$HOME/start_gui.sh\n"
              fullScript += "chmod +x \$HOME/start_gui.sh\n"
              
              // Deploy stop_gui.sh as well
-             val stopGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/stop_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
+             val stopGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("debian/proot/stop/stop_gui.sh").toByteArray(), android.util.Base64.NO_WRAP)
              fullScript += "echo '$stopGuiScriptB64' | base64 -d > \$HOME/stop_gui.sh\n"
              fullScript += "chmod +x \$HOME/stop_gui.sh\n"
 
              // Deploy start_gui_kde.sh (KDE Plasma launcher)
-             val kdeGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("common/start_gui_kde.sh").toByteArray(), android.util.Base64.NO_WRAP)
+             val kdeGuiScriptB64 = android.util.Base64.encodeToString(scriptManager.getScriptContent("debian/proot/start/start_gui_kde.sh").toByteArray(), android.util.Base64.NO_WRAP)
              fullScript += "echo '$kdeGuiScriptB64' | base64 -d > \$HOME/start_gui_kde.sh\n"
              fullScript += "chmod +x \$HOME/start_gui_kde.sh\n"
         }
@@ -393,7 +393,7 @@ object TermuxIntentFactory {
      */
     fun buildRunLlmIntent(context: Context, distroId: String): Intent {
         val scriptManager = ScriptManager(context)
-        val scriptContent = scriptManager.getScriptContent("common/launch_qwen25.sh")
+        val scriptContent = scriptManager.getScriptContent("debian/common/addon/launch_qwen25.sh")
         val scriptB64 = android.util.Base64.encodeToString(scriptContent.toByteArray(), android.util.Base64.NO_WRAP)
         val command = "proot-distro login $distroId -- bash -c 'echo \"$scriptB64\" | base64 -d | bash'"
         return buildRunCommandIntent(command, runInBackground = false)
@@ -613,7 +613,7 @@ object TermuxIntentFactory {
 
         if (distroId == "debian13_chroot") {
             // Deploy chroot KDE launcher: write to Termux $HOME first, then su cp to /data/local/tmp/
-            val chrootKdeScriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui.sh")
+            val chrootKdeScriptContent = scriptManager.getScriptContent("debian/chroot/start/start_debian13_kde_gui.sh")
             val chrootKdeScriptB64 = android.util.Base64.encodeToString(chrootKdeScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
 
             val command = """
@@ -648,7 +648,7 @@ object TermuxIntentFactory {
         }
 
         // Standard PRoot launch — deploy start_gui_kde.sh inline then run it
-        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptContent = scriptManager.getScriptContent("debian/proot/start/start_gui_kde.sh")
         val kdeGuiScriptB64 = android.util.Base64.encodeToString(kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
         val command = """
             echo '$kdeGuiScriptB64' | base64 -d > ${'$'}HOME/start_gui_kde.sh
@@ -667,7 +667,7 @@ object TermuxIntentFactory {
         val scriptManager = ScriptManager(context)
 
         if (distroId == "debian13_chroot") {
-            val chrootKdeScriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui_turnip.sh")
+            val chrootKdeScriptContent = scriptManager.getScriptContent("debian/chroot/start/start_debian13_kde_gui_turnip.sh")
             val chrootKdeScriptB64 = android.util.Base64.encodeToString(
                 chrootKdeScriptContent.toByteArray(), android.util.Base64.NO_WRAP
             )
@@ -697,7 +697,7 @@ object TermuxIntentFactory {
         }
 
         // Standard PRoot — Turnip is accessible natively; just use GALLIUM_DRIVER=zink override
-        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptContent = scriptManager.getScriptContent("debian/proot/start/start_gui_kde.sh")
         val kdeGuiScriptB64 = android.util.Base64.encodeToString(
             kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP
         )
@@ -718,7 +718,7 @@ object TermuxIntentFactory {
         val scriptManager = ScriptManager(context)
 
         if (distroId == "debian13_chroot") {
-            val scriptContent = scriptManager.getScriptContent("chroot/start_debian13_kde_gui_software.sh")
+            val scriptContent = scriptManager.getScriptContent("debian/chroot/start/start_debian13_kde_gui_software.sh")
             val scriptB64 = android.util.Base64.encodeToString(
                 scriptContent.toByteArray(), android.util.Base64.NO_WRAP
             )
@@ -746,7 +746,7 @@ object TermuxIntentFactory {
         }
 
         // PRoot: set LIBGL_ALWAYS_SOFTWARE=1 override on the existing kde script
-        val kdeGuiScriptContent = scriptManager.getScriptContent("common/start_gui_kde.sh")
+        val kdeGuiScriptContent = scriptManager.getScriptContent("debian/proot/start/start_gui_kde.sh")
         val kdeGuiScriptB64 = android.util.Base64.encodeToString(
             kdeGuiScriptContent.toByteArray(), android.util.Base64.NO_WRAP
         )
@@ -766,7 +766,7 @@ object TermuxIntentFactory {
 
         if (distroId == "debian13_chroot") {
             val scriptManager = ScriptManager(context)
-            val stopScriptContent = scriptManager.getScriptContent("chroot/stop_debian13_kde_gui.sh")
+            val stopScriptContent = scriptManager.getScriptContent("debian/chroot/stop/stop_debian13_kde_gui.sh")
             val stopScriptB64 = android.util.Base64.encodeToString(stopScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
             val command = """
                 echo '$stopScriptB64' | base64 -d > ${'$'}HOME/stop_debian13_kde_gui.sh

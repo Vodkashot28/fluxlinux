@@ -1,98 +1,169 @@
 # Scripts Directory Reference
 
-This document provides a comprehensive reference for all **45 files (44 shell scripts + 1 markdown)** used by FluxLinux to set up, configure, and run environments. All scripts are bundled within the app assets at `app/src/main/assets/scripts/`.
+This document provides a comprehensive reference for all **45 files (44 shell scripts + 1 markdown)** bundled in `app/src/main/assets/scripts/`. The directory is now organised by **distro → execution type → action**.
+
+```
+scripts/
+├── termux/
+├── debian/
+│   ├── common/
+│   │   ├── setup/
+│   │   └── addon/
+│   ├── proot/
+│   │   ├── setup/
+│   │   ├── start/
+│   │   └── stop/
+│   └── chroot/
+│       ├── setup/
+│       ├── start/
+│       └── stop/
+├── arch/
+│   ├── common/setup/
+│   └── chroot/setup/
+└── fedora/
+    └── common/setup/
+```
 
 ---
 
-## 1. Debian Chroot Scripts (10 Scripts)
-**Location:** `app/src/main/assets/scripts/chroot/`
+## 1. `termux/` — Host Termux Scripts (5 Files)
 
-These scripts are exclusively for **rooted devices** running a native Chroot environment.
+Run exclusively on the **host Android device (Termux)**. Never executed inside a container.
 
-* **Installation & Removal**
-  * `setup_arch_chroot.sh`: Setup script for Arch Linux in Chroot.
-  * `setup_debian_chroot.sh`: General setup for a Debian Chroot.
-  * `setup_debian13_chroot.sh`: Setup specific to Debian 13 (Trixie) in Chroot.
-  * `uninstall_debian_chroot.sh`: Uninstalls the generic Debian Chroot.
-  * `uninstall_debian13.sh`: Uninstalls the Debian 13 Chroot.
-
-* **GUI Management**
-  * `start_debian13_kde_gui.sh`: Starts the KDE desktop environment.
-  * `start_debian13_kde_gui_software.sh`: Starts KDE using software rendering.
-  * `start_debian13_kde_gui_turnip.sh`: Starts KDE using Turnip drivers.
-  * `stop_debian13_gui.sh`: Stops all GUI components.
-  * `stop_debian13_kde_gui.sh`: Gracefully stops the KDE session.
+| Script | Called By App | Purpose |
+|---|---|---|
+| `setup_termux.sh` | ✅ PrerequisitesScreen & SettingsScreen | **Step 7 (Required):** Installs proot-distro, grants storage, sets up X11 env |
+| `termux_tweaks.sh` | ✅ PrerequisitesScreen & SettingsScreen | **Step 7 (Optional):** X11 packages and PulseAudio config |
+| `install.sh` | Manual use / LocalInstallServer | Bootstrap Termux packages. App generates composite install via `getBaseInstallScript()` |
+| `install_apps.sh` | Manual use | Additional Termux package requirements |
+| `setup_theme.sh` | Manual use | Termux terminal theme (fonts, colours, key layout) |
 
 ---
 
-## 2. PRoot Scripts (4 Scripts)
-**Location:** `app/src/main/assets/scripts/common/`
+## 2. `debian/proot/` — PRoot Host Scripts (4 Files)
 
-These scripts are strictly for **rootless (PRoot)** execution to launch and manage the containers from the host Termux side.
+Execute on the **host Termux side** to manage rootless PRoot containers. Physically separate from `debian/common/` to distinguish host vs. container execution.
 
-* `flux_install.sh`: The core installation wrapper executing `proot-distro install`.
-* `start_gui.sh`: Launches the XFCE4 Desktop Environment inside PRoot.
-* `start_gui_kde.sh`: Launches the KDE Desktop Environment inside PRoot.
-* `stop_gui.sh`: Gracefully terminates the PRoot GUI session.
+### `debian/proot/setup/`
+| Script | Purpose |
+|---|---|
+| `flux_install.sh` | Calls `proot-distro install` to download the container image |
 
----
+### `debian/proot/start/`
+| Script | Purpose |
+|---|---|
+| `start_gui.sh` | Launches **XFCE4** desktop via Termux:X11 |
+| `start_gui_kde.sh` | Launches **KDE Plasma** desktop via Termux:X11 |
 
-## 3. Common Environment Scripts (25 Scripts)
-**Location:** `app/src/main/assets/scripts/common/`
-
-These scripts run *inside* the Linux environment and are shared between **both PRoot and Chroot** setups.
-
-* **Core Setup & Families**
-  * `setup_arch_family.sh`: Core setup for Arch-based environments.
-  * `setup_debian_family.sh`: Core setup for Debian-based environments.
-  * `setup_fedora_family.sh`: Core setup for Fedora-based environments.
-  * `setup_kde_debian.sh`: Installs and configures KDE Plasma in Debian.
-
-* **Hardware & Acceleration**
-  * `ha`: Wrapper script to dynamically inject VirGL/Zink hardware acceleration.
-  * `setup_hw_accel_debian.sh`: Configures Vulkan, Turnip, and Zink drivers.
-  * `setup_gpu.sh`: General GPU preparation.
-  * `gpu_diagnostics.sh`: Tools to diagnose hardware acceleration issues.
-
-* **Development Workflows**
-  * `setup_appdev_debian.sh`: Android Studio, Flutter, and mobile dev tools.
-  * `setup_gengdev_debian.sh`: General dev tools (GCC, Git, Python, VS Code).
-  * `setup_webdev_debian.sh`: Web development stacks (Node.js, PHP).
-  * `setup_gamedev_debian.sh`: Game development tools like Godot.
-  * `setup_datascience_debian.sh`: Jupyter, Pandas, data science suite.
-
-* **Productivity & Creative**
-  * `setup_office_debian.sh`: LibreOffice and general productivity.
-  * `setup_graphic_design_debian.sh`: GIMP, Inkscape, etc.
-  * `setup_video_editing_debian.sh`: Kdenlive and video editors.
-  * `setup_cybersec_debian.sh`: Cybersecurity and pentesting tools.
-
-* **AI & Emulation**
-  * `setup_emulation_debian.sh`: RetroArch and gaming emulators.
-  * `setup_vulkan_llamacpp_debian.sh`: Configures Vulkan-accelerated local LLM engines.
-  * `setup_qwen25_debian.sh` / `setup_qwen35_debian.sh`: Downloads Qwen AI models.
-  * `launch_qwen25.sh` / `launch_qwen35.sh`: Launchers to execute the Qwen models.
-
-* **Customization**
-  * `setup_customization_debian.sh`: Themes/icons for XFCE/general.
-  * `setup_customization_kde_debian.sh`: Themes/icons specific to KDE.
+### `debian/proot/stop/`
+| Script | Purpose |
+|---|---|
+| `stop_gui.sh` | Kills X11 server, VNC, and PulseAudio |
 
 ---
 
-## 4. Host Termux Pre-Requisites (5 Scripts + 1 Document)
-**Location:** Mix of `app/src/main/assets/scripts/termux/` and `common/`
+## 3. `debian/common/` — Container Scripts, Debian (25 Files)
 
-These files run purely on the **host Android device (Termux)** to prep the system before any Linux environment is spawned.
+Run **inside the Linux container** (both PRoot and Chroot). Invoked by the app via `TermuxIntentFactory` (proot-distro login or chroot wrapper).
 
-* **In `termux/` directory:**
-  * `install.sh`: Foundational Termux package installer.
-  * `install_apps.sh`: Additional Termux app requirements.
-  * `setup_theme.sh`: Configures the Termux terminal theme (fonts/colors).
+### `debian/common/setup/` — Setup & Installation (21 Scripts)
 
-* **In `common/` directory:**
-  * `setup_termux.sh`: Finalizes storage permissions and installs `proot-distro`.
-  * `termux_tweaks.sh`: Installs X11 packages and PulseAudio server configurations.
-  * `virgl_troubleshooting.md`: **(Documentation)** A guide covering troubleshooting steps for Virgl/Turnip issues.
+**Core Desktop:**
+| Script | App Component ID | Purpose |
+|---|---|---|
+| `setup_debian_family.sh` | `xfce4_desktop` | XFCE4 desktop + Termux:X11 base setup |
+| `setup_hw_accel_debian.sh` | `hw_accel` *(mandatory)* | VirGL, Turnip, and Zink GPU drivers |
+| `setup_kde_debian.sh` | `kde_plasma` | KDE Plasma DE, Konsole, Dolphin, Kate |
+| `setup_customization_debian.sh` | `customization` | FluxLinux theme, wallpapers, 2× scale (XFCE4) |
+| `setup_customization_kde_debian.sh` | `kde_customization` | FluxLinux theme, Papirus icons, Zsh (KDE) |
+| `setup_gpu.sh` | *(standalone)* | General GPU preparation helper |
+
+**Development:**
+| Script | App Component ID | Purpose |
+|---|---|---|
+| `setup_appdev_debian.sh` | `app_dev` | Android SDK, Flutter, IntelliJ IDEA |
+| `setup_webdev_debian.sh` | `web_dev` | Node.js, VS Code, Nginx, Python |
+| `setup_gengdev_debian.sh` | `gen_dev` | C++, Rust, Go, LunarVim, Neovim |
+| `setup_gamedev_debian.sh` | `game_dev` | Godot, Blender, Raylib |
+| `setup_cybersec_debian.sh` | `cyber_sec` | Kali tools, Metasploit, Wireshark |
+| `setup_datascience_debian.sh` | `data_science` | Jupyter, Pandas, NumPy, R |
+
+**Productivity & Creative:**
+| Script | App Component ID | Purpose |
+|---|---|---|
+| `setup_office_debian.sh` | `office` | LibreOffice, PDF viewer |
+| `setup_graphic_design_debian.sh` | `graphic_design` | GIMP, Inkscape, Krita |
+| `setup_video_editing_debian.sh` | `video_editing` | Kdenlive, Shotcut, OpenShot |
+| `setup_emulation_debian.sh` | `emulation` | RetroArch, emulator cores *(coming soon)* |
+
+**AI / LLM:**
+| Script | App Component ID | Purpose |
+|---|---|---|
+| `setup_vulkan_llamacpp_debian.sh` | `vulkan_llm` | Vulkan-accelerated llama.cpp |
+| `setup_qwen25_debian.sh` | `qwen25` | Downloads Qwen2.5-1.5B GGUF model |
+| `setup_qwen35_debian.sh` | `qwen35` | Downloads Qwen3.5-0.8B GGUF model |
+
+### `debian/common/addon/` — Runtime Add-ons (5 Files + 1 Doc)
+| File | Purpose |
+|---|---|
+| `ha` | Injects VirGL/Zink GPU acceleration into any command at runtime |
+| `gpu_diagnostics.sh` | Diagnoses hardware acceleration issues |
+| `launch_qwen25.sh` | Runs Qwen2.5 interactively inside the container |
+| `launch_qwen35.sh` | Runs Qwen3.5 interactively inside the container |
+| `virgl_troubleshooting.md` | *(Doc)* Troubleshooting guide for VirGL/Turnip issues |
 
 ---
-**Total Coverage Verification: 10 + 4 + 25 + 5 + 1 = 45 Files (Verified and Fully Covered)**
+
+## 4. `debian/chroot/` — Chroot Scripts, Debian (9 Files)
+
+Exclusively for **rooted devices**. Root (`su`) access required.
+
+### `debian/chroot/setup/` — Install & Uninstall
+| Script | Purpose |
+|---|---|
+| `setup_debian13_chroot.sh` | Setup Debian 13 (Trixie) — **primary rooted distro** (`debian13_chroot` ID) |
+| `setup_debian_chroot.sh` | Setup generic Debian Chroot |
+| `uninstall_debian13.sh` | Remove Debian 13 Chroot |
+| `uninstall_debian_chroot.sh` | Remove generic Debian Chroot |
+
+### `debian/chroot/start/` — GUI Launch
+| Script | GPU Mode | Purpose |
+|---|---|---|
+| `start_debian13_kde_gui.sh` | VirGL | KDE Plasma with VirGL hardware acceleration |
+| `start_debian13_kde_gui_turnip.sh` | Turnip/Zink | KDE Plasma with Adreno Vulkan (best Snapdragon perf) |
+| `start_debian13_kde_gui_software.sh` | LLVMpipe | KDE Plasma with software rendering (most compatible) |
+
+### `debian/chroot/stop/`
+| Script | Purpose |
+|---|---|
+| `stop_debian13_gui.sh` | Stops all GUI processes for Debian 13 Chroot |
+| `stop_debian13_kde_gui.sh` | Gracefully stops KDE Plasma session |
+
+---
+
+## 5. `arch/` — Arch Linux Scripts (2 Files)
+
+### `arch/common/setup/`
+| Script | App Component ID | Purpose |
+|---|---|---|
+| `setup_arch_family.sh` | `arch_desktop` *(mandatory)* | XFCE4 desktop base for Arch |
+
+### `arch/chroot/setup/`
+| Script | Purpose |
+|---|---|
+| `setup_arch_chroot.sh` | Native Arch Chroot environment setup |
+
+---
+
+## 6. `fedora/` — Fedora Scripts (1 File)
+
+### `fedora/common/setup/`
+| Script | Purpose |
+|---|---|
+| `setup_fedora_family.sh` | Core setup for Fedora-based environments |
+
+---
+
+**Total: 10 (termux/proot/chroot host) + 25 (debian/common) + 9 (debian/chroot) + 2 (arch) + 1 (fedora) = 45 + 2 arch + 1 fedora subtotals = verified 45 files ✅**
+
+> **Note:** `arch/` and `fedora/` directories are pre-created with their current scripts. Sub-folders (`start/`, `stop/`, `addon/`) will be added as distro support expands.

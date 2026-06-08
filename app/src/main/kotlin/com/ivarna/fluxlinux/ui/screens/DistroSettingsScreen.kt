@@ -354,9 +354,9 @@ fun DistroSettingsScreen(
                             if (isChroot) {
                                 // ... (Script generation logic) ...
                                 val scriptName = when(distro.id) {
-                                    "debian_chroot" -> "chroot/uninstall_debian_chroot.sh"
-                                    "debian13_chroot" -> "chroot/uninstall_debian13.sh"
-                                    else -> "chroot/uninstall_debian_chroot.sh"
+                                    "debian_chroot" -> "debian/chroot/setup/uninstall_debian_chroot.sh"
+                                    "debian13_chroot" -> "debian/chroot/setup/uninstall_debian13.sh"
+                                    else -> "debian/chroot/setup/uninstall_debian_chroot.sh"
                                 }
                                 
                                 try {

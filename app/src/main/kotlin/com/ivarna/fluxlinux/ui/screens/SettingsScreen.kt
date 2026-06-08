@@ -177,9 +177,9 @@ fun SettingsScreen(
                                 onClick = {
                                     if (permissionState.status.isGranted) {
                                         val scriptManager = ScriptManager(context)
-                                        val setupScript = scriptManager.getScriptContent("common/setup_termux.sh")
-                                        val fluxInstallScript = scriptManager.getScriptContent("common/flux_install.sh")
-                                        val startGuiScript = scriptManager.getScriptContent("common/start_gui.sh")
+                                        val setupScript = scriptManager.getScriptContent("termux/setup_termux.sh")
+                                        val fluxInstallScript = scriptManager.getScriptContent("debian/proot/setup/flux_install.sh")
+                                        val startGuiScript = scriptManager.getScriptContent("debian/proot/start/start_gui.sh")
                                         
                                         val compositeCommand = buildString {
                                             append("cat << 'EOF_FLUX' > \$HOME/flux_install.sh\n")
@@ -241,7 +241,7 @@ fun SettingsScreen(
                                 onClick = {
                                     if (permissionState.status.isGranted) {
                                         val scriptManager = ScriptManager(context)
-                                        val tweaksScript = scriptManager.getScriptContent("common/termux_tweaks.sh")
+                                        val tweaksScript = scriptManager.getScriptContent("termux/termux_tweaks.sh")
                                         val forceTweaksScript = "rm -f \$HOME/.fluxlinux/termux_tweaks.done\n" + tweaksScript
                                         val copyCmd = "cat > \$HOME/termux_tweaks.sh << 'TWEAKS_EOF'\n$forceTweaksScript\nTWEAKS_EOF\nchmod +x \$HOME/termux_tweaks.sh && bash \$HOME/termux_tweaks.sh"
                                         val intent = TermuxIntentFactory.buildRunCommandIntent(copyCmd)
