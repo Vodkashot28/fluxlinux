@@ -62,18 +62,48 @@ set -e
 
 export DEBIAN_FRONTEND=noninteractive  # or equivalent for your distro
 
+# ── Error Handler (MANDATORY) ──
+# Scripts must NEVER exit silently. This keeps the terminal open so the user
+# can read the error, copy it, and report the issue.
+handle_error() {
+    echo ""
+    echo "❌ FluxLinux Error: Script failed at step: $1"
+    echo "---------------------------------------------------"
+    echo "Please check the error message above for details."
+    echo "---------------------------------------------------"
+    read -p "Press Enter to acknowledge error and exit..."
+    exit 1
+}
+
 log_step() { echo ""; echo "===== $1 ====="; echo ""; }
 
 log_step "Installing Desktop Environment"
-# apt-get install -y xfce4 xfce4-goodies   # Debian/Ubuntu
-# pacman -S --noconfirm xfce4              # Arch
-# dnf install -y @xfce-desktop             # Fedora
+# apt-get install -y xfce4 xfce4-goodies   || handle_error "XFCE4 Install"   # Debian/Ubuntu
+# pacman -S --noconfirm xfce4              || handle_error "XFCE4 Install"   # Arch
+# dnf install -y @xfce-desktop             || handle_error "XFCE4 Install"   # Fedora
 
 log_step "Installing TigerVNC / X11 bridge"
-# ...
+# apt install -y tigervnc-standalone-server || handle_error "TigerVNC Install"
 
 log_step "Setting up locale and timezone"
 # ...
+
+# ── Verification (recommended for scripts that install multiple tools) ──
+verify_installation() {
+    echo ""
+    echo "🔎 FluxLinux: Verifying Installations..."
+    echo "------------------------------------------------"
+    MISSING=0
+    if command -v xfce4-session >/dev/null; then echo " [✅] XFCE4"; else echo " [❌] XFCE4 Missing"; MISSING=1; fi
+    if command -v vncserver >/dev/null; then echo " [✅] TigerVNC"; else echo " [❌] TigerVNC Missing"; MISSING=1; fi
+    echo "------------------------------------------------"
+    if [ $MISSING -eq 1 ]; then
+        echo "⚠️  Some components failed. Check errors above."
+    else
+        echo "🎉 All components installed successfully!"
+    fi
+}
+verify_installation
 
 # Signal completion back to FluxLinux app
 am start -a android.intent.action.VIEW \
@@ -81,7 +111,15 @@ am start -a android.intent.action.VIEW \
   --flags 0x10000000 2>/dev/null || true
 
 echo "Setup complete!"
+read -p "Press Enter to close..."
 ```
+
+> **⚠️ Critical Rules:**
+> 1. **Every failable command** must use `|| handle_error "Step Name"` — never let errors pass silently.
+> 2. **`read -p` at the end** — Termux closes the terminal on script exit. Without this, the user can't read success/error output.
+> 3. **`verify_installation`** — Recommended for scripts installing 2+ tools. Shows a clean checklist so the user knows exactly what succeeded/failed.
+>
+> See [setup_appdev_debian.sh](file:///home/abhay/repos/fluxlinux/app/src/main/assets/scripts/debian/common/setup/setup_appdev_debian.sh) (lines 6–15, 786–846) for the full canonical implementation.
 
 ---
 

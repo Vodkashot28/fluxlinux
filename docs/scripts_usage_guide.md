@@ -116,6 +116,17 @@ All scripts must start with:
 
 set -e  # Exit on error
 
+# ── Error Handler (MANDATORY — keeps terminal open on failure) ──
+handle_error() {
+    echo ""
+    echo "❌ FluxLinux Error: Script failed at step: $1"
+    echo "---------------------------------------------------"
+    echo "Please check the error message above for details."
+    echo "---------------------------------------------------"
+    read -p "Press Enter to acknowledge error and exit..."
+    exit 1
+}
+
 # ── Callback (for app state tracking — only on component scripts) ──
 CALLBACK_NAME="<your_component_id>"   # Must match DistroComponent.id
 
@@ -128,6 +139,70 @@ am start -a android.intent.action.VIEW \
 ```
 
 > **Important:** The `am start` callback at the end is what tells the app the component installed successfully, advancing the install queue. Omit it only for `addon/` or `termux/` scripts that don't have a component ID.
+
+---
+
+## 3b. Error Handling (Mandatory)
+
+Scripts **must never silently exit on failure**. The user runs these in a Termux terminal — if the script crashes without output, they see nothing and can't report the issue.
+
+### The `handle_error` Pattern
+
+Every command that can fail must use `|| handle_error "<step name>"`:
+
+```bash
+# ✅ CORRECT — user sees which step failed + terminal stays open
+apt install -y git wget curl || handle_error "Dependencies Installation"
+wget https://example.com/tool.tar.gz -O /tmp/tool.tar.gz || handle_error "Tool Download"
+unzip /tmp/tool.tar.gz -d /opt || handle_error "Tool Extract"
+
+# ❌ WRONG — script crashes silently, user sees nothing
+apt install -y git wget curl
+wget https://example.com/tool.tar.gz -O /tmp/tool.tar.gz
+```
+
+### `read -p` to Hold the Terminal
+
+Termux closes the terminal window immediately when a script exits. Both `handle_error` (on failure) and the script end (on success) must use `read -p` to keep the terminal open so the user can read the output:
+
+```bash
+# At the END of every script (success path):
+echo "---------------------------------------------------"
+echo "Setup Complete!"
+read -p "Press Enter to close..."
+```
+
+### Verification Function (Recommended for Large Scripts)
+
+For scripts that install multiple tools, add a verification block (see [setup_appdev_debian.sh](file:///home/abhay/repos/fluxlinux/app/src/main/assets/scripts/debian/common/setup/setup_appdev_debian.sh) lines 786–833):
+
+```bash
+verify_installation() {
+    echo ""
+    echo "🔎 FluxLinux: Verifying Installations..."
+    echo "------------------------------------------------"
+    MISSING=0
+    
+    if command -v tool1 >/dev/null; then
+        echo " [✅] Tool1 Installed"
+    else
+        echo " [❌] Tool1 Missing"
+        MISSING=1
+    fi
+    
+    # ... repeat for each tool ...
+    
+    echo "------------------------------------------------"
+    if [ $MISSING -eq 1 ]; then
+        echo "⚠️  Some components failed to install."
+    else
+        echo "🎉 All components installed successfully!"
+    fi
+}
+
+verify_installation
+read -p "Press Enter to close..."
+```
 
 ### Step 4 — Register in the app (if it's a component)
 
