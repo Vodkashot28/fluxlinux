@@ -747,7 +747,45 @@ fun SettingsScreen(
                     }
 
                     // =====================================================================
-                    // 2.5. JOIN DISCORD
+                    // TUTORIALS
+                    // =====================================================================
+                    GlassSettingCard(
+                        onClick = { openUrl(context, "https://github.com/abhay-byte/fluxlinux#readme") }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("📖", fontSize = 24.sp)
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    "Read Documentation",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                Text(
+                                    "Setup guides and full tutorials",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // =====================================================================
+                    // JOIN DISCORD
                     // =====================================================================
                     GlassSettingCard(
                         onClick = { openUrl(context, "https://discord.gg/tag9kXAs2x") }
