@@ -4,7 +4,7 @@
   <p><strong>Run full Linux desktop environments on your Android device</strong></p>
 
 <a href="https://f-droid.org/packages/com.ivarna.fluxlinux">
-  <img src="assets/logo/fdroid-badge.png" alt="Get it on F-Droid" height="45" align="middle"/>
+  <img src="assets/logo/fdroid-badge.png" alt="Get it on F-Droid" height="54" align="middle"/>
 </a>
 <a href="https://play.google.com/store/apps/details?id=com.zenithblue.fluxlinux">
   <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="60" align="middle"/>
