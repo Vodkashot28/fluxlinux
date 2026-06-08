@@ -40,6 +40,7 @@ fun DistroCard(
     isInstalled: Boolean = false,
     isGuiRunning: Boolean = false,
     isGlobalInstalling: Boolean = false,
+    isCurrentlyInstalling: Boolean = false,
     onInstall: () -> Unit,
     onUninstall: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -216,8 +217,8 @@ fun DistroCard(
             if (!isInstalled) {
                 // Show Install button when not installed
                 Button(
-                    onClick = if (distro.comingSoon || isGlobalInstalling) { {} } else onInstall,
-                    enabled = !distro.comingSoon && !isGlobalInstalling,
+                    onClick = if (distro.comingSoon || (isGlobalInstalling && !isCurrentlyInstalling)) { {} } else onInstall,
+                    enabled = !distro.comingSoon && (!isGlobalInstalling || isCurrentlyInstalling),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                         disabledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
@@ -228,6 +229,7 @@ fun DistroCard(
                 ) {
                     Text(
                         text = when {
+                            isCurrentlyInstalling -> "View Progress"
                             isGlobalInstalling -> "Installation Busy..."
                             distro.comingSoon -> "Coming Soon"
                             else -> "Install"

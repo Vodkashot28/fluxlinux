@@ -108,9 +108,10 @@ fun DistroScreen(
                         distro = distro,
                         isInstalled = false,
                         isGlobalInstalling = installState.isInstalling,
+                        isCurrentlyInstalling = installState.isInstalling && installState.currentDistroId == distro.id,
                         onInstall = {
-                            if (installState.isInstalling) {
-                                Toast.makeText(context, "Installation already in progress — wait for current install to finish", Toast.LENGTH_LONG).show()
+                            if (installState.isInstalling && installState.currentDistroId != distro.id) {
+                                Toast.makeText(context, "Installation already in progress for another distro", Toast.LENGTH_LONG).show()
                             } else if (permissionState.status.isGranted) {
                                 onNavigateToInstall(distro)
                             } else {
