@@ -2029,23 +2029,69 @@ fun HelpAndSupportStep(
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        // Docs Link
+        // FluxLinux Setup Link
         androidx.compose.material3.Card(
             colors = androidx.compose.material3.CardDefaults.cardColors(
                 containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
             ),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().clickable {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/abhay-byte/fluxlinux#readme"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/abhay-byte/fluxlinux/blob/main/docs/tutorial/setup_fluxlinux.md"))
                 context.startActivity(intent)
             }
         ) {
             Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("📖", fontSize = 32.sp)
+                androidx.compose.foundation.Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.size(32.dp))
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("Read Documentation", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("Setup guides and full tutorials", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                    Text("FluxLinux Setup", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Step-by-Step Installation", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Debian PRoot Link
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/abhay-byte/fluxlinux/blob/main/docs/tutorial/setup_debian_proot.md"))
+                context.startActivity(intent)
+            }
+        ) {
+            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.foundation.Image(painter = painterResource(id = R.drawable.distro_debian), contentDescription = null, modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("Debian PRoot", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Rootless Installation Guide", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Debian Chroot Link
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/abhay-byte/fluxlinux/blob/main/docs/tutorial/setup_debian_chroot.md"))
+                context.startActivity(intent)
+            }
+        ) {
+            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.foundation.Image(painter = painterResource(id = R.drawable.distro_debian), contentDescription = null, modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("Debian Chroot", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Rooted Installation Guide", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                 }
             }
         }
