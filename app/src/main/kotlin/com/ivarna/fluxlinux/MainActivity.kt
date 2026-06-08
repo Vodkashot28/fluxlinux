@@ -201,7 +201,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             // Force Permanent Dark Mode
-            val currentThemeMode = ThemeMode.DARK
+            val currentThemeMode = com.ivarna.fluxlinux.core.utils.ThemeMode.DARK
             
             FluxLinuxTheme(themeMode = currentThemeMode) {
                 val onboardingComplete = StateManager.isOnboardingComplete(this@MainActivity)
@@ -401,12 +401,7 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = Screen.ONBOARDING
                             },
                             onNavigateToTroubleshooting = { currentScreen = Screen.TROUBLESHOOTING },
-                            onNavigateToRootCheck = { currentScreen = Screen.ROOT_ACCESS },
-                            onThemeChanged = { newMode -> 
-                                themePrefs.setThemeMode(newMode)
-                                currentThemeMode = newMode 
-                            },
-                            currentTheme = currentThemeMode
+                            onNavigateToRootCheck = { currentScreen = Screen.ROOT_ACCESS }
                         )
                     }
                     Screen.TROUBLESHOOTING -> {
