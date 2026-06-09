@@ -184,7 +184,7 @@ object TermuxIntentFactory {
         val baseScriptName = when (distro.id) {
             "debian13_chroot" -> "debian/chroot/setup/setup_debian13_chroot.sh"
             "debian_chroot" -> "debian/chroot/setup/setup_debian_chroot.sh"
-            "termux" -> "termux/setup_termux.sh"
+            "termux" -> "termux/setup_termux.sh"   // Base Termux deps (proot, X11, etc.)
             "archlinux" -> "arch/common/setup/setup_arch_family.sh"
             else -> "debian/common/setup/setup_debian_family.sh"
         }
@@ -403,6 +403,13 @@ object TermuxIntentFactory {
      * Launches a specific distro in GUI mode (XFCE4).
      */
     fun buildLaunchGuiIntent(distroId: String): Intent {
+        if (distroId == "termux") {
+            // Termux Native: Run start_xfce4_termux.sh directly in Termux
+            // The script is deployed during install; just run it directly.
+            val command = "bash $TERMUX_HOME_DIR/start_xfce4_termux.sh"
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
         if (distroId == "debian_chroot") {
             // Launch Chroot GUI as User (Wrapper handles su for Chroot entry)
             return buildRunCommandIntent("sh /data/local/tmp/start_debian_gui.sh", runInBackground = false)
@@ -449,6 +456,12 @@ object TermuxIntentFactory {
      * Stops the GUI for a specific distro.
      */
     fun buildStopGuiIntent(distroId: String): Intent {
+        if (distroId == "termux") {
+            // Termux Native: kill Termux:X11 + XFCE4 processes directly
+            val command = "bash $TERMUX_HOME_DIR/stop_xfce4_termux.sh"
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
         if (distroId == "debian13_chroot" || distroId == "debian_chroot") {
             // Stop Chroot GUI using root
             val scriptPath = if (distroId == "debian13_chroot") {
@@ -481,6 +494,17 @@ object TermuxIntentFactory {
             "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=$callbackName\""
         } else ""
         
+        if (distroId == "termux") {
+            // Termux Native: script runs directly in Termux host (no proot, no chroot)
+            val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
+            val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
+            val callbackCmd = if (callbackName != null) {
+                "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=$callbackName\""
+            } else ""
+            val command = "echo \"$scriptB64\" | base64 -d > /tmp/flux_feature.sh && bash /tmp/flux_feature.sh; rm -f /tmp/flux_feature.sh; $callbackCmd"
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
+
         if (distroId == "debian_chroot") {
             // For Chroot, we must decode the script on the HOST (Android)
             // Write to Termux's tmp directory since that's what gets mounted into the chroot
@@ -610,6 +634,18 @@ object TermuxIntentFactory {
      */
     fun buildLaunchKdeGuiIntent(context: android.content.Context, distroId: String): Intent {
         val scriptManager = ScriptManager(context)
+
+        if (distroId == "termux") {
+            // Termux Native KDE: deploy start_kde_termux.sh then run it
+            val kdeScriptContent = scriptManager.getScriptContent("termux/start/start_kde_termux.sh")
+            val kdeScriptB64 = android.util.Base64.encodeToString(kdeScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+            val command = """
+                echo '$kdeScriptB64' | base64 -d > ${'$'}HOME/start_kde_termux.sh
+                chmod +x ${'$'}HOME/start_kde_termux.sh
+                bash ${'$'}HOME/start_kde_termux.sh
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
 
         if (distroId == "debian13_chroot") {
             // Deploy chroot KDE launcher: write to Termux $HOME first, then su cp to /data/local/tmp/
@@ -763,6 +799,19 @@ object TermuxIntentFactory {
      * Kills plasmashell, kwin_x11, kded5 instead of xfce4 processes.
      */
     fun buildStopKdeGuiIntent(context: android.content.Context, distroId: String): Intent {
+
+        if (distroId == "termux") {
+            // Termux Native KDE: deploy stop_kde_termux.sh then run it
+            val scriptManager = ScriptManager(context)
+            val stopScriptContent = scriptManager.getScriptContent("termux/stop/stop_kde_termux.sh")
+            val stopScriptB64 = android.util.Base64.encodeToString(stopScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+            val command = """
+                echo '$stopScriptB64' | base64 -d > ${'$'}HOME/stop_kde_termux.sh
+                chmod +x ${'$'}HOME/stop_kde_termux.sh
+                bash ${'$'}HOME/stop_kde_termux.sh
+            """.trimIndent()
+            return buildRunCommandIntent(command, runInBackground = false)
+        }
 
         if (distroId == "debian13_chroot") {
             val scriptManager = ScriptManager(context)

@@ -78,8 +78,11 @@ Use this decision tree:
 ```
 Is this script for Termux host (not inside container)?
 ├── Yes, and no root needed:
-│   ├── It sets up the Termux env  →  termux/
-│   └── It manages PRoot containers  →  debian/proot/{setup|start|stop}/
+│   ├── It sets up the Termux env / installs base deps  →  termux/
+│   ├── It installs a desktop component in Termux        →  termux/setup/
+│   ├── It starts a Termux-native GUI                   →  termux/start/
+│   ├── It stops a Termux-native GUI                    →  termux/stop/
+│   └── It manages PRoot containers                     →  debian/proot/{setup|start|stop}/
 └── No, runs INSIDE the container:
     ├── It installs software  →  <distro>/common/setup/
     ├── It's a runtime helper/launcher  →  <distro>/common/addon/
@@ -95,9 +98,11 @@ Follow the existing naming convention:
 
 | Pattern | Example |
 |---|---|
-| `setup_<feature>_<distro>.sh` | `setup_gamedev_debian.sh` |
-| `start_<de>_gui.sh` | `start_gui_kde.sh` |
-| `stop_<de>_gui.sh` | `stop_gui.sh` |
+| `setup_<feature>_<distro>.sh` | `setup_gamedev_debian.sh`, `setup_kde_termux.sh` |
+| `start_<de>_<distro>.sh` | `start_xfce4_termux.sh`, `start_kde_termux.sh` |
+| `stop_<de>_<distro>.sh` | `stop_xfce4_termux.sh`, `stop_kde_termux.sh` |
+| `start_<de>_gui.sh` | `start_gui_kde.sh` (PRoot only) |
+| `stop_<de>_gui.sh` | `stop_gui.sh` (PRoot only) |
 | `uninstall_<distro>.sh` | `uninstall_debian13.sh` |
 | `launch_<tool>.sh` | `launch_qwen25.sh` |
 
@@ -138,7 +143,41 @@ am start -a android.intent.action.VIEW \
   --flags 0x10000000 2>/dev/null || true
 ```
 
-> **Important:** The `am start` callback at the end is what tells the app the component installed successfully, advancing the install queue. Omit it only for `addon/` or `termux/` scripts that don't have a component ID.
+> **Important:** The `am start` callback at the end is what tells the app the component installed successfully, advancing the install queue. Omit it only for `addon/` or standalone `termux/` scripts that don't have a component ID.
+
+---
+
+## 3c. Termux Native Scripts
+
+The **Termux Native** distro (`id = "termux"`) runs desktops directly in Termux without any container. Scripts for this distro live under `termux/setup/`, `termux/start/`, and `termux/stop/`.
+
+### Available Termux Native Scripts
+
+| Script | Location | Purpose | Component ID |
+|---|---|---|---|
+| `setup_xfce4_termux.sh` | `termux/setup/` | Installs XFCE4 + Termux:X11 | `xfce4_desktop` |
+| `setup_hw_accel_termux.sh` | `termux/setup/` | Installs VirGL / Turnip GPU drivers | `hw_accel` |
+| `setup_customization_termux.sh` | `termux/setup/` | Applies FluxLinux XFCE4 theme | `customization` |
+| `setup_kde_termux.sh` | `termux/setup/` | Installs KDE Plasma + Termux:X11 | `kde_plasma` |
+| `setup_customization_kde_termux.sh` | `termux/setup/` | Applies FluxLinux KDE theme | `kde_customization` |
+| `start_xfce4_termux.sh` | `termux/start/` | Launches XFCE4 via Termux:X11 | (launch only) |
+| `start_kde_termux.sh` | `termux/start/` | Launches KDE via Termux:X11 | (launch only) |
+| `stop_xfce4_termux.sh` | `termux/stop/` | Stops XFCE4 + Termux:X11 | (stop only) |
+| `stop_kde_termux.sh` | `termux/stop/` | Stops KDE + Termux:X11 | (stop only) |
+
+### Key Differences from Container Scripts
+
+- Scripts run **directly in Termux** — no `proot-distro login`, no `su`, no `busybox chroot`.
+- `pkg install` is used instead of `apt install`.
+- `$PREFIX` (e.g., `/data/data/com.termux/files/usr`) is always available.
+- Start/stop scripts are deployed to `$HOME` and run directly by the app:
+  ```bash
+  bash $HOME/start_xfce4_termux.sh   # XFCE4
+  bash $HOME/stop_xfce4_termux.sh    # stop XFCE4
+  bash $HOME/start_kde_termux.sh     # KDE
+  bash $HOME/stop_kde_termux.sh      # stop KDE
+  ```
+- Component scripts are dispatched by `TermuxIntentFactory.buildRunFeatureScriptIntent("termux", ...)` which runs them inline in Termux (no proot wrapper).
 
 ---
 

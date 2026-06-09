@@ -19,3 +19,4 @@ packages/android-ndk-r27d-aarch64-linux-musl.tar.xz
 app/release
 .kotlin
 flux.jks
+keystore.properties

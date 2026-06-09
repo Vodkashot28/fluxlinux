@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import java.util.Properties
 
 // F-Droid reproducible builds: disable baseline profiles using Groovy script
 apply(from = "fix-baseline-profiles.gradle")
@@ -39,6 +40,23 @@ android {
         includeInBundle = false
     }
 
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(keystorePropertiesFile.inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -47,6 +65,7 @@ android {
             }
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
