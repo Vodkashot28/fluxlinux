@@ -69,7 +69,7 @@ case "$GPU_BACKEND" in
         GALLIUM_DRIVER=zink \
         MESA_LOADER_DRIVER_OVERRIDE=zink \
         ZINK_DESCRIPTORS=lazy \
-        virgl_test_server --use-egl-surfaceless --use-gles &>/dev/null &
+        virgl_test_server --use-egl-surfaceless --use-gles &
         ;;
     software)
         echo " Using software rendering (LLVMpipe)"
@@ -78,7 +78,7 @@ case "$GPU_BACKEND" in
         ;;
     virgl|*)
         echo " Using VirGL (general compatibility)"
-        virgl_test_server_android &>/dev/null &
+        virgl_test_server_android &
         ;;
 esac
 sleep 2
@@ -90,7 +90,7 @@ if ! command -v termux-x11 >/dev/null 2>&1; then
     read -p "Press Enter to exit..."
     exit 1
 fi
-termux-x11 :0 &>/dev/null &
+termux-x11 :0 &
 sleep 3
 
 # ── Step 5: Export display env ───────────────────────────

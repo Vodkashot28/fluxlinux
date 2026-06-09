@@ -74,14 +74,11 @@ echo ""
 echo "===== Installing PulseAudio ====="
 pkg install -y pulseaudio || handle_error "PulseAudio install"
 
-# ── Step 8: Fonts ────────────────────────────────────────
+# ── Step 8: Fonts ────────────────────────────────────
 echo ""
 echo "===== Installing Fonts ====="
-pkg install -y \
-    fontconfig \
-    noto-fonts \
-    noto-fonts-extra \
-    || handle_error "Font install"
+# fontconfig for font management (noto-fonts are not available in Termux repos)
+pkg install -y fontconfig || true
 fc-cache -fv 2>/dev/null || true
 
 # ── Step 9: KWin workaround config ───────────────────────

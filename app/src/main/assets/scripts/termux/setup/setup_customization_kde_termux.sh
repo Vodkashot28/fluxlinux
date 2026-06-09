@@ -49,13 +49,17 @@ echo ""
 echo "===== Setting Up Wallpaper ====="
 WALLPAPER_PATH="$HOME/.fluxlinux/wallpapers/flux_dark.jpg"
 if [ ! -f "$WALLPAPER_PATH" ]; then
-    wget -q --show-progress \
+    echo " Downloading wallpaper..."
+    curl -fsSL \
         "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/wallpaper/wall-0.jpg" \
-        -O "$WALLPAPER_PATH" 2>/dev/null || {
+        -o "$WALLPAPER_PATH" || {
+        echo " [⚠️] curl download failed — trying ImageMagick fallback..."
         if command -v convert >/dev/null 2>&1; then
             convert -size 1920x1080 xc:#0d1117 "$WALLPAPER_PATH" 2>/dev/null || true
+            echo " [⚠️] Using generated solid fallback wallpaper"
+        else
+            echo " [⚠️] No wallpaper — neither curl nor convert available"
         fi
-        echo " [⚠️] Using fallback wallpaper"
     }
 fi
 echo " [✅] Wallpaper ready"

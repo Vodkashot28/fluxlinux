@@ -78,11 +78,8 @@ pkg install -y \
 # ── Step 8: Font support ─────────────────────────────────
 echo ""
 echo "===== Installing Fonts ====="
-pkg install -y \
-    fontconfig \
-    noto-fonts \
-    noto-fonts-extra \
-    || handle_error "Font install"
+# fontconfig for font management (noto-fonts are not available in Termux repos)
+pkg install -y fontconfig || true
 
 # Rebuild font cache
 fc-cache -fv 2>/dev/null || true

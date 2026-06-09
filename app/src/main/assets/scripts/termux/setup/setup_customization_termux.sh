@@ -44,7 +44,7 @@ echo "===== Installing Papirus Icon Theme ====="
 pkg install -y papirus-icon-theme 2>/dev/null || {
     echo " [⚠️] papirus-icon-theme not in repo — downloading..."
     PAPIRUS_URL="https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/refs/heads/master.tar.gz"
-    wget -q --show-progress "$PAPIRUS_URL" -O /tmp/papirus.tar.gz || {
+    curl -fsSL "$PAPIRUS_URL" -o /tmp/papirus.tar.gz || {
         echo " [⚠️] Papirus download failed — using Adwaita icons as fallback"
     }
     if [ -f /tmp/papirus.tar.gz ]; then
@@ -63,14 +63,18 @@ echo "===== Setting Up Wallpaper ====="
 WALLPAPER_PATH="$HOME/.fluxlinux/wallpapers/flux_dark.jpg"
 if [ ! -f "$WALLPAPER_PATH" ]; then
     # Use a public domain dark abstract wallpaper
-    wget -q --show-progress \
+    echo " Downloading wallpaper..."
+    curl -fsSL \
         "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/wallpaper/wall-0.jpg" \
-        -O "$WALLPAPER_PATH" 2>/dev/null || {
+        -o "$WALLPAPER_PATH" || {
+        echo " [⚠️] curl download failed — trying ImageMagick fallback..."
         # Fallback: create a solid dark wallpaper via convert (ImageMagick)
         if command -v convert >/dev/null 2>&1; then
             convert -size 1920x1080 xc:#0d1117 "$WALLPAPER_PATH" 2>/dev/null || true
+            echo " [⚠️] Using generated solid fallback wallpaper"
+        else
+            echo " [⚠️] No wallpaper — neither curl nor convert available"
         fi
-        echo " [⚠️] Using fallback wallpaper"
     }
 fi
 echo " [✅] Wallpaper ready: $WALLPAPER_PATH"

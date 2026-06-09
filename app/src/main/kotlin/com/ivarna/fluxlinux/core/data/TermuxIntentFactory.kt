@@ -501,7 +501,7 @@ object TermuxIntentFactory {
             val callbackCmd = if (callbackName != null) {
                 "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=$callbackName\""
             } else ""
-            val command = "echo \"$scriptB64\" | base64 -d > /tmp/flux_feature.sh && bash /tmp/flux_feature.sh; rm -f /tmp/flux_feature.sh; $callbackCmd"
+            val command = "echo \"$scriptB64\" | base64 -d > $TERMUX_HOME_DIR/flux_feature.sh && chmod +x $TERMUX_HOME_DIR/flux_feature.sh && bash $TERMUX_HOME_DIR/flux_feature.sh; rm -f $TERMUX_HOME_DIR/flux_feature.sh; $callbackCmd"
             return buildRunCommandIntent(command, runInBackground = false)
         }
 
