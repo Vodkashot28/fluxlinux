@@ -412,7 +412,7 @@ fun HomeScreen(
                     Button(
                         onClick = {
                             if (permissionState.status.isGranted) {
-                                val intent = TermuxIntentFactory.buildLaunchGuiIntent(distro.id)
+                                val intent = TermuxIntentFactory.buildLaunchGuiIntent(context, distro.id)
                                 try {
                                     onStartService(intent)
                                     StateManager.setGuiRunning(context, distro.id, true)

@@ -402,11 +402,19 @@ object TermuxIntentFactory {
     /**
      * Launches a specific distro in GUI mode (XFCE4).
      */
-    fun buildLaunchGuiIntent(distroId: String): Intent {
+    fun buildLaunchGuiIntent(context: android.content.Context, distroId: String): Intent {
+        val scriptManager = ScriptManager(context)
+
         if (distroId == "termux") {
-            // Termux Native: Run start_xfce4_termux.sh directly in Termux
-            // The script is deployed during install; just run it directly.
-            val command = "bash $TERMUX_HOME_DIR/start_xfce4_termux.sh"
+            // Termux Native: deploy start_xfce4_termux.sh inline then run it
+            // (matches buildLaunchKdeGuiIntent pattern — script lives in assets, not on-disk)
+            val xfce4ScriptContent = scriptManager.getScriptContent("termux/start/start_xfce4_termux.sh")
+            val xfce4ScriptB64 = android.util.Base64.encodeToString(xfce4ScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+            val command = """
+                echo '$xfce4ScriptB64' | base64 -d > ${'$'}HOME/start_xfce4_termux.sh
+                chmod +x ${'$'}HOME/start_xfce4_termux.sh
+                bash ${'$'}HOME/start_xfce4_termux.sh
+            """.trimIndent()
             return buildRunCommandIntent(command, runInBackground = false)
         }
 

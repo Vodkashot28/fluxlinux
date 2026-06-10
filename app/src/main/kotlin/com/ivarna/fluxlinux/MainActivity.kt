@@ -706,7 +706,7 @@ class MainActivity : ComponentActivity() {
                                   onLaunchXfce = {
                                       if (permissionState.status.isGranted) {
                                           try {
-                                              val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildLaunchGuiIntent(selectedDistro!!.id)
+                                              val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildLaunchGuiIntent(this@MainActivity, selectedDistro!!.id)
                                               onStartServiceStub(intent)
                                           } catch (e: Exception) {
                                               android.util.Log.e("FluxLinux", "Launch XFCE4 failed", e)
