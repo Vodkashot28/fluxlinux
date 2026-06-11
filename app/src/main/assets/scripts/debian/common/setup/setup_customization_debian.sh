@@ -779,6 +779,9 @@ export PATH="$HOME/.local/bin:/opt/nodejs/bin:$PATH"
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
+# Fix XDG_RUNTIME_DIR (not set in PRoot/chroot — no systemd-logind)
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+
 # Background visuals - don't block shell startup
 { fastfetch --config termux; pokemon-colorscripts --no-title -r 1,2,3 } &!
 
