@@ -511,6 +511,12 @@ class MainActivity : ComponentActivity() {
                                                          val server = com.ivarna.fluxlinux.core.utils.LocalInstallServer()
                                                          lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                                                              val port = server.start(script)
+                                                         // Auto-stop server after 5 min to prevent resource leak
+                                                         // (do not stop on download so re-runs work)
+                                                         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                             kotlinx.coroutines.delay(300_000L)
+                                                             server.stop()
+                                                         }
                                                              withContext(kotlinx.coroutines.Dispatchers.Main) {
                                                                   // INTERACTIVE COMMAND: Download then Run
                                                                   // Prepend Exports based on Selection
@@ -535,10 +541,9 @@ class MainActivity : ComponentActivity() {
                                                                         .setTitle("⚠️ Root Access Required")
                                                                         .setMessage("This distro requires Root/Chroot.\n\n1. Open Termux\n2. Type 'su' and press Enter 🔑\n3. Paste the command and Run it.\n4. Follow prompts.")
                                                                         .setPositiveButton("Open Termux") { _, _ ->
-                                                                            server.onDownload = { server.stop() }
                                                                             val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(this@MainActivity)
                                                                             if (launchIntent != null) startActivity(launchIntent)
-                                                                            currentScreen = Screen.HOME
+                                                                            // Stay on Install Wizard/DistroSettings so user sees progress
                                                                         }
                                                                         .setNegativeButton("Cancel") { _, _ -> server.stop() }
                                                                         .setCancelable(false)
@@ -633,6 +638,11 @@ class MainActivity : ComponentActivity() {
                                                    
                                                    lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                                                         val port = server.start(script)
+                                                        // Server kept alive (no onDownload stop) so re-runs and retries work
+                                                        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                            kotlinx.coroutines.delay(300_000L)
+                                                            server.stop()
+                                                        }
                                                         withContext(kotlinx.coroutines.Dispatchers.Main) {
                                                               val isChroot = selectedDistro!!.chrootSupported && !selectedDistro!!.prootSupported
                                                               val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
@@ -647,10 +657,8 @@ class MainActivity : ComponentActivity() {
                                                                     .setTitle("⚠️ Root Required (Reinstall)")
                                                                     .setMessage("1. Open Termux\n2. Type 'su' -> Enter 🔑\n3. Paste & Run command.")
                                                                     .setPositiveButton("Open Termux") { _, _ ->
-                                                                        server.onDownload = { server.stop() }
                                                                         val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(this@MainActivity)
                                                                         if (launchIntent != null) startActivity(launchIntent)
-                                                                        currentScreen = Screen.HOME
                                                                     }
                                                                     .setNegativeButton("Cancel") { _, _ -> server.stop() }
                                                                     .setCancelable(false)
@@ -665,10 +673,8 @@ class MainActivity : ComponentActivity() {
                                                                     .setTitle("Reinstalling Base System 🚀")
                                                                     .setMessage("Command copied!\n\n1. Open Termux\n2. Paste command")
                                                                     .setPositiveButton("Open Termux") { _, _ ->
-                                                                        server.onDownload = { server.stop() }
                                                                         val launchIntent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildOpenTermuxIntent(this@MainActivity)
                                                                         if (launchIntent != null) startActivity(launchIntent)
-                                                                        currentScreen = Screen.HOME
                                                                     }
                                                                     .setNegativeButton("Cancel") { _, _ -> server.stop() }
                                                                     .setCancelable(false)

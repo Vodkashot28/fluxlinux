@@ -73,6 +73,13 @@ fun DistroSettingsScreen(
     var selectedTheme by remember { mutableStateOf("dark") }
     var selectedGpu by remember { mutableStateOf("auto") }
 
+    // Auto-clear stale "Busy..." state when screen opens with no active install
+    LaunchedEffect(Unit) {
+        if (!InstallationQueueManager.hasPending() && InstallationQueueManager.currentTask == null) {
+            InstallationQueueManager.clear()
+        }
+    }
+
     GlassScaffold(
         hazeState = hazeState,
         topBar = {

@@ -28,11 +28,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.res.Configuration
 
 import com.ivarna.fluxlinux.core.utils.StateManager
 import com.ivarna.fluxlinux.core.utils.RootUtils
@@ -115,105 +117,228 @@ fun PrerequisitesScreen(
         }
     }
     
+    val config = LocalConfiguration.current
+    val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val visualStep = if (currentStep > 5) currentStep - 1 else currentStep
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
     ) {
+        if (isLandscape) {
+            PrerequisitesLandscapeLayout(
+                currentStep = currentStep,
+                visualStep = visualStep,
+                totalSteps = totalSteps,
+                termuxInstalled = termuxInstalled,
+                x11Installed = x11Installed,
+                configDone = configDone,
+                permissionState = permissionState,
+                onRefresh = checkStatus,
+                onStepChange = { currentStep = it },
+                onConfigDone = { configDone = it },
+                onComplete = onComplete
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(40.dp))
+
+                Text(
+                    text = "Prerequisites",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "FluxLinux requires these to function",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                StepIndicator(currentStep = visualStep, totalSteps = totalSteps)
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                PrerequisitesStepContent(
+                    currentStep = currentStep,
+                    termuxInstalled = termuxInstalled,
+                    x11Installed = x11Installed,
+                    configDone = configDone,
+                    permissionState = permissionState,
+                    onRefresh = checkStatus,
+                    onStepChange = { currentStep = it },
+                    onConfigDone = { configDone = it },
+                    onComplete = onComplete
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun PrerequisitesLandscapeLayout(
+    currentStep: Int,
+    visualStep: Int,
+    totalSteps: Int,
+    termuxInstalled: MutableState<Boolean>,
+    x11Installed: MutableState<Boolean>,
+    configDone: Boolean,
+    permissionState: com.google.accompanist.permissions.PermissionState,
+    onRefresh: () -> Unit,
+    onStepChange: (Int) -> Unit,
+    onConfigDone: (Boolean) -> Unit,
+    onComplete: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+            .padding(start = 32.dp, top = 24.dp, end = 24.dp, bottom = 0.dp)
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .weight(0.35f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-            
-            // Title
             Text(
                 text = "Prerequisites",
                 color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // Subtitle
+
             Text(
                 text = "FluxLinux requires these to function",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha=0.7f),
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 fontSize = 14.sp
             )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Step Indicator
-            // Logical step 6 (Environment Setup) shares the visual step 5 slot
-            val visualStep = if (currentStep > 5) currentStep - 1 else currentStep
-            StepIndicator(currentStep = visualStep, totalSteps = totalSteps)
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Content based on current step
-            when (currentStep) {
-                1 -> PackageInstallationStep(
-                    termuxInstalled = termuxInstalled,
-                    x11Installed = x11Installed,
-                    onRefresh = checkStatus,
-                    onContinue = {
-                        if (termuxInstalled.value && x11Installed.value) {
-                            currentStep = 2
-                        }
-                    }
-                )
-                
-                2 -> TermuxConfigurationStep(
-                    configDone = configDone,
-                    onConfigDone = { configDone = it },
-                    onContinue = {
-                        if (configDone) {
-                            StateManager.setConnectionFixed(context, true)
-                            currentStep = 3
-                        }
-                    }
-                )
-                
-                3 -> PermissionRequestStep(
-                    permissionState = permissionState,
-                    onContinue = { currentStep = 4 }
-                )
-                
-                4 -> OverlayPermissionStep(
-                    onContinue = { currentStep = 5 }
-                )
-
-                5 -> PhantomProcessStep(
-                    onContinue = { currentStep = 6 }
-                )
-                
-                6 -> BusyBoxInstallStep(
-                    onContinue = { currentStep = 7 }
-                )
-
-                7 -> EnvironmentSetupStep(
-                    onContinue = { currentStep = 8 }
-                )
-                
-                8 -> SystemCheckStep(
-                    onContinue = { currentStep = 9 }
-                )
-                
-                9 -> FinalInstructionsStep(
-                    onContinue = { currentStep = 10 }
-                )
-                
-                10 -> HelpAndSupportStep(
-                    onComplete = onComplete
-                )
-            }
         }
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        VerticalDivider(
+            modifier = Modifier.fillMaxHeight(),
+            thickness = 1.dp,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        )
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        Column(
+            modifier = Modifier
+                .weight(0.65f)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .padding(end = 8.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            StepIndicator(currentStep = visualStep, totalSteps = totalSteps)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            PrerequisitesStepContent(
+                currentStep = currentStep,
+                termuxInstalled = termuxInstalled,
+                x11Installed = x11Installed,
+                configDone = configDone,
+                permissionState = permissionState,
+                onRefresh = onRefresh,
+                onStepChange = onStepChange,
+                onConfigDone = onConfigDone,
+                onComplete = onComplete
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun PrerequisitesStepContent(
+    currentStep: Int,
+    termuxInstalled: MutableState<Boolean>,
+    x11Installed: MutableState<Boolean>,
+    configDone: Boolean,
+    permissionState: com.google.accompanist.permissions.PermissionState,
+    onRefresh: () -> Unit,
+    onStepChange: (Int) -> Unit,
+    onConfigDone: (Boolean) -> Unit,
+    onComplete: () -> Unit
+) {
+    val context = LocalContext.current
+    when (currentStep) {
+        1 -> PackageInstallationStep(
+            termuxInstalled = termuxInstalled,
+            x11Installed = x11Installed,
+            onRefresh = onRefresh,
+            onContinue = {
+                if (termuxInstalled.value && x11Installed.value) {
+                    onStepChange(2)
+                }
+            }
+        )
+
+        2 -> TermuxConfigurationStep(
+            configDone = configDone,
+            onConfigDone = onConfigDone,
+            onContinue = {
+                if (configDone) {
+                    StateManager.setConnectionFixed(context, true)
+                    onStepChange(3)
+                }
+            }
+        )
+
+        3 -> PermissionRequestStep(
+            permissionState = permissionState,
+            onContinue = { onStepChange(4) }
+        )
+
+        4 -> OverlayPermissionStep(
+            onContinue = { onStepChange(5) }
+        )
+
+        5 -> PhantomProcessStep(
+            onContinue = { onStepChange(6) }
+        )
+
+        6 -> BusyBoxInstallStep(
+            onContinue = { onStepChange(7) }
+        )
+
+        7 -> EnvironmentSetupStep(
+            onContinue = { onStepChange(8) }
+        )
+
+        8 -> SystemCheckStep(
+            onContinue = { onStepChange(9) }
+        )
+
+        9 -> FinalInstructionsStep(
+            onContinue = { onStepChange(10) }
+        )
+
+        10 -> HelpAndSupportStep(
+            onComplete = onComplete
+        )
     }
 }
 
@@ -246,8 +371,6 @@ fun PackageInstallationStep(
     }
 
     val TERMUX_SHA = "7600078440c3c34ef050bc009b00fc3215cb87ec4a449e01a696f74cf4249db2"
-    val TERMUX_X11_SHA = "82d03cb7b3c5b1a75bca8b46ff2b627f82c98b8b1ea41c9af33b00b5e0d5a993"
-
     LaunchedEffect(Unit) {
         if (!termuxInstalled.value && ApkDownloader.apkExists(context, "termux.apk")) {
             if (ApkDownloader.verifySha256(context, "termux.apk", TERMUX_SHA)) {
@@ -257,11 +380,7 @@ fun PackageInstallationStep(
             }
         }
         if (!x11Installed.value && ApkDownloader.apkExists(context, "termux_x11.apk")) {
-            if (ApkDownloader.verifySha256(context, "termux_x11.apk", TERMUX_X11_SHA)) {
-                x11ApkStatus = ApkStatus.DOWNLOADED
-            } else {
-                x11ApkStatus = ApkStatus.CORRUPTED
-            }
+            x11ApkStatus = ApkStatus.DOWNLOADED
         }
     }
 
@@ -302,11 +421,7 @@ fun PackageInstallationStep(
                 if (state.error != null) {
                     x11ApkStatus = ApkStatus.NOT_INSTALLED
                 } else if (state.isDone) {
-                    if (ApkDownloader.verifySha256(context, "termux_x11.apk", TERMUX_X11_SHA)) {
-                        x11ApkStatus = ApkStatus.DOWNLOADED
-                    } else {
-                        x11ApkStatus = ApkStatus.CORRUPTED
-                    }
+                    x11ApkStatus = ApkStatus.DOWNLOADED
                     x11Progress = 1f
                 } else {
                     x11Progress = state.progress

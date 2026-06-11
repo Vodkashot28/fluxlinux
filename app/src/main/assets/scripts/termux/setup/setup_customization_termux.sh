@@ -79,50 +79,96 @@ if [ ! -f "$WALLPAPER_PATH" ]; then
 fi
 echo " [✅] Wallpaper ready: $WALLPAPER_PATH"
 
-# ── Step 3: XFCE4 xfconf settings ────────────────────────
+# ── Step 3: Write XFCE4 config XML files directly ────────
+# xfconf-query only works inside a running XFCE4 session.
+# Writing XML files directly ensures settings apply on the FIRST launch.
 echo ""
 echo "===== Applying XFCE4 Theme Settings ====="
 
-# GTK Theme (Adwaita-dark is built into GTK — always available)
-xfconf-query -c xsettings -p /Net/ThemeName -s "Adwaita-dark" 2>/dev/null || \
-    mkdir -p "$HOME/.config/gtk-3.0" && \
-    echo '[Settings]
+XFCONF_DIR="$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+mkdir -p "$XFCONF_DIR"
+
+# ── Always write gtk-3.0/settings.ini ───────────────────
+mkdir -p "$HOME/.config/gtk-3.0"
+cat > "$HOME/.config/gtk-3.0/settings.ini" << 'GTKEOF'
+[Settings]
 gtk-theme-name=Adwaita-dark
 gtk-icon-theme-name=Papirus-Dark
 gtk-font-name=Noto Sans 10
-gtk-application-prefer-dark-theme=1' > "$HOME/.config/gtk-3.0/settings.ini"
-echo " [✅] GTK dark theme applied"
+gtk-application-prefer-dark-theme=1
+GTKEOF
+echo " [✅] GTK3 settings.ini written"
 
-# Icon theme
+# ── xsettings.xml — theme, icons, fonts, HiDPI ──────────
+cat > "$XFCONF_DIR/xsettings.xml" << 'XSEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="Adwaita-dark"/>
+    <property name="IconThemeName" type="string" value="Papirus-Dark"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="FontName" type="string" value="Noto Sans 10"/>
+    <property name="CursorThemeName" type="string" value="Adwaita"/>
+  </property>
+  <property name="Gdk" type="empty">
+    <property name="WindowScalingFactor" type="int" value="2"/>
+  </property>
+</channel>
+XSEOF
+echo " [✅] xsettings.xml written (theme, icons, fonts, HiDPI 2x)"
+
+# ── xfwm4.xml — window manager, compositor ──────────────
+cat > "$XFCONF_DIR/xfwm4.xml" << 'XWMEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="use_compositing" type="bool" value="false"/>
+    <property name="theme" type="string" value="Default-dark"/>
+    <property name="title_font" type="string" value="Noto Sans Bold 10"/>
+  </property>
+</channel>
+XWMEOF
+echo " [✅] xfwm4.xml written (compositor off, dark WM theme)"
+
+# ── xfce4-desktop.xml — wallpaper ───────────────────────
+cat > "$XFCONF_DIR/xfce4-desktop.xml" << DESEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitorVirtual-1" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="last-image" type="string" value="$WALLPAPER_PATH"/>
+          <property name="image-style" type="int" value="5"/>
+        </property>
+      </property>
+      <property name="monitor0" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="last-image" type="string" value="$WALLPAPER_PATH"/>
+          <property name="image-style" type="int" value="5"/>
+        </property>
+      </property>
+    </property>
+  </property>
+</channel>
+DESEOF
+echo " [✅] xfce4-desktop.xml written (wallpaper: $WALLPAPER_PATH)"
+
+# ── Live-session update (only works if xfce4 is running) ─
+xfconf-query -c xsettings -p /Net/ThemeName -s "Adwaita-dark" 2>/dev/null || true
 xfconf-query -c xsettings -p /Net/IconThemeName -s "Papirus-Dark" 2>/dev/null || true
-echo " [✅] Icon theme applied"
-
-# Font
 xfconf-query -c xsettings -p /Gtk/FontName -s "Noto Sans 10" 2>/dev/null || true
+xfconf-query -c xsettings -p /Gdk/WindowScalingFactor -s 2 2>/dev/null || true
+xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null || true
 xfconf-query -c xfwm4 -p /general/title_font -s "Noto Sans Bold 10" 2>/dev/null || true
-echo " [✅] Fonts applied"
-
-# Wallpaper (applied to default monitor/workspace)
-xfconf-query -c xfce4-desktop \
-    -p /backdrop/screen0/monitorVirtual-1/workspace0/last-image \
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitorVirtual-1/workspace0/last-image \
     -s "$WALLPAPER_PATH" 2>/dev/null || true
-# Also try monitor0 naming
-xfconf-query -c xfce4-desktop \
-    -p /backdrop/screen0/monitor0/workspace0/last-image \
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image \
     -s "$WALLPAPER_PATH" 2>/dev/null || true
-echo " [✅] Wallpaper applied"
+echo " [✅] Live session update attempted (harmless if XFCE4 not running)"
 
 # ── Step 4: Performance settings ─────────────────────────
-echo ""
-echo "===== Applying Performance Settings ====="
-
-# Disable compositor (mobile GPU cannot handle it well)
-xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null || true
-echo " [✅] Compositor disabled (performance)"
-
-# HiDPI scaling (2x for Android phone screens)
-xfconf-query -c xsettings -p /Gdk/WindowScalingFactor -s 2 2>/dev/null || true
-echo " [✅] Window scaling set to 2x (HiDPI)"
 
 # ── Step 5: Panel layout ──────────────────────────────────
 echo ""
