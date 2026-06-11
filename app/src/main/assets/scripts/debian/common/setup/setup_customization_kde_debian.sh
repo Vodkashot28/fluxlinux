@@ -41,7 +41,13 @@ echo "FluxLinux: Starting KDE Plasma Customization..."
 echo "FluxLinux: Installing customization tools..."
 export DEBIAN_FRONTEND=noninteractive
 apt update -y
-apt install -y curl fastfetch wget unzip fontconfig breeze breeze-gtk-theme || handle_error "Dependency Installation"
+apt install -y curl fastfetch wget unzip fontconfig locales breeze breeze-gtk-theme || handle_error "Dependency Installation"
+
+# Setup Locales for proper font rendering in ZSH/Terminal
+echo "FluxLinux: Setting up locales..."
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8
 
 # Install optional packages (may not be available on all Debian versions)
 apt install -y qt5ct qt5-style-plugins systemsettings plasma-discover kinfocenter 2>/dev/null || true
@@ -430,6 +436,10 @@ echo "FluxLinux: Writing optimized .zshrc..."
 cat > "$ZSHRC" << 'ZSHEOF'
 # PATH setup - local bin, npm global modules
 export PATH="$HOME/.local/bin:/opt/nodejs/bin:$PATH"
+
+# Setup Locales
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # Background visuals - don't block shell startup
 { fastfetch --config termux; pokemon-colorscripts --no-title -r 1,2,3 } &!

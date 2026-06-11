@@ -27,7 +27,13 @@ echo "FluxLinux: Starting XFCE4 Customization..."
 echo "FluxLinux: Installing customization tools..."
 export DEBIAN_FRONTEND=noninteractive
 apt update -y
-apt install -y xfce4-goodies curl fastfetch wget unzip fontconfig || handle_error "Dependency Installation"
+apt install -y xfce4-goodies curl fastfetch wget unzip fontconfig locales || handle_error "Dependency Installation"
+
+# Setup Locales for proper font rendering in ZSH/Terminal
+echo "FluxLinux: Setting up locales..."
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8
 
 # 2. Deploy Assets (From GitHub Release debian-v1)
 ASSET_REPO="abhay-byte/fluxlinux"
@@ -768,6 +774,10 @@ echo "FluxLinux: Writing optimized .zshrc..."
 cat > "$ZSHRC" << 'ZSHEOF'
 # PATH setup - local bin, npm global modules
 export PATH="$HOME/.local/bin:/opt/nodejs/bin:$PATH"
+
+# Setup Locales
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # Background visuals - don't block shell startup
 { fastfetch --config termux; pokemon-colorscripts --no-title -r 1,2,3 } &!
