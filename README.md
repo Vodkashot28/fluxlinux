@@ -61,9 +61,20 @@
       <td align="center" width="140"><img src="app/src/main/res/drawable/distro_debian.webp" width="48"/><br/><b><a href="docs/tutorial/setup_debian_chroot.md">Debian Trixie Chroot</a></b></td>
       <td><strong>Debian Setup Guide (Rooted):</strong> Follow our Debian Chroot Configuration Guide for setting up a native, high-performance Debian container using root access.</td>
     </tr>
+  </table>
+</div>
+
+---
+
+## 🎬 Video Tutorials
+
+<div align="center">
+  <table>
     <tr>
-      <td align="center" width="140"><a href="https://www.youtube.com/watch?v=BXRzlJnaiLU"><img src="https://markdown-videos-api.jorgenkh.no/youtube/BXRzlJnaiLU" width="120"/></a></td>
-      <td><strong>Video Tutorial:</strong> Watch our complete setup walkthrough on YouTube — covers everything from first install to running a full Linux desktop.</td>
+      <td align="center">
+        <a href="https://www.youtube.com/watch?v=BXRzlJnaiLU"><img src="https://markdown-videos-api.jorgenkh.no/youtube/BXRzlJnaiLU" width="240"/></a><br/>
+        <b>Complete FluxLinux Setup Guide</b>
+      </td>
     </tr>
   </table>
 </div>
