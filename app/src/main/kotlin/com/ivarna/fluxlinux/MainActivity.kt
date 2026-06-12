@@ -616,22 +616,12 @@ class MainActivity : ComponentActivity() {
                                       if (permissionState.status.isGranted) {
                                           lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                                               val queueManager = com.ivarna.fluxlinux.core.utils.InstallationQueueManager
-                                              queueManager.clear()
+                                                                                              // No need to enqueue a task here since the base install is handled manually via curl/Termux.
+                                                // Enqueueing it causes the UI to permanently stay in 'isInstalling' (Busy) mode.
 
-                                               // Enqueue Base Install (Manual)
-                                              val task = com.ivarna.fluxlinux.core.utils.InstallTask(
-                                                  id = "redo_base_install",
-                                                  name = "Redo Base Installation",
-                                                  type = com.ivarna.fluxlinux.core.utils.TaskType.BASE_INSTALL,
-                                                  isManual = true,
-                                                  distroId = selectedDistro!!.id,
-                                                  extraEnv = emptyMap() // Use defaults or existing logic
-                                              )
-                                              queueManager.enqueue(listOf(task))
-                                              
                                               withContext(kotlinx.coroutines.Dispatchers.Main) {
                                                    // Reuse InstallConfigScreen logic for Base Install handling
-                                                   // We manually trigger the logic here because processNextInstallTask doesn't handle Manual/Base tasks automatically.
+                                                   // We manually trigger the logic here because it's a manual script execution in Termux.
                                                    
                                                    val script = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.getBaseInstallScript(this@MainActivity, selectedDistro!!)
                                                    val server = com.ivarna.fluxlinux.core.utils.LocalInstallServer()
