@@ -1,6 +1,6 @@
 #!/bin/bash
 # setup_appdev_debian.sh
-# Installs App Development stack (Android SDK, Flutter, React Native, IntelliJ)
+# Installs App Development stack (Android SDK, Flutter, React Native)
 # Target: Debian 13 (Trixie) ARM64
 
 # Error Handler
@@ -638,87 +638,7 @@ else
     echo " [✅] aapt2 installed (architecture verification skipped - install 'file' package to enable)"
 fi
 
-# 5. IntelliJ IDEA Community
-IDEA_ROOT="/opt/intellij"
-# Recent version: 2025.3.1 (Unified, AArch64)
-IDEA_VER="2025.3.1"
-IDEA_URL="https://download.jetbrains.com/idea/idea-${IDEA_VER}-aarch64.tar.gz"
 
-echo "FluxLinux: Checking IntelliJ IDEA..."
-INSTALL_NEEDED=false
-
-if [ ! -f "$IDEA_ROOT/bin/idea.sh" ]; then
-    echo " - Not installed."
-    INSTALL_NEEDED=true
-else
-    # Check installed version via product-info.json
-    if [ -f "$IDEA_ROOT/product-info.json" ]; then
-        INSTALLED_VER=$(grep -Po '"version": "\K[^"]*' "$IDEA_ROOT/product-info.json")
-        echo " - Found installed version: $INSTALLED_VER"
-        if [ "$INSTALLED_VER" != "$IDEA_VER" ]; then
-            echo " - Version mismatch (Target: $IDEA_VER)."
-            INSTALL_NEEDED=true
-        else
-            echo " - Version Check OK ($IDEA_VER)."
-        fi
-    else
-        echo " - Version info missing. Forcing update."
-        INSTALL_NEEDED=true
-    fi
-fi
-
-if [ "$INSTALL_NEEDED" = true ]; then
-    echo "FluxLinux: Installing IntelliJ IDEA Unified ($IDEA_VER)..."
-    
-    # Clean partial/old
-    if [ -d "$IDEA_ROOT" ]; then
-        echo " - Removing existing/old installation..."
-        rm -rf "$IDEA_ROOT"
-    fi
-    mkdir -p "$IDEA_ROOT"
-    
-    wget -q --show-progress "$IDEA_URL" -O /tmp/idea.tar.gz || handle_error "IntelliJ Download"
-    
-    echo "Extracting..."
-    tar -xzf /tmp/idea.tar.gz -C "$IDEA_ROOT" --strip-components=1
-    rm /tmp/idea.tar.gz
-    
-    # Create Wrapper
-    # Dynamically find JAVA_HOME
-    if [ -d "/usr/lib/jvm/java-21-openjdk-arm64" ]; then
-        JHOME="/usr/lib/jvm/java-21-openjdk-arm64"
-    elif [ -d "/usr/lib/jvm/java-17-openjdk-arm64" ]; then
-        JHOME="/usr/lib/jvm/java-17-openjdk-arm64"
-    else
-        JHOME="/usr/lib/jvm/default-java"
-    fi
-
-    cat <<EOF > /usr/local/bin/idea
-#!/bin/bash
-export JAVA_HOME=$JHOME
-exec "$IDEA_ROOT/bin/idea.sh" "\$@"
-EOF
-    chmod +x /usr/local/bin/idea
-    
-    # Create Desktop Entry
-    mkdir -p /usr/share/applications
-    cat <<EOF > /usr/share/applications/jetbrains-idea-ce.desktop
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=IntelliJ IDEA
-Icon=$IDEA_ROOT/bin/idea.svg
-Exec="/usr/local/bin/idea" %f
-Comment=Capstone IDE for JVM
-Categories=Development;IDE;
-Terminal=false
-StartupWMClass=jetbrains-idea
-EOF
-
-    echo " [✅] IntelliJ IDEA Installed ($IDEA_VER)"
-else
-    echo "FluxLinux: IntelliJ IDEA is up-to-date."
-fi
 
 # 6. React Native Setup (Environment)
 # Node is installed via webdev script. We just ensure env vars are ready.
@@ -777,8 +697,8 @@ ln -sf "$KOTLIN_ROOT/bin/kotlinc" /usr/local/bin/kotlinc
 
 # 8. Final Permission Fix (Crucial for non-root usage)
 echo "FluxLinux: Ensuring correct permissions for $TARGET_USER..."
-chown -R $TARGET_USER:$TARGET_GROUP "$SDK_ROOT" "$FLUTTER_ROOT" "$IDEA_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
-chmod -R 775 "$SDK_ROOT" "$FLUTTER_ROOT" "$IDEA_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
+chown -R $TARGET_USER:$TARGET_GROUP "$SDK_ROOT" "$FLUTTER_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
+chmod -R 775 "$SDK_ROOT" "$FLUTTER_ROOT" "$KOTLIN_ROOT" "/opt/gradle"
 
 echo "FluxLinux: App Development Setup Complete!"
 
@@ -821,8 +741,7 @@ verify_installation() {
     # Check Kotlin
     if [ -f "$KOTLIN_ROOT/bin/kotlinc" ]; then echo " [✅] Kotlin Compiler"; else echo " [❌] Kotlin Missing"; MISSING=1; fi
 
-    # Check IntelliJ
-    if [ -f "$IDEA_ROOT/bin/idea.sh" ]; then echo " [✅] IntelliJ IDEA"; else echo " [❌] IntelliJ IDEA Missing"; MISSING=1; fi
+
     
     echo "------------------------------------------------"
     if [ $MISSING -eq 1 ]; then
@@ -840,7 +759,7 @@ echo " - JDK 21/17/Default"
 echo " - Android SDK 34/35/36 (ARM64 Build Tools)"
 echo " - Flutter (Stable)"
 echo " - Kotlin"
-echo " - IntelliJ IDEA Community ($IDEA_VER)"
+
 echo "------------------------------------------------"
 echo "Note: Restart your terminal/session for PATH changes to take effect."
 read -p "Press Enter to close..."
