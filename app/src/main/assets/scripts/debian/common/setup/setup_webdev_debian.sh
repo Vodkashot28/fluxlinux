@@ -53,6 +53,39 @@ Pin-Priority: 1000
 apt update -y
 apt install -y firefox chromium || handle_error "Browser Installation"
 
+# Fix Firefox sandbox crashes in PRoot (no user namespaces, /dev is Android bind-mount)
+# Wrapper at /usr/local/bin/firefox takes priority over /usr/bin/firefox via PATH
+echo "FluxLinux: Applying Firefox proot sandbox fix..."
+cat > /usr/local/bin/firefox << 'EOF'
+#!/bin/bash
+# FluxLinux: Firefox sandbox wrapper for PRoot/chroot on Android
+# Firefox's sandbox requires user namespaces + a real /dev — neither available in proot.
+# Disabling all sandbox layers prevents child process SIGSEGV (signal 11) crashes.
+export MOZ_DISABLE_CONTENT_SANDBOX=1
+export MOZ_DISABLE_GMP_SANDBOX=1
+export MOZ_DISABLE_RDD_SANDBOX=1
+export MOZ_DISABLE_SOCKET_PROCESS_SANDBOX=1
+exec /usr/bin/firefox "$@"
+EOF
+chmod +x /usr/local/bin/firefox
+
+# Update desktop entry to point to wrapper
+mkdir -p /usr/share/applications
+cat > /usr/share/applications/firefox.desktop << 'EOF'
+[Desktop Entry]
+Name=Firefox Web Browser
+Comment=Browse the World Wide Web
+GenericName=Web Browser
+Exec=/usr/local/bin/firefox %u
+Icon=firefox
+Terminal=false
+Type=Application
+MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+Categories=Network;WebBrowser;
+EOF
+echo "FluxLinux: Firefox wrapper applied."
+
 
 # 3. Install Node.js (v25) -- Manual Install for ARM64 & Global Path fix
 NODE_ROOT="/opt/nodejs"
