@@ -33,10 +33,30 @@ echo "  ⚠️  Experimental — compositor is disabled"
 echo "══════════════════════════════════════════════"
 echo ""
 
-# ── Read GPU config ───────────────────────────────────────
+# ── Read GPU config / auto-detect ────────────────────────
 GPU_BACKEND="virgl"
 GPU_CONFIG="$HOME/.fluxlinux/gpu_config"
-[ -f "$GPU_CONFIG" ] && source "$GPU_CONFIG" && GPU_BACKEND="${FLUX_GPU_BACKEND:-virgl}"
+if [ -f "$GPU_CONFIG" ]; then
+    source "$GPU_CONFIG"
+    GPU_BACKEND="${FLUX_GPU_BACKEND:-virgl}"
+else
+    # gpu_config not found — auto-detect now
+    echo "FluxLinux: gpu_config not found, auto-detecting GPU..."
+    _vulkan_hw=$(getprop ro.hardware.vulkan 2>/dev/null || echo "")
+    _egl_hw=$(getprop ro.hardware.egl 2>/dev/null || echo "")
+    _board=$(getprop ro.product.board 2>/dev/null || echo "")
+    if echo "$_vulkan_hw$_egl_hw" | grep -qi "adreno\|freedreno"; then
+        GPU_BACKEND="turnip"
+    elif grep -qi "qualcomm\|snapdragon" /proc/cpuinfo 2>/dev/null; then
+        GPU_BACKEND="turnip"
+    elif echo "$_board" | grep -qi "snapdragon\|sm[0-9]\|sdm[0-9]\|msm[0-9]"; then
+        GPU_BACKEND="turnip"
+    fi
+    # Save result so next launch skips detection
+    mkdir -p "$HOME/.fluxlinux"
+    echo "FLUX_GPU_BACKEND=$GPU_BACKEND" > "$GPU_CONFIG"
+    echo "FluxLinux: Auto-detected GPU backend: [$GPU_BACKEND] (saved to gpu_config)"
+fi
 echo "FluxLinux: GPU backend [$GPU_BACKEND]"
 
 # ── Step 1: Kill previous session ─────────────────────────
