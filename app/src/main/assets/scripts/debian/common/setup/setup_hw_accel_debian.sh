@@ -109,7 +109,7 @@ if [ "$MODE" = "turnip" ]; then
     # Install Turnip (Mesa Turnip for Adreno - KGSL-based, proot compatible)
     # Reference: https://github.com/lfdevs/mesa-for-android-container
     # This driver uses KGSL directly, no /dev/dri needed
-    TURNIP_VERSION="26.1.0-devel-20260307"
+    TURNIP_VERSION="26.2.0-devel-20260610"
     
     # Detect distro for correct package
     if [ -f /etc/debian_version ]; then
