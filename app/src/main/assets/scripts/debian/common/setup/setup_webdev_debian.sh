@@ -86,6 +86,40 @@ Categories=Network;WebBrowser;
 EOF
 echo "FluxLinux: Firefox wrapper applied."
 
+# Fix Chromium GPU/sandbox crashes in PRoot
+# --no-sandbox: no user namespaces in proot
+# --disable-gpu: GPU process crashes (no /proc/bus/pci, no udev, no usable GPU device)
+# --use-gl=swiftshader: software WebGL renderer so pages still render correctly
+echo "FluxLinux: Applying Chromium proot sandbox/GPU fix..."
+cat > /usr/local/bin/chromium << 'EOF'
+#!/bin/bash
+# FluxLinux: Chromium wrapper for PRoot/chroot on Android
+# Chromium's GPU process exits with SIGABRT (exit code 256) inside proot because
+# /proc/bus/pci/devices is missing, no udev, and no user namespaces for sandbox.
+exec /usr/bin/chromium --no-sandbox --disable-gpu --use-gl=swiftshader "$@"
+EOF
+chmod +x /usr/local/bin/chromium
+
+# Override system .desktop so the XFCE app menu also uses the wrapper flags
+# User-level overrides take priority over /usr/share/applications/
+FLUX_LOCAL_APPS="/home/flux/.local/share/applications"
+mkdir -p "$FLUX_LOCAL_APPS"
+cat > "$FLUX_LOCAL_APPS/chromium.desktop" << 'EOF'
+[Desktop Entry]
+Name=Chromium Web Browser
+Comment=Access the Internet
+GenericName=Web Browser
+Exec=/usr/local/bin/chromium %U
+Icon=chromium
+Terminal=false
+Type=Application
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+Categories=Network;WebBrowser;
+EOF
+chown -R flux:users "$FLUX_LOCAL_APPS" 2>/dev/null || true
+echo "FluxLinux: Chromium wrapper applied."
+
 
 # 3. Install Node.js (v25) -- Manual Install for ARM64 & Global Path fix
 NODE_ROOT="/opt/nodejs"
