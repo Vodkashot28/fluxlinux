@@ -169,11 +169,66 @@ XFCEXML
             ln -sf /dev/null /dev/dri/renderD128 2>/dev/null || true
         fi
         chmod 755 /dev/dri 2>/dev/null || true
+        echo "FluxLinux: /dev/dri compatibility layer created."
     else
         echo "Error: Failed to download Turnip drivers."
         exit 1
     fi
+
+    # Upgrade system Mesa to match Turnip version (26.2.0-devel)
+    # Debian Trixie ships Mesa 25.0.7-2; upgrade to 26.2.0-devel for matching
+    # OpenGL/Zink/EGL/GBM libraries from the same mesa-for-android-container build.
+    MESA_VERSION="26.2.0-devel-20260610"
+    MESA_URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-${MESA_VERSION}/mesa-for-android-container_${MESA_VERSION}_${DISTRO}_arm64.tar.gz"
+
+    echo "FluxLinux: Upgrading system Mesa to ${MESA_VERSION}..."
+    curl -L -o /tmp/mesa-upgrade.tar.gz "$MESA_URL"
+
+    if [ -f "/tmp/mesa-upgrade.tar.gz" ]; then
+        tar -zxf /tmp/mesa-upgrade.tar.gz -C /
+        ldconfig
+        rm /tmp/mesa-upgrade.tar.gz
+        echo "FluxLinux: Mesa upgraded to ${MESA_VERSION}!"
+
+        # Pin Mesa packages so 'apt upgrade' does not downgrade them back to 25.x
+        echo "FluxLinux: Pinning Mesa packages to prevent apt downgrade..."
+        cat > /etc/apt/preferences.d/pin-mesa << 'PINEOF'
+# FluxLinux: Mesa pinned — runtime upgraded to 26.2.0-devel via mesa-for-android-container
+# Prevent apt from downgrading back to Debian's packaged version (25.0.7-2)
+Package: libgl1-mesa-dri
+Pin: version *
+Pin-Priority: -1
+
+Package: mesa-libgallium
+Pin: version *
+Pin-Priority: -1
+
+Package: libglx-mesa0
+Pin: version *
+Pin-Priority: -1
+
+Package: libegl-mesa0
+Pin: version *
+Pin-Priority: -1
+
+Package: mesa-va-drivers
+Pin: version *
+Pin-Priority: -1
+
+Package: mesa-vdpau-drivers
+Pin: version *
+Pin-Priority: -1
+
+Package: mesa-vulkan-drivers
+Pin: version *
+Pin-Priority: -1
+PINEOF
+        echo "FluxLinux: Mesa packages pinned."
+    else
+        echo "[WARN] Failed to download Mesa upgrade — system Mesa remains at stock version."
+    fi
 fi
+
 
 # 4. Create Launch Wrapper
 echo "FluxLinux: Creating 'gpu-launch' wrapper..."
