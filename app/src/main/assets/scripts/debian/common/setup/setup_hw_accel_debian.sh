@@ -125,27 +125,26 @@ if [ "$MODE" = "turnip" ]; then
     URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/turnip-${TURNIP_VERSION}/turnip_${TURNIP_VERSION}_${DISTRO}_arm64.tar.gz"
 
     echo "FluxLinux: Downloading Turnip drivers v${TURNIP_VERSION} for ${DISTRO}..."
-    curl -L -o /tmp/turnip.tar.gz "$URL"
+    curl -L --fail -o /tmp/turnip.tar.gz "$URL" || { echo "Error: Failed to download Turnip (HTTP error)."; exit 1; }
 
-    if [ -f "/tmp/turnip.tar.gz" ]; then
-        echo "FluxLinux: Installing Turnip..."
-        tar -zxvf /tmp/turnip.tar.gz -C /
-        ldconfig
-        rm /tmp/turnip.tar.gz
-        echo "FluxLinux: Turnip installed successfully!"
-        
-        # Disable XFCE4 compositor (causes black screen with Turnip)
-        # Must modify config files directly since desktop may not be running
-        echo "FluxLinux: Disabling XFCE4 compositor for Turnip compatibility..."
-        
-        # For all users with XFCE4 config
-        for userdir in /home/* /root; do
-            if [ -d "$userdir" ]; then
-                XFCE_CONF_DIR="$userdir/.config/xfce4/xfconf/xfce-perchannel-xml"
-                mkdir -p "$XFCE_CONF_DIR" 2>/dev/null || true
-                
-                # Create or modify xfwm4.xml to disable compositor
-                cat > "$XFCE_CONF_DIR/xfwm4.xml" << 'XFCEXML'
+    echo "FluxLinux: Installing Turnip..."
+    tar -zxvf /tmp/turnip.tar.gz -C /
+    ldconfig
+    rm /tmp/turnip.tar.gz
+    echo "FluxLinux: Turnip installed successfully!"
+
+    # Disable XFCE4 compositor (causes black screen with Turnip)
+    # Must modify config files directly since desktop may not be running
+    echo "FluxLinux: Disabling XFCE4 compositor for Turnip compatibility..."
+
+    # For all users with XFCE4 config
+    for userdir in /home/* /root; do
+        if [ -d "$userdir" ]; then
+            XFCE_CONF_DIR="$userdir/.config/xfce4/xfconf/xfce-perchannel-xml"
+            mkdir -p "$XFCE_CONF_DIR" 2>/dev/null || true
+
+            # Create or modify xfwm4.xml to disable compositor
+            cat > "$XFCE_CONF_DIR/xfwm4.xml" << 'XFCEXML'
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfwm4" version="1.0">
   <property name="general" type="empty">
@@ -153,27 +152,23 @@ if [ "$MODE" = "turnip" ]; then
   </property>
 </channel>
 XFCEXML
-                chown -R $(stat -c '%U:%G' "$userdir") "$userdir/.config" 2>/dev/null || true
-            fi
-        done
-        echo "FluxLinux: XFCE4 compositor disabled."
-        
-        # Create fake /dev/dri for apps that check it (like vkmark)
-        # Turnip uses /dev/kgsl-3d0 but some apps iterate /dev/dri
-        echo "FluxLinux: Creating /dev/dri compatibility layer..."
-        mkdir -p /dev/dri 2>/dev/null || true
-        if [ ! -e /dev/dri/card0 ]; then
-            ln -sf /dev/null /dev/dri/card0 2>/dev/null || true
+            chown -R $(stat -c '%U:%G' "$userdir") "$userdir/.config" 2>/dev/null || true
         fi
-        if [ ! -e /dev/dri/renderD128 ]; then
-            ln -sf /dev/null /dev/dri/renderD128 2>/dev/null || true
-        fi
-        chmod 755 /dev/dri 2>/dev/null || true
-        echo "FluxLinux: /dev/dri compatibility layer created."
-    else
-        echo "Error: Failed to download Turnip drivers."
-        exit 1
+    done
+    echo "FluxLinux: XFCE4 compositor disabled."
+
+    # Create fake /dev/dri for apps that check it (like vkmark)
+    # Turnip uses /dev/kgsl-3d0 but some apps iterate /dev/dri
+    echo "FluxLinux: Creating /dev/dri compatibility layer..."
+    mkdir -p /dev/dri 2>/dev/null || true
+    if [ ! -e /dev/dri/card0 ]; then
+        ln -sf /dev/null /dev/dri/card0 2>/dev/null || true
     fi
+    if [ ! -e /dev/dri/renderD128 ]; then
+        ln -sf /dev/null /dev/dri/renderD128 2>/dev/null || true
+    fi
+    chmod 755 /dev/dri 2>/dev/null || true
+    echo "FluxLinux: /dev/dri compatibility layer created."
 
     # Upgrade system Mesa to match Turnip version (26.2.0-devel)
     # Debian Trixie ships Mesa 25.0.7-2; upgrade to 26.2.0-devel for matching
@@ -182,9 +177,7 @@ XFCEXML
     MESA_URL="https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-${MESA_VERSION}/mesa-for-android-container_${MESA_VERSION}_${DISTRO}_arm64.tar.gz"
 
     echo "FluxLinux: Upgrading system Mesa to ${MESA_VERSION}..."
-    curl -L -o /tmp/mesa-upgrade.tar.gz "$MESA_URL"
-
-    if [ -f "/tmp/mesa-upgrade.tar.gz" ]; then
+    if curl -L --fail -o /tmp/mesa-upgrade.tar.gz "$MESA_URL"; then
         tar -zxf /tmp/mesa-upgrade.tar.gz -C /
         ldconfig
         rm /tmp/mesa-upgrade.tar.gz
@@ -193,7 +186,7 @@ XFCEXML
         # Pin Mesa packages so 'apt upgrade' does not downgrade them back to 25.x
         echo "FluxLinux: Pinning Mesa packages to prevent apt downgrade..."
         cat > /etc/apt/preferences.d/pin-mesa << 'PINEOF'
-# FluxLinux: Mesa pinned — runtime upgraded to 26.2.0-devel via mesa-for-android-container
+# FluxLinux: Mesa pinned - runtime upgraded to 26.2.0-devel via mesa-for-android-container
 # Prevent apt from downgrading back to Debian's packaged version (25.0.7-2)
 Package: libgl1-mesa-dri
 Pin: version *
@@ -225,6 +218,7 @@ Pin-Priority: -1
 PINEOF
         echo "FluxLinux: Mesa packages pinned."
     else
+        rm -f /tmp/mesa-upgrade.tar.gz
         echo "[WARN] Failed to download Mesa upgrade — system Mesa remains at stock version."
     fi
 fi
