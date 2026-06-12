@@ -723,7 +723,7 @@ class MainActivity : ComponentActivity() {
                                   },
                                   onStopXfce = {
                                       try {
-                                          val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildStopGuiIntent(selectedDistro!!.id)
+                                          val intent = com.ivarna.fluxlinux.core.data.TermuxIntentFactory.buildStopGuiIntent(this, selectedDistro!!.id)
                                           onStartServiceStub(intent)
                                       } catch (e: Exception) {
                                           android.util.Log.e("FluxLinux", "Stop XFCE4 failed", e)

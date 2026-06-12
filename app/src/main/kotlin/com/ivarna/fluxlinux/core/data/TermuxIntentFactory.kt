@@ -463,10 +463,17 @@ object TermuxIntentFactory {
     /**
      * Stops the GUI for a specific distro.
      */
-    fun buildStopGuiIntent(distroId: String): Intent {
+    fun buildStopGuiIntent(context: android.content.Context, distroId: String): Intent {
         if (distroId == "termux") {
-            // Termux Native: kill Termux:X11 + XFCE4 processes directly
-            val command = "bash $TERMUX_HOME_DIR/stop_xfce4_termux.sh"
+            // Termux Native: deploy stop_xfce4_termux.sh from assets then run it
+            val scriptManager = ScriptManager(context)
+            val stopScriptContent = scriptManager.getScriptContent("termux/stop/stop_xfce4_termux.sh")
+            val stopScriptB64 = android.util.Base64.encodeToString(stopScriptContent.toByteArray(), android.util.Base64.NO_WRAP)
+            val command = """
+                echo '$stopScriptB64' | base64 -d > ${'$'}HOME/stop_xfce4_termux.sh
+                chmod +x ${'$'}HOME/stop_xfce4_termux.sh
+                bash ${'$'}HOME/stop_xfce4_termux.sh
+            """.trimIndent()
             return buildRunCommandIntent(command, runInBackground = false)
         }
 

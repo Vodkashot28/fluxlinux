@@ -184,8 +184,10 @@ object TermuxX11Preferences {
                     echo "✅ Preferences applied successfully."
                     # Try toast, but don't fail if missing
                     termux-toast "Termux:X11 Settings Applied" 2>/dev/null || true
+                    exit 0
                 else
                     echo "❌ Failed to apply some preferences."
+                    exit 1
                 fi
             """.trimIndent()
             

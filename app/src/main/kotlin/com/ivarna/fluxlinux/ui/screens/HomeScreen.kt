@@ -158,7 +158,7 @@ fun HomeScreen(
                             val intent = if (runningType == "kde") {
                                 TermuxIntentFactory.buildStopKdeGuiIntent(context, distro.id)
                             } else {
-                                TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                TermuxIntentFactory.buildStopGuiIntent(context, distro.id)
                             }
                             try {
                                 onStartService(intent)
@@ -479,7 +479,7 @@ fun HomeScreen(
                                 val intent = if (runningType == "kde") {
                                     TermuxIntentFactory.buildStopKdeGuiIntent(context, distro.id)
                                 } else {
-                                    TermuxIntentFactory.buildStopGuiIntent(distro.id)
+                                    TermuxIntentFactory.buildStopGuiIntent(context, distro.id)
                                 }
                                 onStartService(intent)
                                 StateManager.setGuiRunning(context, distro.id, false)
