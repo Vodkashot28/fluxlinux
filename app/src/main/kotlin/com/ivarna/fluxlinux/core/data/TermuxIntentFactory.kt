@@ -500,46 +500,68 @@ object TermuxIntentFactory {
      * Runs a specific feature script inside the distro.
      * Uses Base64 injection to avoid quoting/escape issues.
      */
-    fun buildRunFeatureScriptIntent(distroId: String, scriptContent: String, callbackName: String? = null): Intent {
+    fun buildRunFeatureScriptIntent(distroId: String, scriptContent: String, callbackName: String? = null, isUninstall: Boolean = false): Intent {
         val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
         val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
-        
-        // Callback command (run by Termux)
-        val callbackCmd = if (callbackName != null) {
+
+        // When uninstalling, pass "uninstall" as $1 to the script so it can
+        // branch into its removal path. Install path runs with no args.
+        val scriptArg = if (isUninstall) " uninstall" else ""
+
+        // Success/error callback commands. Hoisted so every install path
+        // (termux, chroot, proot) propagates the script's exit code back to
+        // the app — without this, failed installs silently report success.
+        // `${'$'}` is Kotlin-template-escaped so the resulting bash string
+        // contains a literal `$` for shell variable expansion.
+        val successCallbackCmd = if (callbackName != null) {
             "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=$callbackName\""
-        } else ""
-        
+        } else ":"
+        val errorCallbackCmd = if (callbackName != null) {
+            "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=error&name=$callbackName\""
+        } else ":"
+
         if (distroId == "termux") {
             // Termux Native: script runs directly in Termux host (no proot, no chroot)
-            val safeScript = if (!scriptContent.endsWith("\n")) "$scriptContent\n" else scriptContent
-            val scriptB64 = android.util.Base64.encodeToString(safeScript.toByteArray(), android.util.Base64.NO_WRAP)
-            val callbackCmd = if (callbackName != null) {
-                "am start -a android.intent.action.VIEW -d \"fluxlinux://callback?result=success&name=$callbackName\""
-            } else ""
-            val command = "echo \"$scriptB64\" | base64 -d > $TERMUX_HOME_DIR/flux_feature.sh && chmod +x $TERMUX_HOME_DIR/flux_feature.sh && bash $TERMUX_HOME_DIR/flux_feature.sh; rm -f $TERMUX_HOME_DIR/flux_feature.sh; $callbackCmd"
+            val command = """
+                echo "$scriptB64" | base64 -d > $TERMUX_HOME_DIR/flux_feature.sh
+                chmod +x $TERMUX_HOME_DIR/flux_feature.sh
+                bash $TERMUX_HOME_DIR/flux_feature.sh$scriptArg
+                STATUS=${'$'}?
+                rm -f $TERMUX_HOME_DIR/flux_feature.sh
+                if [ ${'$'}STATUS -eq 0 ]; then
+                    $successCallbackCmd
+                else
+                    $errorCallbackCmd
+                fi
+                exit ${'$'}STATUS
+            """.trimIndent()
             return buildRunCommandIntent(command, runInBackground = false)
         }
 
         if (distroId == "debian_chroot") {
             // For Chroot, we must decode the script on the HOST (Android)
-            // Write to Termux's tmp directory since that's what gets mounted into the chroot
+            // Write to Termux's tmp directory since that's what gets mounted into the chroot.
+            // Capture the chroot's exit code inside the su -c block, then fire
+            // the matching callback after su exits.
             val termuxTmp = "/data/data/com.termux/files/usr/tmp"
             val innerCommand = """
                 su -c '
                 mkdir -p $termuxTmp;
                 echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
                 chmod +x $termuxTmp/flux_feature.sh;
-                busybox chroot /data/local/tmp/chrootDebian /bin/su - root -c "bash /tmp/flux_feature.sh";
+                busybox chroot /data/local/tmp/chrootDebian /bin/su - root -c "bash /tmp/flux_feature.sh$scriptArg";
+                STATUS=${'$'}?;
                 rm -f $termuxTmp/flux_feature.sh;
+                exit ${'$'}STATUS;
                 ';
-                sleep 1; $callbackCmd
+                sleep 1;
+                if [ ${'$'}? -eq 0 ]; then $successCallbackCmd; else $errorCallbackCmd; fi
             """.trimIndent().replace("\n", " ")
-            
+
             return buildRunCommandIntent(innerCommand, runInBackground = false)
         }
 
         if (distroId == "debian13_chroot") {
-            // Debian 13 Chroot Feature Script
             // Debian 13 Chroot Feature Script
             // Uses generated helper for robustness, falls back to inline mounts if missing.
             // Write to Termux's tmp directory since that's what gets mounted into the chroot
@@ -552,7 +574,8 @@ object TermuxIntentFactory {
                     mkdir -p $termuxTmp;
                     echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
                     chmod +x $termuxTmp/flux_feature.sh;
-                    sh "${'$'}ROOT_RUNNER" "bash /tmp/flux_feature.sh";
+                    sh "${'$'}ROOT_RUNNER" "bash /tmp/flux_feature.sh$scriptArg";
+                    STATUS=${'$'}?;
                     rm -f $termuxTmp/flux_feature.sh;
                 else
                     mnt=/data/local/tmp/chrootDebian13;
@@ -568,22 +591,32 @@ object TermuxIntentFactory {
                     mount --bind $termuxTmp ${'$'}mnt/tmp >/dev/null 2>&1;
                     echo "$scriptB64" | base64 -d > $termuxTmp/flux_feature.sh;
                     chmod +x $termuxTmp/flux_feature.sh;
-                    busybox chroot ${'$'}mnt /bin/su - root -c "bash /tmp/flux_feature.sh";
+                    busybox chroot ${'$'}mnt /bin/su - root -c "bash /tmp/flux_feature.sh$scriptArg";
+                    STATUS=${'$'}?;
                     rm -f $termuxTmp/flux_feature.sh;
                 fi;
+                exit ${'$'}STATUS;
                 ';
-                sleep 1; $callbackCmd
+                sleep 1;
+                if [ ${'$'}? -eq 0 ]; then $successCallbackCmd; else $errorCallbackCmd; fi
             """.trimIndent().replace("\n", " ")
-            
+
             return buildRunCommandIntent(innerCommand, runInBackground = false)
         }
-        
+
         // Command to run inside Termux (Proot):
-        // 1. Run script inside Proot
-        val innerCommand = "echo \"$scriptB64\" | base64 -d > /tmp/flux_feature.sh && bash /tmp/flux_feature.sh; rm -f /tmp/flux_feature.sh"
-        // 2. Append Callback to outer command (Termux runs this after Proot exits)
-        val command = "proot-distro login $distroId --shared-tmp -- bash -c '$innerCommand'; $callbackCmd"
-        
+        // 1. Run script inside Proot (with optional "uninstall" arg), capture its
+        //    exit code BEFORE the trailing rm (which would otherwise mask the
+        //    script's status with its own always-zero exit), then propagate the
+        //    captured status to the outer shell via `exit $RC`.
+        val innerCommand = "echo \"$scriptB64\" | base64 -d > /tmp/flux_feature.sh && bash /tmp/flux_feature.sh$scriptArg; RC=${'$'}?; rm -f /tmp/flux_feature.sh; exit ${'$'}RC"
+        // 2. Outer command: run proot, capture its exit, fire success/error callback
+        val command = """
+            proot-distro login $distroId --shared-tmp -- bash -c '$innerCommand'
+            STATUS=${'$'}?
+            if [ ${'$'}STATUS -eq 0 ]; then $successCallbackCmd; else $errorCallbackCmd; fi
+        """.trimIndent()
+
         return buildRunCommandIntent(command, runInBackground = false) // Foreground to see progress
     }
 
@@ -717,6 +750,10 @@ object TermuxIntentFactory {
     fun buildLaunchKdeGuiTurnipIntent(context: android.content.Context, distroId: String): Intent {
         val scriptManager = ScriptManager(context)
 
+        if (distroId == "termux") {
+            return buildLaunchKdeGuiIntent(context, distroId)
+        }
+
         if (distroId == "debian13_chroot") {
             val chrootKdeScriptContent = scriptManager.getScriptContent("debian/chroot/start/start_debian13_kde_gui_turnip.sh")
             val chrootKdeScriptB64 = android.util.Base64.encodeToString(
@@ -767,6 +804,10 @@ object TermuxIntentFactory {
      */
     fun buildLaunchKdeGuiSoftwareIntent(context: android.content.Context, distroId: String): Intent {
         val scriptManager = ScriptManager(context)
+
+        if (distroId == "termux") {
+            return buildLaunchKdeGuiIntent(context, distroId)
+        }
 
         if (distroId == "debian13_chroot") {
             val scriptContent = scriptManager.getScriptContent("debian/chroot/start/start_debian13_kde_gui_software.sh")

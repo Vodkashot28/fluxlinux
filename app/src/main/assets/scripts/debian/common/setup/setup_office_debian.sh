@@ -3,6 +3,34 @@
 # Installs Office Productivity Stack
 # Target: Debian 13 (Trixie) ARM64
 # Compatible with: Chroot and Proot
+# Usage: setup_office_debian.sh [uninstall]
+
+# Office-specific packages. Shared system deps (dbus-x11, fonts) intentionally
+# excluded — they're used by XFCE, browsers, and other components.
+PKGS=(
+    libreoffice
+    libreoffice-gtk3
+    libreoffice-writer
+    libreoffice-calc
+    libreoffice-impress
+    thunderbird
+    evince
+    xournalpp
+    fonts-noto
+)
+
+# ─── UNINSTALL MODE ──────────────────────────────────────────────────────
+if [ "$1" = "uninstall" ]; then
+    echo "FluxLinux: Uninstalling Office Productivity Environment..."
+
+    export DEBIAN_FRONTEND=noninteractive
+    apt remove -y --purge "${PKGS[@]}" 2>/dev/null || true
+    apt autoremove -y 2>/dev/null || true
+
+    echo "FluxLinux: Office Productivity Environment Uninstalled."
+    exit 0
+fi
+# ─── END UNINSTALL MODE ──────────────────────────────────────────────────
 
 # Error Handler
 handle_error() {
@@ -67,10 +95,22 @@ apt install -y --no-install-recommends \
 echo "FluxLinux: Installing PDF Tools..."
 # Evince: Document Viewer
 # Xournal++: Note taking & PDF Annotation
+# Non-fatal: on Debian Trixie + backports, evince transitively pulls
+# libgnome-desktop-3 which conflicts with backports' libxkbcommon0.
+# Try, fix, retry; if still fails, warn and continue — LibreOffice can
+# open PDFs anyway.
 apt install -y --no-install-recommends \
     evince \
     xournalpp \
-    || handle_error "PDF Tools Installation"
+    2>/dev/null || {
+        echo " [⚠️] PDF Tools install failed, attempting to fix and retry individually..."
+        apt --fix-broken install -y 2>/dev/null || true
+        dpkg --configure -a 2>/dev/null || true
+        apt install -y --no-install-recommends evince 2>/dev/null || \
+            echo " [⚠️] evince not installed (likely libgnome-desktop-3 / libxkbcommon0 conflict). LibreOffice can still open PDFs."
+        apt install -y --no-install-recommends xournalpp 2>/dev/null || \
+            echo " [⚠️] xournalpp not installed."
+    }
 
 # 5. Optional: Try to install extra fonts (non-fatal if fails)
 echo "FluxLinux: Installing additional fonts (optional)..."
