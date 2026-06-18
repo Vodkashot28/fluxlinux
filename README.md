@@ -1,26 +1,33 @@
 <div align="center">
-  <img src="assets/logo/logo.webp" width="180" />
+  <img src="assets/logo/logo.webp" width="150" />
   <h1>FluxLinux</h1>
   <p><strong>Run full Linux desktop environments on your Android device</strong></p>
 
-<a href="https://f-droid.org/packages/com.ivarna.fluxlinux">
-  <img src="assets/logo/fdroid-badge.png" alt="Get it on F-Droid" height="54" align="middle"/>
-</a>
-<a href="https://play.google.com/store/apps/details?id=com.zenithblue.fluxlinux">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="60" align="middle"/>
-</a>
+  <a href="https://github.com/abhay-byte/fluxlinux">
+    <img src="docs/readme/showcase.gif" alt="FluxLinux Showcase" width="100%" />
+  </a>
+  <br/><br/>
 
----
+  <a href="https://f-droid.org/packages/com.ivarna.fluxlinux">
+    <img src="assets/logo/fdroid-badge.png" alt="Get it on F-Droid" height="54" align="middle"/>
+  </a>
+  <a href="https://play.google.com/store/apps/details?id=com.zenithblue.fluxlinux">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="60" align="middle"/>
+  </a>
 
-<!-- Row 1 -->
-<a href="https://discord.gg/tag9kXAs2x"><img src="https://img.shields.io/badge/Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
-<a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success" alt="Downloads"></a>
-<a href="https://github.com/abhay-byte/fluxlinux/stargazers"><img src="https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow" alt="Stars"></a>
+  <br/><br/>
 
-<!-- Row 2 -->
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-2ea44f?style=for-the-badge&logo=gnu&logoColor=white" alt="License"></a>
-<img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
-<a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/badge/Release-v1.7-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release"></a>
+  <!-- Row 1 -->
+  <a href="https://discord.gg/tag9kXAs2x"><img src="https://img.shields.io/badge/Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/github/downloads/abhay-byte/fluxlinux/total?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=success" alt="Downloads"></a>
+  <a href="https://github.com/abhay-byte/fluxlinux/stargazers"><img src="https://img.shields.io/github/stars/abhay-byte/fluxlinux?style=for-the-badge&logo=github&logoColor=white&labelColor=24292e&color=yellow" alt="Stars"></a>
+  
+  <br/>
+
+  <!-- Row 2 -->
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL_v3-2ea44f?style=for-the-badge&logo=gnu&logoColor=white" alt="License"></a>
+  <img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
+  <a href="https://github.com/abhay-byte/fluxlinux/releases"><img src="https://img.shields.io/badge/Release-v1.7-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release"></a>
 
 </div>
 
